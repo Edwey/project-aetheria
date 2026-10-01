@@ -1,0 +1,28 @@
+# Deps / build
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# PartyKit / Vercel
+.partykit/
+.vercel/
