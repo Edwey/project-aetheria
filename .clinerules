@@ -1,0 +1,22 @@
+# Project Aetheria — Aesthetic & Engineering Rules (TasteSkill)
+
+## Visual
+- Use smooth GSAP tweens: `power2.out` or `back.out(1.7)` for UI popups/modals.
+- Never use raw unshaded primary colors; use curated pastel (day) / neon (night) palettes.
+- Keep 3D meshes instanced where possible (trees, rocks, chime pillars).
+- Avoid generic AI loading spinners; use floating ambient particles.
+- Strictly adhere to the modular Archipelago architecture (Section 4 of TODO.md).
+
+## Code
+- Prefer `@react-three/drei` helpers (`Html`, `Text`, `Effects`, `Environment`) over raw Three.js.
+- Keep components small; one island = one component file.
+- All user-generated text goes through `src/utils/sanitize.js` before DB.
+- Bundle discipline: initial JS < 2.5 MB. No PhysX/Ammo — raycasting + bounding spheres only.
+
+## Resilience
+- If PartyKit WS or Supabase fails → degrade to single-player zen garden, never crash.
+- All network calls wrapped in try/catch with toast fallback.
+
+## Audio
+- PositionalAudio only; 120 BPM quantized chimes, 300 ms debounce per pillar.
+- Pentatonic set: C4, D4, E4, G4, A4 (preloaded in `public/sounds/`).
