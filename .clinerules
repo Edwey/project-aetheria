@@ -1,4 +1,5 @@
 # Project Aetheria — Aesthetic & Engineering Rules (TasteSkill)
+> Refer to AGENT_RULES.md for all project constraints. This file holds TasteSkill specifics.
 
 ## Visual
 - Use smooth GSAP tweens: `power2.out` or `back.out(1.7)` for UI popups/modals.
