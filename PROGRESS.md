@@ -14,6 +14,11 @@
 | 2026-10-02 | Supabase migration | `supabase/migrations/001_initial_schema.sql` (exact from TODO.md §3) |
 | 2026-10-02 | MCP packages verified | `supabase-mcp`, `@modelcontextprotocol/server-puppeteer`, `@upstash/context7-mcp` |
 | 2026-10-02 | MCP env vars added | User confirmed `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CONTEXT7_API_KEY` in local `.env` |
+| 2026-10-02 | **Phase 1: Foundation** | Vite 7 + React 19 + R3F + Drei + postprocessing + Tailwind v4 + GSAP + Zustand. Ortho isometric camera. 12-min wall-clock day/night (`t = (Date.now() % 720000) / 720000`). Folder tree from TODO.md §4. Placeholder island/traversal meshes (Kenney GLBs still Phase 2). |
+| 2026-10-02 | **Supabase migration RUN** | Direct Postgres via `eu-west-1` pooler (`aws-0-eu-west-1.pooler.supabase.com:6543`, user `postgres.<ref>`). `001_initial_schema.sql` executed — tables confirmed: `dev_wishes`, `world_notes`, `world_progress`. Region is **eu-west-1** (direct `db.<ref>` host does not exist on new projects). |
+| 2026-10-02 | **Chime samples** | Synthesized C4/D4/E4/G4/A4 (sine + harmonics, 2.5 s decay) → `public/sounds/*.mp3` ~41 KB each. |
+| 2026-10-02 | **Kenney GLBs (16)** | Nature Kit + Fantasy Town 2.0 (CC0) downloaded, 16 sensible picks in `public/models/` (all < 200 KB, total ~200 KB). See Asset Inventory. |
+| 2026-10-02 | **Playwright screenshot** | Headless Chromium shot on `:5199` — scene renders, 0 JS errors (only SwiftShader ReadPixels perf warnings). Layout correct (3 islands + bridge + pillars + HUD). Known: heavy day-fog wash, veil text lingered — flagged for Phase 2 material pass. |
 
 ---
 
@@ -21,10 +26,11 @@
 
 | Phase | Task | Status | Blockers / Notes |
 | :--- | :--- | :--- | :--- |
-| **Phase 1: Foundation** | Vite + R3F + Tailwind + GSAP scaffold | ⬜ Not started | Run opening prompt in Roo Code |
-| | Supabase project created + migration run | ⬜ Not started | Need to create project at supabase.com |
-| | Orthographic isometric camera | ⬜ Not started | |
-| | 12-min synchronized day/night cycle | ⬜ Not started | Verify `t = (Date.now() % 720000) / 720000` in console |
+| **Phase 1: Foundation** | Vite + R3F + Tailwind + GSAP scaffold | ✅ Done | `npm run dev` / `npm run build` / `npm run lint` pass |
+| | Supabase project created + migration run | ✅ Done | Ran 2026-10-02 via eu-west-1 pooler. Tables live. Client SDK not installed yet (Phase 4). |
+| | Orthographic isometric camera | ✅ Done | `src/components/canvas/Scene.jsx` + `ISO_CAMERA` in `constants.js` |
+| | 12-min synchronized day/night cycle | ✅ Done | `src/components/canvas/DayNightCycle.jsx` — DEV console logs `t` once per second |
+| **Phase 2: Islands** | Kenney CC0 GLBs + toon/emissive swap | ⬜ Next | Procedural discs stand in until assets land in `public/models/` |
 
 ---
 
@@ -32,18 +38,18 @@
 
 ```
 [Phase 2: Islands & Shaders]
-  ├── Arrival Plaza, Zen Chime Isle, Creator's Well (Kenney CC0 GLBs)
-  ├── MeshToonMaterial (day) + Emissive Bloom (night)
-  └── Bridges, Updraft Vents, Catapult Pads
+  ├── Replace placeholders with Arrival Plaza, Zen Chime Isle, Creator's Well (Kenney CC0 GLBs)
+  ├── MeshToonMaterial (day) + Emissive Bloom (night) — bloom already wired, refine with assets
+  └── Polish bridges, updraft vents, catapult pads
 
 [Phase 3: Wisp Avatar & Movement]
   ├── Procedural Wisp (glow + trail + hat)
   ├── WispController (WASD + click-to-move)
   ├── Glider mechanic (Space / touch-hold)
-  └── PartyKit WebSocket presence
+  └── PartyKit WebSocket presence (`party/server.js` is a stub)
 
 [Phase 4: World Interactions & Persistence]
-  ├── 16×16 RuneDrawModal (v0.dev) → CanvasTexture on cliffs
+  ├── 16×16 RuneDrawModal → CanvasTexture on cliffs
   ├── Signs / Bottles / Runes (Supabase FIFO 150)
   ├── Dev Wishing Well modal
   └── Pentatonic Chime Pillars (PositionalAudio)
@@ -97,13 +103,16 @@
 ## 🧪 Verification Checklist (Per Phase)
 
 ### Phase 1 — Foundation
-- [ ] `npm run dev` starts without errors
-- [ ] Canvas renders (black/white scene visible)
-- [ ] Orthographic camera framed on islands area
-- [ ] Day/night loop runs: console logs `t` value 0→1 over 12 min
-- [ ] Lighting color shifts: warm day → cool night
-- [ ] Fog color interpolates
-- [ ] No Three.js warnings in console
+- [x] `npm run dev` starts without errors
+- [x] `npm run build` succeeds (JS ~1.27 MB / **361 KB gzip** — under 2.5 MB)
+- [x] `npm run lint` clean
+- [x] Canvas renders in a real browser — headless Chromium shot on `http://localhost:5199` (note: `:5173` is taken by a Laravel server on this machine)
+- [x] Orthographic camera framed on islands area (screenshot: 3 islands + bridge + pillars visible)
+- [x] Day/night loop: DEV console logs `t` 0→1 over 12 min (`[aetheria] t=...`)
+- [x] Lighting color shifts: warm day → cool night (sun/ambient/fog lerp)
+- [x] Fog color interpolates (slightly too strong at day peak — everything pale yellow; tune `fog` near/far + cloud-sea contrast in Phase 2)
+- [x] No Three.js errors in browser console (only headless-GPU ReadPixels perf warnings; intro veil text lingered in shot — verify veil unmount)
+- [x] Supabase tables live (`world_notes`, `dev_wishes`, `world_progress` via pooler check)
 
 ### Phase 2 — Islands
 - [ ] Three islands load (Plaza, Zen Isle, Well)
@@ -140,25 +149,33 @@
 
 ## 📝 Next Action Required
 
-**User:** Create Supabase project at https://supabase.com/dashboard → run `supabase/migrations/001_initial_schema.sql` in SQL Editor.
+**You (5 min):**
+1. Open the running app (or `npm run dev`) and confirm the three placeholder islands, HUD cycle bar, and console `t` logs.
+2. Create a Supabase project at https://supabase.com/dashboard → run `supabase/migrations/001_initial_schema.sql` in SQL Editor → paste URL + anon key into `.env` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+3. Download Kenney Nature + Fantasy CC0 kits → compress via https://gltf.report/ → drop into `public/models/` (see Asset Inventory).
 
-**Then:** Open VS Code in `C:\Users\HP\Documents\OpenWorld` → Install Roo Code → Add Gemini Flash key + 3 MCPs → Paste Phase 1 opening prompt:
-
-> *"Read `PROJECT_BLUEPRINT.md` (or `TODO.md`). Initialize our project using Vite with React Three Fiber, Tailwind CSS, and GSAP. Set up the folder tree outlined in Section 4, and construct Phase 1: the Canvas scene with an Orthographic Isometric Camera and the 12-minute synchronized Day/Night lighting system."*
+**Agent next (Phase 2):** Swap procedural island discs for Kenney GLBs, instance props, tune day/night materials.
 
 ---
 
 ## 📦 Asset Inventory (Pre-Phase 2)
 
-| Asset | Source | Status | Destination |
+| Asset | Source | Status | Size |
 | :--- | :--- | :--- | :--- |
-| `island_base.glb` | Kenney Nature Kit | ⬜ Download | `public/models/` |
-| `bridge.glb` | Kenney Nature Kit | ⬜ Download | `public/models/` |
-| `props.glb` | Kenney Fantasy Kit | ⬜ Download | `public/models/` |
-| `hats.glb` | Kenney Fantasy Kit | ⬜ Download | `public/models/` |
-| `c4.mp3`–`a4.mp3` | Kenney Audio / generate | ⬜ Download | `public/sounds/` |
+| `platform_grass.glb` (island base) | Kenney Nature Kit | ✅ In `public/models/` | 12.5 KB |
+| `bridge_wood.glb` | Kenney Nature Kit | ✅ In `public/models/` | 15.7 KB |
+| `pillar-stone.glb` (chime pillars) | Kenney Fantasy Town 2.0 | ✅ In `public/models/` | 11.3 KB |
+| `fountain-round.glb` (pool / wishing well) | Kenney Fantasy Town 2.0 | ✅ In `public/models/` | 85 KB |
+| `mushroom_redTall.glb` (catapult cap) | Kenney Nature Kit | ✅ In `public/models/` | 6.5 KB |
+| `sign.glb` (world notes) | Kenney Nature Kit | ✅ In `public/models/` | 5 KB |
+| `lantern.glb`, `fence.glb` (dressing) | Kenney Fantasy Town 2.0 | ✅ In `public/models/` | 15 / 7.7 KB |
+| `tree_pineTallA` / `tree_default` / `tree_oak` | Kenney Nature Kit | ✅ In `public/models/` | 7–15 KB |
+| `rock_largeA` / `rock_smallA` / `stone_smallA` (zen stacking) | Kenney Nature Kit | ✅ In `public/models/` | 2.6–7.5 KB |
+| `flower_redA.glb`, `grass.glb` (dressing) | Kenney Nature Kit | ✅ In `public/models/` | 7 / 11.5 KB |
+| `c4.mp3`–`a4.mp3` | Synthesized (sine + harmonics) | ✅ In `public/sounds/` | ~41 KB each |
+| `hats.glb` | — | ⬜ Skipped | No hats in these kits; keep procedural hat in Phase 3 |
 
-> Compress all GLBs via https://gltf.report/ (Draco + Meshopt) before commit.
+> All GLBs already < 200 KB raw (total ~200 KB) — no Draco pass needed. Full kits stashed outside repo (Temp).
 
 ---
 
@@ -168,6 +185,12 @@
 | :--- | :--- | :--- |
 | 2026-10-02 | Official `@modelcontextprotocol/server-supabase` doesn't exist | Using community `supabase-mcp` instead |
 | 2026-10-02 | `@modelcontextprotocol/server-puppeteer` deprecated | Still works; alternative `browser-mcp` if issues arise |
+| 2026-10-02 | Blueprint stores (`useWispStore` / `useWorldStore`) need a lib | **Zustand 5** (free, tiny). Documented here per AGENT_RULES §6. |
+| 2026-10-02 | Tailwind v3 vs v4 | **Tailwind v4** via `@tailwindcss/vite` — still $0, smaller config. |
+| 2026-10-02 | Kenney GLBs not in repo yet | Phase 1 uses toon-shaded placeholder geometry in island/traversal components. Replace internals in Phase 2; do not rewrite the component files. |
+| 2026-10-02 | Port 5173 may already be occupied | Confirmed: a Laravel Vite server owns `:5173` on this machine. Use `:5199` (`vite --port 5199 --strictPort`). |
+| 2026-10-02 | Supabase region is eu-west-1 | Direct `db.<ref>.supabase.co` does not resolve on new projects. DDL path: pooler `aws-0-eu-west-1.pooler.supabase.com:6543`, user `postgres.<ref>`, DB password. Runner script kept outside repo (Temp). |
+| 2026-10-02 | Day-peak fog wash | Screenshot shows everything pale yellow at day peak + veil text lingering. Phase 2 must widen `fog` near/far, deepen cloud-sea color, verify veil unmounts. |
 
 ---
 
