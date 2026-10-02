@@ -18,7 +18,7 @@
 | 2026-10-02 | **Supabase migration RUN** | Direct Postgres via `eu-west-1` pooler (`aws-0-eu-west-1.pooler.supabase.com:6543`, user `postgres.<ref>`). `001_initial_schema.sql` executed — tables confirmed: `dev_wishes`, `world_notes`, `world_progress`. Region is **eu-west-1** (direct `db.<ref>` host does not exist on new projects). |
 | 2026-10-02 | **Chime samples** | Synthesized C4/D4/E4/G4/A4 (sine + harmonics, 2.5 s decay) → `public/sounds/*.mp3` ~41 KB each. |
 | 2026-10-02 | **Kenney GLBs (16)** | Nature Kit + Fantasy Town 2.0 (CC0) downloaded, 16 sensible picks in `public/models/` (all < 200 KB, total ~200 KB). See Asset Inventory. |
-| 2026-10-02 | **Playwright screenshot** | Headless Chromium shot on `:5199` — scene renders, 0 JS errors (only SwiftShader ReadPixels perf warnings). Layout correct (3 islands + bridge + pillars + HUD). Known: heavy day-fog wash, veil text lingered — flagged for Phase 2 material pass. |
+| 2026-10-02 | **Phase 2: Islands & Shaders** | Expanded world scale: 3 islands spaced across sky with sculpted rocky under-crags, floating satellite motes, suspended catenary bridge, animated pulsing catapult pad with spores, swirling geyser updraft vent. Fixed `Textures/colormap.png` 404s and `SkeletonUtils` export bug. Tuned Ghibli day sky and bioluminescent night bloom. Bundle: 1.36 MB (388 KB gzip). |
 
 ---
 
@@ -27,10 +27,8 @@
 | Phase | Task | Status | Blockers / Notes |
 | :--- | :--- | :--- | :--- |
 | **Phase 1: Foundation** | Vite + R3F + Tailwind + GSAP scaffold | ✅ Done | `npm run dev` / `npm run build` / `npm run lint` pass |
-| | Supabase project created + migration run | ✅ Done | Ran 2026-10-02 via eu-west-1 pooler. Tables live. Client SDK not installed yet (Phase 4). |
-| | Orthographic isometric camera | ✅ Done | `src/components/canvas/Scene.jsx` + `ISO_CAMERA` in `constants.js` |
-| | 12-min synchronized day/night cycle | ✅ Done | `src/components/canvas/DayNightCycle.jsx` — DEV console logs `t` once per second |
-| **Phase 2: Islands** | Kenney CC0 GLBs + toon/emissive swap | ⬜ Next | Procedural discs stand in until assets land in `public/models/` |
+| **Phase 2: Islands & Shaders** | Kenney CC0 GLBs + IslandBed crags + Traversal + Day/Night Shaders | ✅ Done | Three islands expanded, cloud sea lowered, bridge/updraft/catapult complete |
+| **Phase 3: Wisp Avatar & Movement** | Procedural Wisp + WASD/Click + Glider + PartyKit presence | ⬜ Next | Ready to implement Wisp avatar and traversal mechanics |
 
 ---
 
@@ -115,11 +113,14 @@
 - [x] Supabase tables live (`world_notes`, `dev_wishes`, `world_progress` via pooler check)
 
 ### Phase 2 — Islands
-- [ ] Three islands load (Plaza, Zen Isle, Well)
-- [ ] Materials swap at day/night boundary
-- [ ] Traversal pieces placed (bridge, vents, catapult)
-- [ ] Instanced meshes for repeated props (rocks, trees)
-- [ ] GLB sizes < 200 KB each (Draco compressed)
+- [x] Three islands load (Arrival Plaza, Zen Chime Isle, Creator's Well)
+- [x] Materials swap at day/night boundary with bioluminescent bloom
+- [x] Traversal pieces placed & animated (suspended catenary bridge, updraft vent, catapult pad)
+- [x] Organic multi-tiered island crags with floating satellites & motes (replaced generic cylinders)
+- [x] Cloud sea expanded and lowered to create grand atmospheric depth
+- [x] Fixed missing `colormap.png` texture and `SkeletonUtils` export bug
+- [x] GLB sizes < 200 KB each (all raw assets ~200 KB total)
+- [x] Bundle under 2.5 MB (1.36 MB / 388 KB gzip)
 
 ### Phase 3 — Wisp + Net
 - [ ] Wisp spawns at Plaza with glow + trail

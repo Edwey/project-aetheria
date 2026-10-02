@@ -175,10 +175,9 @@ VITE_ENABLE_ANALYTICS=false
 
 ## 8. Supabase Migration (Ready to Run)
 
-**File:** `supabase/migrations/001_initial_schema.sql` (create this folder/file when Phase 1 starts)
+**File:** `supabase/migrations/001_initial_schema.sql` (already in the repo)
 
-Content is **exactly** the SQL block from `TODO.md` §3 (lines 38–100).  
-Run via Supabase MCP or Supabase Dashboard → SQL Editor.
+Content matches `TODO.md` §3. Run via Supabase MCP or Dashboard → SQL Editor after you create a project.
 
 ---
 
@@ -249,10 +248,12 @@ npm run typecheck
 
 ## 14. Next Immediate Action
 
-1. Open VS Code in `C:\Users\HP\Documents\OpenWorld`
-2. Install Roo Code extension
-3. Add Gemini Flash API key + 3 MCP servers
-4. Create `.clinerules` from Section 4
-5. Run the **Opening Prompt** from Section 5.2 in Roo Code
+**Phase 1 is in the repo** (`phase-1-foundation` branch): Vite + R3F canvas, isometric ortho camera, 12-minute day/night.
 
-That kicks off **Phase 1** autonomously. Come back here to verify the checklist before moving to Phase 2.
+1. `npm install` then `npm run dev` — confirm islands, HUD cycle, and `[aetheria] t=` console logs
+2. Create Supabase project + run `supabase/migrations/001_initial_schema.sql`
+3. Fill `.env` from `.env.example` (`VITE_SUPABASE_*`)
+4. Download Kenney CC0 GLBs into `public/models/` (Section 10)
+5. Start **Phase 2**: replace placeholder island meshes, keep the existing component files
+
+Phase 1 opening prompt (Section 5.2) is **done** — do not re-scaffold.

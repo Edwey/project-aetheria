@@ -22,7 +22,8 @@ Aesthetic: **Low-poly cel-shaded (Ghibli-style) by day → bioluminescent neon w
 
 - [ ] Instant Wisp avatar (color + hat, glow trail)
 - [ ] Hybrid movement: WASD + tap-to-move + glider (Space / touch-hold slow-fall)
-- [ ] 3 islands: Arrival Plaza, Zen Chime Isle, Creator's Well
+- [x] Phase 1 canvas: isometric ortho camera + 12-min day/night + HUD cycle
+- [ ] 3 islands: Arrival Plaza, Zen Chime Isle, Creator's Well (placeholders now; Kenney GLBs next)
 - [ ] Traversal: wooden bridge, catapult mushroom pad, updraft geyser vents
 - [ ] Pentatonic chime pillars with positional audio (120 BPM quantized, 300 ms debounce)
 - [ ] Persistent signs / cloud bottles / runes (Supabase, FIFO cap 150)
@@ -116,25 +117,18 @@ Run the migration in `TODO.md` §3 in your Supabase SQL Editor. Summary:
 
 ## Getting Started
 
-> Full scaffolding lands in Phase 1. Placeholder until then.
-
 ```bash
-# 1. Clone
-git clone <your-repo-url>
+git clone https://github.com/Edwey/project-aetheria
 cd project-aetheria
-
-# 2. Install (after `npm create vite`)
 npm install
+cp .env.example .env   # optional until Phase 4 (Supabase)
 
-# 3. Env — copy and fill Supabase + PartyKit values
-cp .env.example .env
-
-# 4. Run Supabase migration from TODO.md §3, then:
-npm run dev        # web
-npx partykit dev   # realtime (separate terminal)
+npm run dev            # Vite — use the Local URL it prints (5173 or next free port)
 ```
 
-Required env (planned):
+PartyKit (`npx partykit dev`) is a Phase 3 concern; `party/server.js` is a stub today.
+
+Required env (Phase 4+):
 
 ```text
 VITE_SUPABASE_URL=
@@ -142,10 +136,13 @@ VITE_SUPABASE_ANON_KEY=
 VITE_PARTYKIT_HOST=
 ```
 
+Day/night uses wall-clock time. In a DEV console you should see `[aetheria] t=0.xxxx day|night` once per second.
+
 ## Roadmap
 
 ```text
-[Phase 1: Foundation]      Vite + R3F + Tailwind · Supabase migration · ortho camera + day/night
+[Phase 1: Foundation]      Vite + R3F + Tailwind + GSAP · ortho camera + day/night  ✅
+                              (Supabase project + SQL still a user step)
 [Phase 2: Islands]         Plaza + Zen Isle + Creator Well · toon + emissive · bridges/vents/pads
 [Phase 3: Wisp + Net]      Procedural wisp + controller + glider · PartyKit presence
 [Phase 4: Interactions]    Rune editor · signs/bottles (FIFO) · wishing well · chime pillars
@@ -165,4 +162,4 @@ See `TODO.md` for the full blueprint (§1–§8).
 
 ## License
 
-MIT — see `LICENSE` (to be added). CC0 assets remain under their original terms (Kenney.nl, Poly Pizza).
+MIT — see `LICENSE`. CC0 assets remain under their original terms (Kenney.nl, Poly Pizza).
