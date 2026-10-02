@@ -195,4 +195,29 @@
 
 ---
 
+## 🔍 Under Review (Not Approved — Do Not Implement Yet)
+
+### Proposal: Dev-only in-browser scene editor (`?edit` mode)
+
+**Problem:** Object placement currently lives in code (`ISLANDS` / `TRAVERSAL` in `constants.js`). The user wants to move/hide objects through a GUI instead of asking an agent for every tweak.
+
+**Proposed solution (dev-only, invisible in production, zero prod-bundle impact via lazy DEV-gated import):**
+
+1. **GUI panel (leva, free):** open `http://localhost:5199/?edit` → floating panel with per-object X/Y/Z sliders, show/hide toggle (= delete without code), day/night time scrubber to judge placement at night.
+2. **Drag in the scene:** click any island/bridge/pad → TransformControls gizmo → drag it like a level editor.
+3. **Copy-back-to-code:** one button copies new positions as JSON to paste into `constants.js` (permanent).
+
+**Planned files:** `src/editor/usePlacementStore.js` (zustand overrides, no UI deps), `src/editor/Placeable.jsx` (wrapper group: override position/visible + click-to-select + ref registry), `src/editor/EditorMode.jsx` (lazy Leva panel + TransformControls), one-line `<Placeable>` wrap on each island/pad root, bridge `from`/`to` via store, `timeOverride` support in `DayNightCycle`, lazy `<EditorMode/>` mount in `Scene.jsx` behind `import.meta.env.DEV` + `?edit`.
+
+**Why not Blender / three.js editor:** arranging blind — no day/night lighting, fog, or bloom preview. In-browser shows the real scene.
+
+**Open questions for review:**
+- Slider panel only, or also drag-gizmo (more invasive)?
+- Should hidden state persist to `localStorage` between reloads?
+- Who owns `constants.js` write-back — user pastes, or agent applies on request?
+
+**Status:** Parked. `leva` was test-installed then fully reverted (`npm uninstall` + lockfile restored) — tree contains zero editor code. Awaiting user approval before any implementation.
+
+---
+
 *Update this file after every phase completion. Commit with `chore: update PROGRESS.md`.*
