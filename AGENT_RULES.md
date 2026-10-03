@@ -82,3 +82,5 @@ All tool-specific rule files reference this file. Never duplicate constraints �
 - Do not introduce a new state library without updating `PROGRESS.md` Known Issues.
 - Do not commit `.env` with real keys. Only `.env.example`.
 - Do not force-push `main`. Branch per phase, PR per phase.
+- **Do not copy code from old MMORPG repos or any source without a verified license.** Borrowed code must be MIT / Apache-2.0 / CC0 only, single-purpose (one mechanic, not whole repos), and recorded in `PROGRESS.md` Vetted Sources with URL + license + what was taken. GPL/copyleft and proprietary/leaked code are banned (they would poison our MIT license).
+- Do not add a physics engine (Rapier/Cannon/PhysX/Ammo) — bundle discipline (§1). Exception requires user approval + PROGRESS.md entry.

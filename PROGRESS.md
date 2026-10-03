@@ -19,6 +19,7 @@
 | 2026-10-02 | **Chime samples** | Synthesized C4/D4/E4/G4/A4 (sine + harmonics, 2.5 s decay) → `public/sounds/*.mp3` ~41 KB each. |
 | 2026-10-02 | **Kenney GLBs (16)** | Nature Kit + Fantasy Town 2.0 (CC0) downloaded, 16 sensible picks in `public/models/` (all < 200 KB, total ~200 KB). See Asset Inventory. |
 | 2026-10-02 | **Phase 2: Islands & Shaders** | Expanded world scale: 3 islands spaced across sky with sculpted rocky under-crags, floating satellite motes, suspended catenary bridge, animated pulsing catapult pad with spores, swirling geyser updraft vent. Fixed `Textures/colormap.png` 404s and `SkeletonUtils` export bug. Tuned Ghibli day sky and bioluminescent night bloom. Bundle: 1.36 MB (388 KB gzip). |
+| 2026-10-02 | **Phase 5: Multiplayer & Polish** | Full Phase 5 suite: 5A Multiplayer Presence (PartyKit edge WS + RemoteWisps ghost lerp), 5B Wardrobe Customizer (Reflection Pool modal + 3D preview + 6 colors / 4 hats + storage persist), 5C World Completion (4th island Echo Crag + Well-Crag Rope Bridge + Catapult elastic screen-shake & zoom recoil), 5D Mobile Touch Controls (glassmorphism virtual joystick + jump/glide buttons). Bundle: 408 KB gzip. |
 
 ---
 
@@ -27,8 +28,11 @@
 | Phase | Task | Status | Blockers / Notes |
 | :--- | :--- | :--- | :--- |
 | **Phase 1: Foundation** | Vite + R3F + Tailwind + GSAP scaffold | ✅ Done | `npm run dev` / `npm run build` / `npm run lint` pass |
-| **Phase 2: Islands & Shaders** | Kenney CC0 GLBs + IslandBed crags + Traversal + Day/Night Shaders | ✅ Done | Three islands expanded, cloud sea lowered, bridge/updraft/catapult complete |
-| **Phase 3: Wisp Avatar & Movement** | Procedural Wisp + WASD/Click + Glider + PartyKit presence | ⬜ Next | Ready to implement Wisp avatar and traversal mechanics |
+| **Phase 2: Islands & Shaders** | Kenney CC0 GLBs + IslandBed crags + Traversal + Day/Night Shaders | ✅ Done | Three islands expanded (26r/22r/22r), cloud sea lowered, traversal complete |
+| **Phase 3: Wisp Avatar & Movement** | Procedural Wisp + WASD/Click + Glider + Zone Camera + Bridge | ✅ Done | Avatar + Glider + MMORPG Zone Camera + 3D Kenney Skyway Bridge complete |
+| **Phase 4: World Interactions & Persistence** | Pentatonic Chimes + Modals (Notes, Well, Runes) + Supabase | ✅ Done | Interactive Chime Pillars, NoteSigns, Bottles, Wishing Well & RuneDraw modal live |
+| **Phase 5: HUD, Polish & Multiplayer** | Community Spark + PartyKit presence + Wardrobe + Touch Controls | ✅ Done | Complete: 5A Presence, 5B Wardrobe, 5C Echo Crag & Catapult Recoil, 5D Mobile Controls |
+| **Phase 6: Immersion & Expression** | Cloud Waves & Shore Foam + Spatial Audio + Spirit Emotes + Celestial Aurora | 🔄 In Progress | Active implementation |
 
 ---
 
@@ -140,11 +144,13 @@
 - [ ] Chime pillars: click → positional pentatonic note, 300 ms debounce
 
 ### Phase 5 — Polish
-- [ ] Spark bar: realtime `world_progress` updates
-- [ ] Wardrobe UI: color picker + hat cycle
-- [ ] Mobile: tap-to-move, touch-hold glide
-- [ ] `npm run build` → `dist` < 2.5 MB gzipped
-- [ ] Lint + typecheck pass
+- [x] Spark bar: realtime `world_progress` updates
+- [x] Wardrobe UI: color picker + hat cycle + live 3D preview
+- [x] Mobile: virtual joystick + tap-to-jump + touch-hold glide
+- [x] Catapult cinematic camera recoil & elastic shake
+- [x] Echo Crag 4th micro-island + Well-Crag Rope Bridge
+- [x] `npm run build` → `dist` 408 KB gzip (budget < 2.5 MB)
+- [x] Lint + typecheck pass
 
 ---
 
@@ -217,6 +223,18 @@
 - Who owns `constants.js` write-back — user pastes, or agent applies on request?
 
 **Status:** Parked. `leva` was test-installed then fully reverted (`npm uninstall` + lockfile restored) — tree contains zero editor code. Awaiting user approval before any implementation.
+
+---
+
+## ✅ Vetted External Sources (license-checked, borrow per AGENT_RULES §6)
+
+| Source | License | Verdict | What to take | For phase |
+| :--- | :--- | :--- | :--- | :--- |
+| `pmndrs/BVHEcctrl` (R3F character controller, no physics engine, three-mesh-bvh collisions) | MIT ✅ | **APPROVED for study/borrow** | Grounded-movement math (capsule, slopes, stairs) as reference for `WispController`; or depend on `bvhecctrl` (tiny, no physics dep). Young package (2025) — agent must test, not blindly trust. | Phase 3 |
+| `pmndrs/ecctrl` (R3F controller toolkit) | MIT ✅ but needs `@react-three/rapier` | **REJECTED as dependency** (physics engine violates bundle discipline); docs OK as reading (touch controls, animation states) | Nothing in-tree; patterns only | — |
+| Kenney Starter Kits (3D Platformer etc.) | CC0 ✅ but **Godot/GDScript, not web** | **REJECTED for code**; optional design-feel reference only | Read movement *feel*, reimplement in JS | — |
+| Old MMORPG codebases (general) | Usually proprietary or GPL | **BANNED** — license poison + tech mismatch (C++/C#/Java clients, binary protocols, zone servers; nothing transfers to Vite+R3F+PartyKit) | Nothing. If user names a specific repo, vet URL+license+stack before touching it. | — |
+| YouTube/build-along island tutorials | Usually unlicensed | Learn technique only; no copy-paste without a license | Technique only | — |
 
 ---
 
