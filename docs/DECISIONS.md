@@ -328,6 +328,27 @@ procedural fallback, per spec). R1 rewires to `/assets/models/manifest.json`
 manifest ids.
 **Change me if**: wiring manifest ids earlier.
 
+## Stage D Asset Notes
+
+### Kenney direct downloads work; itch.io needs a click
+**Decision**: `fetch-assets.mjs` downloads Kenney `page` sources by parsing the
+`.zip` link (8 packs, ~27.6 MB, all verified zips). Quaternius + KayKit stay
+`manual` (itch.io click-through); exact steps print from the script.
+**Change me if**: Quaternius/KayKit gain direct links.
+
+### Curated set: 12 models + 4 sounds, all under budget
+**Decision**: only the kept files are extracted and optimized (gltf-transform
+`optimize`: dedupe/prune/weld/quantize). All 12 models <= 16.8 KB and <= 402
+tris; staged total 174 KB. Textured kits (survival/pirate) keep their relative
+`Textures/colormap.png` layout under per-kit folders.
+**Change me if**: the game needs more models (extend MODELS in optimize-assets.mjs).
+
+### Licenses verified 2026-10-15
+Kenney site-wide CC0 (kenney.nl/support + Nature Kit page); Quaternius CC0, no
+attribution (quaternius.com/faq.html); KayKit UNVERIFIED — confirm CC0 on the
+itch.io page at download time. Poly Pizza excluded (licenses vary).
+**Change me if**: any pack page shows a different license at download time.
+
 ## Notes on Decisions
 
 ### Decision Process

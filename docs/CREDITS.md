@@ -1,15 +1,20 @@
-# CREDITS.md
+# CREDITS.md (auto-generated - do not hand-edit)
 
-This file is auto-generated from `assets/LICENSES.json` by a script. Do not edit manually.
+Generated from assets/LICENSES.json.
 
-Run `npm run generate-credits` to regenerate this file after updating assets.
-
----
-
-## Credits
-
-No assets have been fetched yet. Credits will appear here after running the asset pipeline.
-
-## Asset Licenses
-
-No assets have been licensed yet. License information will appear here after running the asset pipeline.
+- **tree-oak** - tree_detailed (Nature Kit) by Kenney (CC0-1.0)
+- **tree-pine** - tree_cone (Nature Kit) by Kenney (CC0-1.0)
+- **rock** - rock_smallA (Nature Kit) by Kenney (CC0-1.0)
+- **mushroom** - mushroom_red (Nature Kit) by Kenney (CC0-1.0)
+- **flower** - flower_redA (Nature Kit) by Kenney (CC0-1.0)
+- **cactus** - cactus_tall (Nature Kit) by Kenney (CC0-1.0)
+- **workbench** - workbench (Survival Kit) by Kenney (CC0-1.0)
+- **campfire** - campfire-pit (Survival Kit) by Kenney (CC0-1.0)
+- **table** - table (Furniture Kit) by Kenney (CC0-1.0)
+- **bed** - bedSingle (Furniture Kit) by Kenney (CC0-1.0)
+- **boat** - boat-row-small (Pirate Kit) by Kenney (CC0-1.0)
+- **dock** - structure-platform-dock (Pirate Kit) by Kenney (CC0-1.0)
+- **ui-click** - click_001 (Interface Sounds) by Kenney (CC0-1.0)
+- **ui-confirm** - confirmation_001 (Interface Sounds) by Kenney (CC0-1.0)
+- **harvest-pop** - impactGeneric_light_000 (Impact Sounds) by Kenney (CC0-1.0)
+- **jingle** - jingles_NES00 (Music Jingles) by Kenney (CC0-1.0)

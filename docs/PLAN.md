@@ -4,26 +4,25 @@
 
 Each release is playable and has acceptance tests. We deliver as numbered releases R0 to R5.
 
-### R0: Foundation (Current Status: In Progress)
+### R0: Foundation (Current Status: Complete)
 **Goal**: Port the prototype with parity tests, set up repo, docs, scaffold, and asset pipeline.
 
 **Deliverables**:
 - [x] Repository structure created
-- [ ] Documentation (README, AGENT, PLAN, CHARACTERS, ENVIRONMENT, WORLD, WATER, ASSETS, PERFORMANCE, REFERENCES, DECISIONS)
-- [ ] Repo configs (package.json, vite.config.js, .editorconfig, .gitignore, CI)
-- [ ] Scaffold code (empty-but-running app)
-- [ ] Port prototype with parity tests
-- [ ] Asset pipeline scripts
-- [ ] New dev server shows the same game as the prototype
+- [x] Documentation (README, AGENT, PLAN, CHARACTERS, ENVIRONMENT, WORLD, WATER, ASSETS, PERFORMANCE, REFERENCES, DECISIONS)
+- [x] Repo configs (package.json, vite.config.js, .editorconfig, .gitignore, CI)
+- [x] Scaffold code (empty-but-running app, then ported)
+- [x] Port prototype with parity tests (50/50 green, determinism to 1e-12)
+- [x] Asset pipeline scripts (8 CC0 packs fetched, 12 models + 4 sounds staged at 174 KB)
+- [x] New dev server shows the same game as the prototype (game.js verbatim port)
+- [x] Task files: 21 × R1 + 16 × R2 in tasks/, outlines for R3-R5
 
 **Acceptance Tests**:
-- All 48 headless tests from the prototype pass
+- All 48 headless tests from the prototype pass (50 recreated, all green)
 - The dev server loads and runs without errors
 - The new code produces identical results to the prototype (within 1e-6 for pure modules)
 
-**Status**: Stage C complete (commit pending) — 50/50 Node parity tests green,
-smoke green, `npm run build` green. Main app ported to `src/app/game.js`
-(boots the same game as the prototype); render/ui decomposition is R1 work.
+**Status**: Complete (Stages A-E done). Next: execute tasks/R1/ in order.
 
 ---
 
@@ -48,7 +47,7 @@ smoke green, `npm run build` green. Main app ported to `src/app/game.js`
 - Quality governor responds to FPS drops
 - Light quality runs at 30+ FPS on target phone
 
-**Status**: Not started
+**Status**: Task files ready (tasks/R1/001-021) — execute in order
 
 ---
 
@@ -72,7 +71,7 @@ smoke green, `npm run build` green. Main app ported to `src/app/game.js`
 - Void respawn places player at last safe ground without damage
 - Reachability test passes for all forms
 
-**Status**: Not started
+**Status**: Task files ready (tasks/R2/001-016) — start after R1
 
 ---
 

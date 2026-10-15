@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "models": {
+    "tree-oak": {
+      "url": "/assets/models/tree-oak.glb",
+      "sizeKB": 4,
+      "triangles": 402,
+      "via": "gltf-transform"
+    },
+    "tree-pine": {
+      "url": "/assets/models/tree-pine.glb",
+      "sizeKB": 2,
+      "triangles": 132,
+      "via": "gltf-transform"
+    },
+    "rock": {
+      "url": "/assets/models/rock.glb",
+      "sizeKB": 2,
+      "triangles": 16,
+      "via": "gltf-transform"
+    },
+    "mushroom": {
+      "url": "/assets/models/mushroom.glb",
+      "sizeKB": 2,
+      "triangles": 48,
+      "via": "gltf-transform"
+    },
+    "flower": {
+      "url": "/assets/models/flower.glb",
+      "sizeKB": 2,
+      "triangles": 70,
+      "via": "gltf-transform"
+    },
+    "cactus": {
+      "url": "/assets/models/cactus.glb",
+      "sizeKB": 2,
+      "triangles": 122,
+      "via": "gltf-transform"
+    },
+    "workbench": {
+      "url": "/assets/models/survival/workbench.glb",
+      "sizeKB": 14,
+      "triangles": 230,
+      "via": "gltf-transform",
+      "textureKB": 7,
+      "texture": "/assets/models/survival/Textures/colormap.png"
+    },
+    "campfire": {
+      "url": "/assets/models/survival/campfire.glb",
+      "sizeKB": 14,
+      "triangles": 303,
+      "via": "gltf-transform",
+      "textureKB": 7,
+      "texture": "/assets/models/survival/Textures/colormap.png"
+    },
+    "table": {
+      "url": "/assets/models/table.glb",
+      "sizeKB": 1,
+      "triangles": 120,
+      "via": "gltf-transform"
+    },
+    "bed": {
+      "url": "/assets/models/bed.glb",
+      "sizeKB": 5,
+      "triangles": 214,
+      "via": "gltf-transform"
+    },
+    "boat": {
+      "url": "/assets/models/pirate/boat.glb",
+      "sizeKB": 16,
+      "triangles": 168,
+      "via": "gltf-transform",
+      "textureKB": 10,
+      "texture": "/assets/models/pirate/Textures/colormap.png"
+    },
+    "dock": {
+      "url": "/assets/models/pirate/dock.glb",
+      "sizeKB": 17,
+      "triangles": 324,
+      "via": "gltf-transform",
+      "textureKB": 10,
+      "texture": "/assets/models/pirate/Textures/colormap.png"
+    }
+  },
+  "sounds": {
+    "ui-click": {
+      "url": "/assets/sounds/ui-click.ogg",
+      "sizeKB": 5
+    },
+    "ui-confirm": {
+      "url": "/assets/sounds/ui-confirm.ogg",
+      "sizeKB": 9
+    },
+    "harvest-pop": {
+      "url": "/assets/sounds/harvest-pop.ogg",
+      "sizeKB": 6
+    },
+    "jingle": {
+      "url": "/assets/sounds/jingle.ogg",
+      "sizeKB": 39
+    }
+  }
+}

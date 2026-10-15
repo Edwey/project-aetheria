@@ -1,1 +1,18 @@
-{}
+{
+  "tree-oak": { "name": "tree_detailed (Nature Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/nature-kit" },
+  "tree-pine": { "name": "tree_cone (Nature Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/nature-kit" },
+  "rock": { "name": "rock_smallA (Nature Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/nature-kit" },
+  "mushroom": { "name": "mushroom_red (Nature Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/nature-kit" },
+  "flower": { "name": "flower_redA (Nature Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/nature-kit" },
+  "cactus": { "name": "cactus_tall (Nature Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/nature-kit" },
+  "workbench": { "name": "workbench (Survival Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/survival-kit" },
+  "campfire": { "name": "campfire-pit (Survival Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/survival-kit" },
+  "table": { "name": "table (Furniture Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/furniture-kit" },
+  "bed": { "name": "bedSingle (Furniture Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/furniture-kit" },
+  "boat": { "name": "boat-row-small (Pirate Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/pirate-kit" },
+  "dock": { "name": "structure-platform-dock (Pirate Kit)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/pirate-kit" },
+  "ui-click": { "name": "click_001 (Interface Sounds)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/interface-sounds" },
+  "ui-confirm": { "name": "confirmation_001 (Interface Sounds)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/interface-sounds" },
+  "harvest-pop": { "name": "impactGeneric_light_000 (Impact Sounds)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/impact-sounds" },
+  "jingle": { "name": "jingles_NES00 (Music Jingles)", "author": "Kenney", "license": "CC0-1.0", "source": "https://kenney.nl/assets/music-jingles" }
+}
