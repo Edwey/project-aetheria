@@ -330,11 +330,14 @@ manifest ids.
 
 ## Stage D Asset Notes
 
-### Kenney direct downloads work; itch.io needs a click
+### Kenney direct downloads work; itch.io automated for Quaternius
 **Decision**: `fetch-assets.mjs` downloads Kenney `page` sources by parsing the
-`.zip` link (8 packs, ~27.6 MB, all verified zips). Quaternius + KayKit stay
-`manual` (itch.io click-through); exact steps print from the script.
-**Change me if**: Quaternius/KayKit gain direct links.
+`.zip` link (8 packs, ~27.6 MB, all verified zips). Quaternius is now fully
+automated via Playwright: pack page -> "Download on Itch.io" popup -> purchase
+page -> claim bypass ("No thanks") -> download button. KayKit stays `manual`
+(itch.io license text unclear, needs human click-through and CC0 verification);
+exact steps print from the script.
+**Change me if**: KayKit clarifies CC0 on itch.io (then automate).
 
 ### Curated set: 12 models + 4 sounds, all under budget
 **Decision**: only the kept files are extracted and optimized (gltf-transform
