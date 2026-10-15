@@ -9,6 +9,7 @@ import { createScene } from '../render/scene.js';
 import { buildGroundChunks, createGroundMaterial } from '../render/ground.js';
 import { buildFlora } from '../render/flora.js';
 import { createBodyMesh, createWispMesh, updateOutlineForQuality } from '../render/creature.js';
+import { createPanel } from '../ui/panel.js';
 import Phys from '../gameplay/physics.js';
 import Terrain from '../gameplay/terrain.js';
 import Env from '../gameplay/env.js';
@@ -45,43 +46,12 @@ PRESETS.cube.sticky = 0.3;
 const sizeJump = () => Math.pow(1 / profile.look.size, 0.3), sizeSpeed = () => Math.pow(profile.look.size, -0.2);
 
 /* ================= panel: form, body, sliders ================= */
-const FORMS = [['slime', 'Slime'], ['wisp', 'Wisp'], ['stone', 'Stone']];
-const formsEl = $('forms');
-FORMS.forEach(([id, label]) => {
-  const b = document.createElement('button'); b.textContent = label; b.dataset.id = id; b.setAttribute('aria-pressed', id === formKind);
-  b.addEventListener('click', () => { switchForm(id); b.blur(); }); formsEl.appendChild(b);
+const panel = createPanel({
+  $, profile, P, PRESETS, Phys, formKind, quality, coarse,
+  saveSoon, switchForm, choosePreset, spawnForm,
+  syncSliders, syncFormButtons,
+  applyTime, env
 });
-function syncFormButtons() { [...formsEl.children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === formKind)); }
-
-const SLIDERS = [
-  ['stiff', 'Shape hold', 0, 1, 0.01, v => v.toFixed(2)], ['pressure', 'Squish', 0.6, 1.5, 0.01, v => v.toFixed(2)],
-  ['skin', 'Skin tension', 0.05, 1, 0.01, v => v.toFixed(2)], ['grip', 'Grip', 0, 1, 0.01, v => v.toFixed(2)],
-  ['sticky', 'Stickiness', 0, 1, 0.01, v => v.toFixed(2)], ['jmax', 'Max jump', 8, 20, 0.5, v => Phys.jumpHeight({ jmax: v }, 1).height.toFixed(1) + ' m']
-];
-const sliderEls = {};
-SLIDERS.forEach(([key, label, min, max, step, fmt]) => {
-  const d = document.createElement('div'); d.className = 'sl';
-  const l = document.createElement('label'); l.textContent = label; l.htmlFor = 's_' + key;
-  const o = document.createElement('output');
-  const r = document.createElement('input'); r.type = 'range'; r.id = 's_' + key; r.min = min; r.max = max; r.step = step; r.value = P[key];
-  r.addEventListener('input', () => { P[key] = parseFloat(r.value); profile.body[key] = P[key]; o.textContent = fmt(P[key]); saveSoon(); });
-  r.addEventListener('pointerup', () => r.blur());
-  d.append(l, o, r); $('sliders').appendChild(d); sliderEls[key] = { r, o, fmt }; o.textContent = fmt(P[key]);
-});
-function syncSliders() { for (const k in sliderEls) { sliderEls[k].r.value = P[k]; sliderEls[k].o.textContent = sliderEls[k].fmt(P[k]); } }
-const bodiesEl = $('bodies');
-Object.keys(PRESETS).forEach(id => {
-  const b = document.createElement('button'); b.textContent = PRESETS[id].label; b.dataset.id = id; b.setAttribute('aria-pressed', id === profile.body.preset);
-  b.addEventListener('click', () => { choosePreset(id); b.blur(); }); bodiesEl.appendChild(b);
-});
-function choosePreset(id) {
-  const p = PRESETS[id]; profile.body.preset = id;
-  ['stiff', 'pressure', 'skin', 'grip', 'sticky'].forEach(k => { P[k] = p[k]; profile.body[k] = p[k]; });
-  syncSliders(); [...bodiesEl.children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
-  if (formKind === 'slime') spawnForm('slime', null, true); saveSoon();
-}
-$('quality').value = String(quality);
-$('quality').addEventListener('change', e => { quality = parseInt(e.target.value, 10); spawnForm(formKind, null, true); e.target.blur(); });
 
 /* ================= three.js ================= */
 const S = createScene(coarse, $('c'));
