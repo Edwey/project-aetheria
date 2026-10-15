@@ -5,7 +5,7 @@
     "author": "Kenney",
     "page": "https://kenney.nl/assets/nature-kit",
     "license": "CC0-1.0",
-    "licenseVerified": "2026-10-15 (page shows Creative Commons CC0; site-wide CC0 per kenney.nl/support)",
+    "licenseVerified": "2026-10-15 (site-wide CC0 per kenney.nl/support)",
     "download": "page",
     "keep": ["oak/pine trees", "rocks", "flowers", "mushrooms"],
     "dest": "public/assets/models/"
@@ -49,7 +49,7 @@
     "author": "Kenney",
     "page": "https://kenney.nl/assets/pirate-kit",
     "license": "CC0-1.0",
-    "licenseVerified": "2026-10-15 (site-wide CC0 per kenney.nl/support; needed for R3+ boats/docks)",
+    "licenseVerified": "2026-10-15 (site-wide CC0 per kenney.nl/support)",
     "download": "page",
     "keep": ["boats", "docks", "piers"],
     "dest": "public/assets/models/"
@@ -86,31 +86,5 @@
     "download": "page",
     "keep": ["ambient loops", "event stingers"],
     "dest": "public/assets/sounds/"
-  },
-  {
-    "id": "quaternius-stylized-nature",
-    "name": "Quaternius Stylized Nature MegaKit",
-    "author": "Quaternius",
-    "page": "https://quaternius.com/packs/stylizednaturemegakit.html",
-    "license": "CC0-1.0",
-    "licenseVerified": "2026-10-15 (quaternius.com/faq.html: all models CC0, no attribution needed)",
-    "download": "manual",
-    "manualSteps": "Open the pack page, download the Godot/GLTF zip from the linked itch.io page.",
-    "dropFolder": "assets/raw/",
-    "keep": ["birch/pine/cherry trees", "bushes", "rocks", "mushrooms"],
-    "dest": "public/assets/models/"
-  },
-  {
-    "id": "kaykit-forest-nature",
-    "name": "KayKit Forest / Nature packs",
-    "author": "KayKit (Kay Lousberg)",
-    "page": "https://kaylousberg.itch.io/",
-    "license": "CC0-1.0",
-    "licenseVerified": "UNVERIFIED - confirm CC0 on the itch.io pack page at download time",
-    "download": "manual",
-    "manualSteps": "Open kaylousberg.itch.io, pick the forest/nature pack, verify the license line reads CC0, download the zip.",
-    "dropFolder": "assets/raw/",
-    "keep": ["trees", "props", "optional hats (cosmetics)"],
-    "dest": "public/assets/models/"
   }
 ]
