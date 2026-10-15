@@ -192,7 +192,7 @@ function buildAetheria(T, A) {
 /* ================= definitions ================= */
 const defs = {
   aetheria: {
-    label: 'Aetheria (4 biomes)', A: 60, h: hAeth, noBorder: true, color: colorAeth, biome: biomeW, spawn: [-12, 14],
+    label: 'Aetheria (4 biomes)', A: 120, h: hAeth, noBorder: true, color: colorAeth, biome: biomeW, spawn: [-24, 28],
     build(T, A) { return buildAetheria(T, A); }
   },
   playground: {

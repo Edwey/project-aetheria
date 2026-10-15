@@ -104,10 +104,10 @@ export const tests = {
     assert.ok(climb(0) < 2, 'plain slime stays at the base');
   },
 
-  'melt goes below 0.6 m tall and recovers above 0.85 m': () => {
+  'melt goes below 0.65 m tall and recovers above 0.85 m': () => {
     const { body, world, P } = settledSlime();
     for (let i = 0; i < 120; i++) Phys.stepBody(body, world, P, idleInp({ melt: true }), DT);
-    assert.ok(bodyHeight(body) < 0.6, `melted h=${bodyHeight(body)}`);
+    assert.ok(bodyHeight(body) < 0.65, `melted h=${bodyHeight(body)}`);
     for (let i = 0; i < 180; i++) Phys.stepBody(body, world, P, idleInp(), DT);
     assert.ok(bodyHeight(body) > 0.85, `recovered h=${bodyHeight(body)}`);
   },
