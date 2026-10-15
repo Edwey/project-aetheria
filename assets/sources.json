@@ -1,0 +1,50 @@
+[
+  {
+    "id": "kenney-nature-kit",
+    "name": "Kenney Nature Kit",
+    "author": "Kenney",
+    "page": "https://kenney.nl/assets/nature-kit",
+    "license": "CC0-1.0",
+    "download": "manual",
+    "manualSteps": "Open the page, download the Nature Kit zip.",
+    "dropFolder": "assets/raw/",
+    "keep": ["trees (oak, pine)", "rocks", "flowers", "mushrooms"],
+    "dest": "public/assets/models/"
+  },
+  {
+    "id": "kenney-survival-kit",
+    "name": "Kenney Survival Kit",
+    "author": "Kenney",
+    "page": "https://kenney.nl/assets/survival-kit",
+    "license": "CC0-1.0",
+    "download": "manual",
+    "manualSteps": "Open the page, download the Survival Kit zip.",
+    "dropFolder": "assets/raw/",
+    "keep": ["workbench", "campfire", "tools"],
+    "dest": "public/assets/models/"
+  },
+  {
+    "id": "kenney-interface-sounds",
+    "name": "Kenney Interface Sounds",
+    "author": "Kenney",
+    "page": "https://kenney.nl/assets/interface-sounds",
+    "license": "CC0-1.0",
+    "download": "manual",
+    "manualSteps": "Open the page, download the Interface Sounds zip.",
+    "dropFolder": "assets/raw/",
+    "keep": ["ui clicks"],
+    "dest": "public/assets/sounds/"
+  },
+  {
+    "id": "quaternius-nature",
+    "name": "Quaternius Nature Pack",
+    "author": "Quaternius",
+    "page": "https://quaternius.com/",
+    "license": "CC0-1.0",
+    "download": "manual",
+    "manualSteps": "Open quaternius.com, download the nature pack zip.",
+    "dropFolder": "assets/raw/",
+    "keep": ["trees", "bushes", "rocks"],
+    "dest": "public/assets/models/"
+  }
+]
