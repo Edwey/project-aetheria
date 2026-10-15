@@ -4,10 +4,17 @@
  */
 
 import * as THREE from 'three';
+import { makeToon } from './toon.js';
 
 const CHUNK_SIZE = 40; // meters per chunk
 const CHUNKS_PER_SIDE = 6; // 6x6 = 36 chunks for 240m world
 const CHUNK_SEGMENTS = 80; // 40m / 0.5m cell size = 80 segments
+
+function createCheckerTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 2; const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 2, 2); g.fillStyle = '#e3e8e0'; g.fillRect(1, 0, 1, 1); g.fillRect(0, 1, 1, 1);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapLinearFilter; t.encoding = THREE.sRGBEncoding; return t;
+}
 
 /**
  * Build all ground chunks for a world.
@@ -151,12 +158,13 @@ export function buildGroundChunks(scene, world, material) {
 }
 
 /**
- * Create ground material (shared across chunks)
+ * Create ground material (shared across chunks) using toon shading.
  */
 export function createGroundMaterial(world, checkerTexture) {
-  return new THREE.MeshStandardMaterial({
-    vertexColors: true,
+  return makeToon({
+    color: 0xffffff,
     roughness: 0.95,
+    vertexColors: true,
     map: world.checker ? checkerTexture : null
   });
 }
