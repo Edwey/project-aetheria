@@ -294,6 +294,40 @@ This document records every assumption made during development. Each entry has a
 
 ---
 
+## Stage C Port Notes (lighter-option log)
+
+### Cross-module imports (wisp, build -> physics)
+**Decision**: `wisp.js` and `build.js` import `{ groundHeight, forEachContact }`
+from `./physics.js`. In the prototype these were browser globals (`Phys.*`),
+which throws under ES modules (caught by tests before it could reach players).
+**Change me if**: you want zero cross-imports (duplicate the grid lookup instead).
+
+### Main app kept whole in src/app/game.js
+**Decision**: the 90 KB main block is ported verbatim as `initGame()` in
+`src/app/game.js` (imports instead of globals, HUD body/CSS ported too) rather
+than split across render/ui/app now. A blind split of shared closure state
+would risk behaviour change; decomposition happens incrementally as R1 tasks
+(each leaving tests green).
+**Change me if**: you want the big-bang split before R1.
+
+### Tunnel test uses melt-squeeze + aetheria tunnel
+**Decision**: the original "cube does not pass" setup was not recoverable from
+the prototype (both shapes cross the in-world 0.95 m tunnel, slope-assisted).
+Tests lock what the physics supports: blob crosses the real 0.95 m tunnel, and
+melted slime passes a 0.7 m gap that blocks full size (melt 1.09 m -> 0.56 m).
+**Change me if**: playtests show a shape-based jam worth encoding.
+
+### Build.load ignores null rows
+**Decision**: one-line `!d` guard so corrupt saves (null entries) load what is
+valid instead of throwing. Valid-data behaviour unchanged.
+**Change me if**: you prefer strict failure on corrupt saves.
+
+### Manifest path kept as prototype's assets/manifest.json
+**Decision**: `game.js` still fetches `assets/manifest.json` (missing -> silent
+procedural fallback, per spec). R1 rewires to `/assets/models/manifest.json`
+manifest ids.
+**Change me if**: wiring manifest ids earlier.
+
 ## Notes on Decisions
 
 ### Decision Process

@@ -21,7 +21,9 @@ Each release is playable and has acceptance tests. We deliver as numbered releas
 - The dev server loads and runs without errors
 - The new code produces identical results to the prototype (within 1e-6 for pure modules)
 
-**Status**: Stage A (Documentation) in progress
+**Status**: Stage C complete (commit pending) — 50/50 Node parity tests green,
+smoke green, `npm run build` green. Main app ported to `src/app/game.js`
+(boots the same game as the prototype); render/ui decomposition is R1 work.
 
 ---
 

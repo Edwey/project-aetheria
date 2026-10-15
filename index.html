@@ -9,7 +9,81 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <canvas id="c"></canvas>
+
+    <details id="panel" open>
+      <summary>Slime Lab</summary>
+      <div class="body">
+        <div>
+          <div class="lbl">Form (Tab switches)</div>
+          <div class="seg3" id="forms"></div>
+        </div>
+        <div>
+          <div class="lbl">Slime body</div>
+          <div class="seg" id="bodies"></div>
+        </div>
+        <div>
+          <div class="lbl">Terrain</div>
+          <select id="terrain" aria-label="Terrain"></select>
+        </div>
+        <div>
+          <div class="lbl">Slime quality</div>
+          <select id="quality" aria-label="Slime quality"><option value="3">Full (642 particles)</option><option value="2">Light (162 particles)</option></select>
+        </div>
+        <div>
+          <div class="lbl">Actions</div>
+          <div class="acts">
+            <button id="aMelt" aria-pressed="false">Puddle melt (M)</button>
+            <button id="aSpring" aria-pressed="false">Coiled spring (C)</button>
+            <button id="aFloat" aria-pressed="false">Float (V)</button>
+            <button id="aHeart">Heart pop (H)</button>
+            <button id="aPound">Ground pound (F)</button>
+          </div>
+        </div>
+        <div>
+          <div class="lbl">Weather</div>
+          <select id="weather" aria-label="Weather"><option value="auto">Follow biome</option><option value="off">Clear</option><option value="rain">Sun shower</option><option value="sand">Sand flurry</option><option value="snow">Snowfall</option><option value="spore">Spore aurora</option></select>
+        </div>
+        <div class="sl"><label for="time">Time of day</label><output id="timeOut">14:00</output><input type="range" id="time" min="0" max="24" step="0.1" value="14"></div>
+        <div id="sliders" style="display:grid;gap:9px"></div>
+        <details class="sec" id="craft"><summary>Craft</summary><div class="inner">
+          <div id="craftList"></div>
+          <button id="giveRes" class="wide">Test: +10 of each resource</button>
+        </div></details>
+        <details class="sec" id="build"><summary>Build</summary><div class="inner">
+          <select id="bPiece" aria-label="Piece to place"></select>
+          <div class="acts"><button id="bMode" aria-pressed="false">Build mode (P)</button><button id="bPlace">Place (Enter)</button><button id="bRot">Rotate (X)</button><button id="bRemove">Remove near (Del)</button></div>
+          <div id="buildInfo">Build mode is off (P)</div>
+        </div></details>
+        <details id="cust"><summary>Customize and cosmetics</summary><div id="custBody"></div></details>
+        <div class="row">
+          <button id="slow" aria-pressed="false">Slow-mo</button>
+          <button id="reset">Respawn</button>
+        </div>
+        <div class="row">
+          <button id="rotL">Rotate left</button><button id="rotR">Rotate right</button>
+        </div>
+        <div class="row">
+          <button id="zoomOut">Zoom out</button><button id="zoomIn">Zoom in</button>
+        </div>
+        <p class="hint">WASD or arrows move. Slime and stone: hold Space to charge a jump, release to jump; hold it in the air to glide (stone: crystal sail) and hang briefly at the top. Wisp: tap Space to hop, hold Space to rise (costs breath fast), press V to float and hold your height (costs breath slowly); otherwise it sinks. Breath refills on the ground. Push into a wall to climb (slime sticky, stone pitons, wisp wall-hug). M: melt (slime), pebble (stone), diffuse (wisp). C: spring or condense. F: pound or down-gust. H: heart. Hold Shift to Ride the wind (it never moves you otherwise). Tab switches form. 1 to 8 are emotes. B shows wind. P toggles build mode, [ ] pick a piece, X rotates, Enter places, Del removes. Q/E rotate the camera, wheel zooms, R respawns, T slow-mo.</p>
+      </div>
+    </details>
+
+    <div id="inv" aria-live="polite"><div class="biome" id="biomeLbl">Slime Lab</div><div class="wx"><span id="windArrow">&#10148;</span> <span id="wxLbl">Clear</span></div><ul id="invList"></ul></div>
+
+    <div id="jump"><div class="txt" id="jtxt">Tap Space for a hop, hold for a big jump</div><div class="bar"><div class="fill" id="jfill"></div></div></div>
+
+    <div id="touch">
+      <div id="joy"><div id="knob"></div></div>
+      <button id="vbtn">Float</button>
+      <button id="abtn">Ride</button>
+      <button id="mbtn">Melt</button>
+      <button id="pbtn">Pound</button>
+      <button id="jbtn">Jump</button>
+    </div>
+  </div>
   <script type="module" src="/src/app/main.js"></script>
 </body>
 </html>
