@@ -5,9 +5,9 @@ This document records every assumption made during development. Each entry has a
 ## Repository Setup
 
 ### Project Name
-**Decision**: Use "project-aetheria" as repository name
-**Reason**: Prompt specifies this as default
-**Change me if**: You want a different repository name
+**Decision**: Repository is in "OpenWorld" root directory
+**Reason**: User requested everything in the OpenWorld folder, not a subdirectory
+**Change me if**: You want to use a different repository name or structure
 
 ### License
 **Decision**: MIT License
