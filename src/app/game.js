@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three';
+import { createScene } from '../render/scene.js';
 import Phys from '../gameplay/physics.js';
 import Terrain from '../gameplay/terrain.js';
 import Env from '../gameplay/env.js';
@@ -80,50 +81,42 @@ $('quality').value = String(quality);
 $('quality').addEventListener('change', e => { quality = parseInt(e.target.value, 10); spawnForm(formKind, null, true); e.target.blur(); });
 
 /* ================= three.js ================= */
-const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: !coarse });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.25 : 2));
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputEncoding = THREE.sRGBEncoding;
-const scene = new THREE.Scene(); scene.background = new THREE.Color(0xcfe9f3);
-const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
-let view = 9;
-const pointMats = [];   // [material, metres] -> size in px follows zoom
-function pxPerM() { return window.innerHeight / (2 * view); }
-function updatePointSizes() { pointMats.forEach(p => { p[0].size = Math.max(2, p[1] * pxPerM()); }); }
-function resize() {
-  const w = window.innerWidth, h = window.innerHeight, a = w / h;
-  renderer.setSize(w, h, false);
-  cam.left = -view * a; cam.right = view * a; cam.top = view; cam.bottom = -view; cam.updateProjectionMatrix(); updatePointSizes();
-}
-window.addEventListener('resize', resize);
-const hemi = new THREE.HemisphereLight(0xe8f6ff, 0x7d8c6a, 0.95); scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xfff3dc, 1.15);
-sun.castShadow = true; sun.shadow.mapSize.set(coarse ? 1024 : 2048, coarse ? 1024 : 2048);
-const sc = sun.shadow.camera; sc.left = -22; sc.right = 22; sc.top = 22; sc.bottom = -22; sc.near = 1; sc.far = 120;
-sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04; scene.add(sun); scene.add(sun.target);
-let sunOff = new THREE.Vector3(14, 26, 9), hutLight = null;
-const SKY_DAY = new THREE.Color(0xcfe9f3), SKY_DUSK = new THREE.Color(0xf2a56b), SKY_NIGHT = new THREE.Color(0x0b1330), SUN_C = new THREE.Color(0xfff3dc), MOON_C = new THREE.Color(0x8da2ff);
-function applyTime(t) {
-  const ang = (t - 6) / 12 * Math.PI, sh = Math.sin(ang), day = sm(-0.05, 0.25, sh);
-  sun.intensity = lerp(0.4, 1.15, day); sun.color.copy(MOON_C).lerp(SUN_C, day); hemi.intensity = lerp(0.35, 0.95, day);
-  sunOff.set(-Math.cos(ang) * 20, 8 + 22 * Math.abs(sh), 9);
-  const c = scene.background;
-  if (sh > 0) c.copy(SKY_DUSK).lerp(SKY_DAY, sm(0.0, 0.45, sh)); else c.copy(SKY_DUSK).lerp(SKY_NIGHT, sm(0.0, -0.3, sh));
+const S = createScene(coarse, $('c'));
+const renderer = S.renderer;
+const scene = S.scene;
+const cam = S.cam;
+const view = S.view;
+const pxPerM = S.pxPerM;
+const resize = S.resize;
+const applySceneTime = S.applyTime;
+const pointMats = S.pointMats;
+const updatePointSizes = S.updatePointSizes;
+const sun = S.sun;
+const hemi = S.hemi;
+const checker = S.checker;
+const softTex = S.softTex;
+const SKY_DAY = S.SKY_DAY;
+const SKY_DUSK = S.SKY_DUSK;
+const SKY_NIGHT = S.SKY_NIGHT;
+const SUN_C = S.SUN_C;
+const MOON_C = S.MOON_C;
+const sunOff = S.sunOffVec;
+const _hutLightInit = S.hutLightRef;
+
+let hutLight = null;
+
+// Re-export applyTime for game.js usage (adds time display)
+const applyTime = (t) => {
+  S.applyTime(t);
   const hh = Math.floor(t), mm = Math.floor((t - hh) * 60);
   $('timeOut').textContent = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
-  if (hutLight) hutLight.intensity = lerp(1.3, 0.7, day);
-}
+};
+
 $('time').addEventListener('input', e => applyTime(parseFloat(e.target.value)));
 $('time').addEventListener('pointerup', e => e.target.blur());
-const checker = (() => {
-  const c = document.createElement('canvas'); c.width = c.height = 2; const g = c.getContext('2d');
-  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 2, 2); g.fillStyle = '#e3e8e0'; g.fillRect(1, 0, 1, 1); g.fillRect(0, 1, 1, 1);
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapLinearFilter; t.encoding = THREE.sRGBEncoding; return t;
-})();
-const softTex = (() => {
-  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
-  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.4, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
-  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c);
-})();
+
+$('time').addEventListener('input', e => applyTime(parseFloat(e.target.value)));
+$('time').addEventListener('pointerup', e => e.target.blur());
 
 /* ================= world ================= */
 let world = null, worldGroup = null, env = null;
