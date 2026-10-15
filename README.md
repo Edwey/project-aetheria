@@ -1,165 +1,87 @@
-# Project Aetheria — Lightweight Persistent 3D Archipelago
+# Project Aetheria
 
-> A persistent, lightweight, multiplayer 3D diorama built as a floating archipelago.
-> Enter instantly as a customizable glowing **Wisp** — no login required.
-
-**Target:** Web (Desktop & Mobile Browser) · **Budget:** $0.00 (100% free-tier) · **Initial load:** < 2.5 MB
-
----
+A cozy, peaceful 3D browser game where you explore a charming world as three magical forms: Slime (liquid), Wisp (gas), and Stone (solid).
 
 ## Vision
 
-Visitors spawn on the Arrival Plaza as Wisps and can:
+Project Aetheria is a serene exploration and building game. It features a hybrid world with a 240×240m landmass blending four biomes (plains, dunes, taiga, grove), a surrounding sea, and three sky islands reachable by gliding and climbing. The game is entirely peaceful—no combat, no damage, no enemies. Every form can perform every verb (move, jump, climb, glide, squeeze, hover, gather, craft, build, swim, emote), but each has unique perks.
 
-- Navigate via **point-and-click or WASD**, glide between islands via updrafts
-- Ring **real-time pentatonic chimes** with nearby visitors
-- Stack zen rocks, carve **16×16 glowing runes**, float messages in the cloud sea
-- Throw suggestions into the developer's **wishing well**
-
-Aesthetic: **Low-poly cel-shaded (Ghibli-style) by day → bioluminescent neon with soft bloom by night**, on an autonomous synchronized **12-minute loop**.
-
-## Features
-
-- [ ] Instant Wisp avatar (color + hat, glow trail)
-- [ ] Hybrid movement: WASD + tap-to-move + glider (Space / touch-hold slow-fall)
-- [x] Phase 1 canvas: isometric ortho camera + 12-min day/night + HUD cycle
-- [ ] 3 islands: Arrival Plaza, Zen Chime Isle, Creator's Well (placeholders now; Kenney GLBs next)
-- [ ] Traversal: wooden bridge, catapult mushroom pad, updraft geyser vents
-- [ ] Pentatonic chime pillars with positional audio (120 BPM quantized, 300 ms debounce)
-- [ ] Persistent signs / cloud bottles / runes (Supabase, FIFO cap 150)
-- [ ] 16×16 rune pixel editor → CanvasTexture on cliff walls
-- [ ] Dev wishing well + changelog wall + community spark progress bar (`⚡ X% charged`)
-- [ ] Offline fallback: single-player zen garden if WS/DB goes down
-
-## Tech Stack (all free-tier)
-
-| Layer | Technology | Role |
-| :--- | :--- | :--- |
-| Framework | React Three Fiber + Vite | Declarative 3D, fast HMR |
-| 3D Engine | Three.js | WebGL rendering |
-| Animation | GSAP | Camera, modals, pop-ins, squash & stretch |
-| Styling | Tailwind CSS | Minimalist HUD + overlays |
-| Real-time ephemeral | PartyKit (Cloudflare Workers) | <50 ms positions + chime sync |
-| Persistent storage | Supabase (PostgreSQL) | Notes, runes, wishes, sparks |
-| Audio | Three.js `PositionalAudio` | Native Web Audio, zero extra deps |
-| Post-processing | `@react-three/postprocessing` | Selective bloom for night/runes |
-| Assets | Kenney.nl + Poly Pizza (CC0) | Low-poly nature/fantasy, zero fees |
-| Hosting | Vercel | Git CI/CD on global edge CDN |
-
-## How It Works
-
-### 1. Synchronized 12-minute day/night cycle (zero server bandwidth)
-
-All clients derive identical lighting from wall-clock time — no packets needed:
-
-```text
-t = (UnixTime mod 720000) / 720000  ∈ [0, 1)
-```
-
-See `src/components/canvas/DayNightCycle.jsx` (in `TODO.md` §5.1 for reference implementation).
-
-### 2. Movement state machine
-
-```text
-[ GROUND ] --WASD/click--> move on XZ · --catapult--> +Y impulse · --updraft--> lift
-   |
-   v (Y > 2.0)
-[ AIRBORNE ] --gravity--> fall · --hold SPACE/touch--> [ GLIDER: fall capped at -0.5, wings out ]
-```
-
-### 3. Rune bitmap serialization
-
-Runes are 256-char bitstrings (`"000...110..."`) stored in `world_notes.content`, rendered via `CanvasTexture` with `NearestFilter` for crisp pixels.
-
-### 4. Sanitization
-
-All user text is stripped of URLs/phishing vectors, HTML/script tags, and profanity, then trimmed to limits (100 chars text, 140 wishes, 256 rune bits). See `src/utils/sanitize.js` in `TODO.md` §5.4.
-
-### 5. PartyKit protocol
-
-Ephemeral only — no DB overhead:
-
-- `MOVE` → `PLAYER_MOVED` (pos + `walking | gliding`)
-- `PLAY_CHIME` → `CHIME_TRIGGERED` (note + pillarId + pos)
-- `GRAB_ROCK` → `ROCK_HELD` · `DROP_ROCK` → `ROCK_PLACED`
-- Disconnect → `PLAYER_LEFT`
-
-See `party/server.js` in `TODO.md` §6.
-
-## Database (Supabase)
-
-Run the migration in `TODO.md` §3 in your Supabase SQL Editor. Summary:
-
-- `world_progress(id=1, total_sparks, target_sparks=1000, current_realm_phase)` + `add_sparks(amount)`
-- `dev_wishes(id, author_name, message ≤140, created_at)`
-- `world_notes(id, type in sign|bottle|rune, content ≤256, position float8[3], author_name, color, created_at)` + index on `created_at DESC` + FIFO trigger capping at 150 rows
-
-## Project Structure
-
-```text
-├── party/                  # PartyKit WS server (positions, chimes)
-│   └── server.js
-├── partykit.json
-├── public/
-│   ├── models/             # CC0 GLBs (bridge, island_base, props, hats)
-│   └── sounds/             # Pentatonic samples c4/d4/e4/g4/a4.mp3
-├── src/
-│   ├── components/canvas/  # Scene, DayNightCycle, islands/, traversal/, items/
-│   ├── components/wisp/    # WispAvatar, WispController, GliderWings, RemoteWisps
-│   ├── components/dom/     # HUD + Modals (Customizer, DevWell, Note, RuneDraw)
-│   ├── hooks/              # useAudioChimes, useMultiplayer, useWorldState
-│   ├── stores/             # useWispStore, useWorldStore
-│   ├── utils/              # sanitize.js, constants.js, runeUtils.js
-│   ├── App.jsx / main.jsx / index.css
-├── package.json / vite.config.js
-└── TODO.md                 # Full architecture blueprint (source of truth)
-```
-
-## Getting Started
+## Quick Start
 
 ```bash
-git clone https://github.com/Edwey/project-aetheria
-cd project-aetheria
+# Install dependencies
 npm install
-cp .env.example .env   # optional until Phase 4 (Supabase)
 
-npm run dev            # Vite — use the Local URL it prints (5173 or next free port)
+# Development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+
+# Fetch and optimize assets
+npm run assets:fetch
+npm run assets:optimize
+npm run assets:check
 ```
 
-PartyKit (`npx partykit dev`) is a Phase 3 concern; `party/server.js` is a stub today.
+## Key Features
 
-Required env (Phase 4+):
+- **Three Forms**: Switch between Slime (squishy, sticky climbing), Wisp (floating, cloud-like), and Stone (rigid, piton climbing, rolling)
+- **Hybrid World**: Landmass with four blended biomes, sea, and sky islands
+- **Peaceful Gameplay**: No combat, no damage, no hunger—pure exploration and creativity
+- **Crafting & Building**: Gather resources, craft items, and build structures
+- **Day/Night Cycle**: Dynamic lighting and weather per biome
+- **Customization**: Personalize your creature's appearance and cosmetics
+- **Local Saves**: Progress saved to localStorage (plus IndexedDB for large data)
 
-```text
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-VITE_PARTYKIT_HOST=
-```
+## Tech Stack
 
-Day/night uses wall-clock time. In a DEV console you should see `[aetheria] t=0.xxxx day|night` once per second.
+- **Runtime**: Vite + plain Three.js r128 + JavaScript ES modules with JSDoc types
+- **No React/R3F/Tailwind/GSAP**: Lightest runtime for low-end phones
+- **Target Device**: $150 Android phone, 2-3GB RAM, Chrome
+- **Performance Goal**: 60 FPS (30 FPS minimum in "Light" quality)
+- **Hosting**: Vercel (free tier)
 
-## Roadmap
+## Controls
 
-```text
-[Phase 1: Foundation]      Vite + R3F + Tailwind + GSAP · ortho camera + day/night  ✅
-                              (Supabase project + SQL still a user step)
-[Phase 2: Islands]         Plaza + Zen Isle + Creator Well · toon + emissive · bridges/vents/pads
-[Phase 3: Wisp + Net]      Procedural wisp + controller + glider · PartyKit presence
-[Phase 4: Interactions]    Rune editor · signs/bottles (FIFO) · wishing well · chime pillars
-[Phase 5: HUD & Polish]    Spark bar · wardrobe UI · mobile touch optimization
-```
+- **WASD/Arrows**: Move
+- **Space**: Jump (charge for height), hold to glide (Slime/Stone) or rise (Wisp)
+- **Shift**: Ride wind/carried by currents
+- **Tab**: Switch form
+- **M**: Melt (Slime), Pebble (Stone), Diffuse (Wisp)
+- **C**: Spring (Slime), Condense (Wisp)
+- **F**: Ground pound (Slime/Stone), Down-gust (Wisp)
+- **H**: Heart emote
+- **V**: Float mode (Wisp)
+- **Q/E**: Rotate camera
+- **Mouse wheel**: Zoom
+- **P**: Toggle build mode
+- **[ ]**: Select build piece
+- **X**: Rotate build piece
+- **Enter**: Place build piece
+- **Delete/Backspace**: Remove nearby piece
+- **1-8**: Emotes
+- **B**: Toggle wind debug
+- **R**: Respawn
+- **T**: Toggle slow-mo
 
-## Contributing / Agent Rules
+## Documentation
 
-Any contributor or AI agent **must** follow these:
-
-1. **The $0.00 Rule:** No paid deps, no credit-card servers, no paid asset packs. Supabase free + PartyKit free + CC0 only.
-2. **Bundle discipline:** Initial JS **< 2.5 MB**. No PhysX/Ammo — raycasting + bounding spheres + light math only.
-3. **No slop aesthetic:** No default inputs, no harsh unshaded colors, no system-font dumps. Every interactive element gets GSAP micro-animation + spatial audio feedback.
-4. **Resilient fallback:** If WS or Supabase fails, degrade to single-player zen garden — never crash.
-
-See `TODO.md` for the full blueprint (§1–§8).
+- [AGENT.md](docs/AGENT.md) - Rules for AI working on this project
+- [PLAN.md](docs/PLAN.md) - Release roadmap and status
+- [CHARACTERS.md](docs/CHARACTERS.md) - Forms, Core, verbs, controls, and numbers
+- [ENVIRONMENT.md](docs/ENVIRONMENT.md) - Biomes, wind, weather, resources, crafting, building
+- [WORLD.md](docs/WORLD.md) - Hybrid layout, sky islands, world API, save format
+- [WATER.md](docs/WATER.md) - Water types, per-form perks, currents, buoyancy
+- [ASSETS.md](docs/ASSETS.md) - Asset sources, licenses, pipeline, budgets
+- [PERFORMANCE.md](docs/PERFORMANCE.md) - Performance budgets and targets
+- [REFERENCES.md](docs/REFERENCES.md) - Reference games and what we borrow
+- [DECISIONS.md](docs/DECISIONS.md) - Assumptions made and change notes
+- [CREDITS.md](docs/CREDITS.md) - Asset credits (auto-generated)
 
 ## License
 
-MIT — see `LICENSE`. CC0 assets remain under their original terms (Kenney.nl, Poly Pizza).
+MIT License - see LICENSE file for details

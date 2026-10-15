@@ -1,0 +1,286 @@
+PROJECT AETHERIA: MASTER BUILD PROMPT
+For a cloud coding agent (you). You also write small task files that a weaker local
+model will execute later. Output complete files, never placeholders or "...".
+
+0. YOUR JOB
+Create a brand-new repository for a cozy, peaceful 3D browser game. Fill it with
+documentation, folders, scripts, tests and an asset pipeline, port my working
+prototype into it, and write the step-by-step task files for later work.
+Work in STAGES (section 15) and STOP for my approval at the end of stages A and B.
+If a decision is not covered here, pick the lighter and simpler option, record it
+in docs/DECISIONS.md, and continue. Ask me questions only if truly blocked (max 5,
+each with a default).
+
+1. INPUTS
+- slime-lab.html: a single-file working prototype saved from an earlier build. It has
+  2 external script tags (three.js r128 from cdnjs, an optional GLTFLoader) and 8
+  inline script blocks in this order: Phys (physics), Terrain, Env, Wisp, Profile,
+  Craft, Build, then the main app (rendering, input, HUD, harvesting, UI). THE CODE IS
+  THE SOURCE OF TRUTH FOR EVERY NUMBER. Read it before writing any doc.
+- The prototype passed 48 headless tests that no longer exist. Recreate them (section 12).
+- Old docs may be provided (README, AGENT, PLAN, CHARACTERS, ENVIRONMENT). If not,
+  regenerate the docs from the code and from this prompt.
+- You have internet on your machine. I do not have models downloaded yet.
+
+2. LOCKED DECISIONS
+- Name: Project Aetheria. New repo (default name project-aetheria), MIT license,
+  English only, peaceful (no combat, no damage, no enemies).
+- Stack: Vite + plain Three.js (pin r128 first; upgrading is its own later task) +
+  JavaScript ES modules with JSDoc types. No React, no R3F, no Tailwind, no GSAP:
+  the HUD is plain HTML/CSS. Node tests, GitHub Actions CI, free hosting on Vercel.
+  Reason: lightest runtime and smallest bundle for low-end phones.
+- Minimum device: a $150 Android phone in Chrome, 2 to 3 GB RAM. Also desktop.
+  Goal 60 FPS, floor 30 FPS in "Light" quality (budgets in section 13).
+- World: HYBRID. One bounded landmass (about 240 x 240 m) with four blended biome
+  regions (plains, dunes, taiga, grove) and a sea around it, plus 3 sky islands
+  (about 60 m wide) reached by thermals, updrafts, gliding and bridges.
+- Water: swimmable, with perks per form (section 9). Four types: sea with shores and
+  beaches; lakes and rivers inside land biomes; swamp or marsh (shallow, murky);
+  frozen water (ice you can walk on).
+- Single-player with local saves (localStorage, plus IndexedDB for large data).
+  Multiplayer comes later: in v1 only define an event-bus interface, build no server.
+- Art: toon shading (MeshToonMaterial with a 3 to 4 step ramp), flat vertex colours,
+  no large textures, a thin outline on creatures ONLY (inverted-hull pass), day/night.
+- Assets: CC0 packs fetched by a script, with procedural fallbacks for everything.
+  I make the UI icons and the logo myself: create clearly marked placeholders.
+- Final target is everything (land, sky, all water). Deliver it as numbered releases
+  R0 to R5 (section 11) that are each playable, never as one giant milestone.
+
+3. NON-NEGOTIABLE GAME RULES (carry these from the prototype)
+1. Three forms: Slime (liquid), Wisp (gas), Stone (solid). EVERY form has EVERY verb:
+   move, jump or hop, climb, glide or float, squeeze, hover, gather, craft, build,
+   swim, emote. Only the way of doing it and the perks differ.
+2. Advantages only, never disadvantages. No terrain, weather, wind or water may slow,
+   slip or weigh down any form. If a change makes any form worse at any verb, revert it.
+3. Every creature has a Core that keeps it together and is where items fly in.
+   Slime: shape-match centre. Wisp: tether centre (motes never farther than 2.2 m).
+   Stone: rigid centre. The Core and inventory survive form switches.
+4. Wind and currents are STEADY by default: they never move, slow or lift a creature.
+   Hold Ride (Shift) and they carry and boost you (tailwind up to +40% speed, headwinds
+   never slow you, updrafts lift you). Same rule for river currents.
+5. Peaceful: no combat, no damage, no drowning, no hunger.
+6. Pure gameplay modules: src/gameplay/* import nothing (no THREE, no DOM) and run in Node.
+7. Budget $0: free tiers and CC0 or attributed-CC-BY assets only.
+
+4. CREATURE CHEAT-SHEET (behaviour to preserve; exact numbers are in the code)
+- Slime: soft body by position-based dynamics (642 particles Full, 162 Light; sphere or
+  cube; presets blob, goo, jelly ball, jelly cube). Charge jump (hold Space 0 to 0.85 s,
+  release), sticky wall climb, glide (hold Space in the air), melt (M), spring (C),
+  ground pound (F), heart (H), brief hover 0.8 s, overhang cling 1.5 s budget.
+- Wisp: cloud of 96 (48 Light) motes. Tap Space = free hop. Hold Space = rise (breath
+  -20/s). V = Float (holds altitude, breath -3/s). Otherwise it sinks gently. On the
+  ground or within 1.4 m of it: breath refills at 60/s and nothing drains. Out of
+  breath: no rising until it touches down. F = down-gust (puff then dive, one shockwave).
+  Wall-hug climb 3 m/s. Condense (C) and diffuse (M).
+- Stone: slime body at full stiffness. Pitons (climb 2 m/s, hangs without slipping),
+  crystal sail (glide, fall cap -3, free landing shockwave), pebble (M, shrink to 0.65
+  to fit gaps), brief hover 0.5 s (LESS than the slime), stack cap 80 vs 40, lowest hit
+  speed, cracks geodes by rolling.
+- Shared: Steady/Ride wind, idle brake (25/s) so nobody drifts when AFK, harvesting by
+  hit type (impact, pound, absorb), crafting (pocket vs workbench recipes), building
+  (ghost preview, sockets, stilts, roof and wall fade), cosmetics (5 slots), emotions
+  (10 states), customization profile, local save.
+
+5. REFERENCE GAMES (what to borrow, and the test that proves we did)
+- Animal Crossing: cozy palette, soft rounded UI, gentle day/night tint, bouncy UI sounds.
+- A Short Hike: glide and climb exploration, readable small world, short loops.
+- Minecraft: gather, craft, place loop; clear recipe costs.
+- Valheim: modular snapping pieces and clear green/red ghost placement.
+- Slime Rancher: squishy creature feel, readable wobble, joyful pickups.
+- Journey: wind and sand flow, calm music, the feeling of gliding downwind.
+- Raft: building on and over water; floating foundations (R4).
+Write docs/REFERENCES.md: one paragraph per game, what we copy, what we do NOT copy.
+
+6. REPO LAYOUT TO CREATE
+  project-aetheria/
+    README.md  LICENSE(MIT)  package.json  vite.config.js  .editorconfig  .gitignore
+    index.html  public/   (served as is: public/assets/models, sounds, ui)
+    src/
+      gameplay/   physics.js wisp.js env.js terrain.js world.js water.js profile.js
+                  craft.js build.js forms.js events.js   (pure, no THREE, no DOM)
+      render/     scene.js camera.js toon.js outline.js ground.js flora.js water-mesh.js
+                  creature.js wisp-points.js weather.js pieces.js
+      ui/         hud.css hud.js panel.js craft-panel.js build-panel.js customize.js touch.js
+      app/        main.js loop.js input.js save.js audio.js quality.js assets.js
+    assets/       sources.json raw/(gitignored) LICENSES.json
+    scripts/      fetch-assets.mjs optimize-assets.mjs check-assets.mjs make-placeholders.mjs
+    tests/        unit/ smoke/ run-all.js
+    docs/         README index plus the documents in section 7
+    tasks/        R0/ R1/ R2/ R3/ R4/ R5/   (task files for the local model, section 14)
+    .github/workflows/ci.yml
+  package.json scripts: dev, build, preview, test, test:smoke, assets:fetch,
+  assets:optimize, assets:check, lint.
+
+7. DOCUMENTS TO WRITE (put them in docs/, link them from README)
+- README.md: vision, quick start, links. AGENT.md: rules for ANY AI working here
+  (small-model rules: one task at a time, never rewrite whole files, minimal diffs, run
+  tests, stop and report on failure, never add features). PLAN.md: releases, status,
+  acceptance tests. CHARACTERS.md: forms, Core, verbs table, controls, numbers.
+  ENVIRONMENT.md: biomes, wind, weather, resources, crafting, building.
+  WORLD.md: hybrid layout, sky islands, world API, save format. WATER.md: section 9 in full.
+  ASSETS.md: sources, licenses, pipeline, budgets. PERFORMANCE.md: section 13.
+  REFERENCES.md. DECISIONS.md: every assumption you made, with a "change me if" note.
+  CREDITS.md: GENERATED from assets/LICENSES.json by a script, never hand-edited.
+- Every number a player can feel must appear in CHARACTERS.md or ENVIRONMENT.md.
+- Include in AGENT.md an "advantage audit" table (verb x form) that every change fills in.
+  A cell that reads "worse" blocks the change.
+
+8. PORT THE PROTOTYPE (stage C)
+- Extract the 8 inline scripts into the module files in section 6. Convert top-level
+  globals (Phys, Terrain, Env, Wisp, Profile, Craft, Build) to ES modules with named
+  exports. Split the main app into render/, ui/ and app/ files. Do not change behaviour.
+- Verify parity: run the same scripted scenarios in the prototype and in the new code
+  and compare results (positions and counters within 1e-6 for the pure modules).
+- Keep physics fixed step 1/60 s, 4 substeps, units metres and seconds, Y up, gravity -20.
+- Keep the pitfalls from the prototype in AGENT.md: heights come from a pre-sampled
+  grid (never per-particle analytic noise); particle speed cap per substep; the arena
+  clamp must never count as a sticky contact; use the push law (not relative drag) for
+  wind that must never slow you; judge "on the ground" with clearance (1.4 m), not only
+  the per-step contact flag; save before switching terrain; never stay stuck in a dive.
+
+9. WORLD AND WATER (new work, stages R1 to R4)
+World API (R1): WorldSet = list of terrain bodies. Each body has its own height grid
+(0.5 m cells), bounds, colliders and flora. ground(x,z) queries the body that contains
+the point; outside any body is VOID (creatures fall into the cloud sea and respawn at
+the last safe ground, with no damage). Landmass 240 x 240 m, rendered as 40 m chunk
+meshes (6 x 6) with per-chunk instanced flora; the isometric orthographic camera only
+needs the chunks in view. Colliders stay in the global 4 m broadphase grid.
+Sky islands (R2): 3 islands, about 60 m wide, centres 30 to 50 m above sea level, one
+resource or landmark each. Reached by thermals above dune crests, mushroom trampolines,
+glide and float, and bridges. Test that every island is reachable by every form.
+
+Water rules (ALL forms, rule 2 applies): no drowning, no damage, no speed loss, no
+breath cost for being in water. Water has a surface level per body and a bed (height grid).
+Per form perks:
+- Slime: floats and swims at the surface, dives when you hold F, and has a skip-dash
+  (charged jump released at speed bounces off the surface up to 3 times).
+- Wisp: skimming over water counts as "low" (breath refills, free), and it can dive
+  in as mist at normal speed.
+- Stone: sinks to the bed and WALKS it at full ground speed, never needs to surface,
+  gathers seabed resources fastest (one hit), ignores currents.
+Inputs in water: Space = swim up or jump out, F = dive while submerged (pound is
+replaced while submerged). Treat these as a starting proposal and tune in playtests.
+Currents: rivers have a flow field. It only affects you while Riding (rule 4).
+Types and content:
+- Sea (R3): surrounds the landmass, beach band, depth up to about 6 m near shore.
+  Resources: pearl, kelp fibre (counts as fibre).
+- Lakes and rivers (R4): inside plains, grove and taiga. Lakebed clay. Rivers follow splines.
+- Swamp (R4): shallow (1 m or less), murky tint, reeds (fibre), glowing spores. Wading at full speed.
+- Frozen water (R4): ice sheets you can walk on with NEUTRAL physics (no slipping). Ground
+  pound cracks a ring open and drops ice crystals.
+Building on water (R4): shallow water takes normal foundations with stilts to the bed;
+deep water needs a "raft" floor piece that floats and snaps to other rafts (Raft reference).
+Cheap rendering: one transparent plane per body of water, vertex-shader waves,
+colour from a precomputed depth stored in vertex colours (no depth texture, no
+reflection, no refraction), shoreline foam from the depth band, underwater tint from fog
+plus a CSS overlay when the camera target is submerged. Fake caustics only in Medium+.
+Buoyancy for soft bodies: per-particle upward acceleration proportional to depth below
+the surface (clamped), water drag, tuned so rule 2 holds. Write the numbers in WATER.md.
+Water tests: no form is slower in water than on land at the same input (within 10%);
+the slime surfaces; the stone walks the bed and gathers; the wisp refills breath
+over water; currents act only while Riding; no NaN anywhere.
+
+10. ASSET PIPELINE (stage D)
+Candidate CC0 sources (VERIFY each page, exact pack name and license at download time;
+if a pack has moved, choose the closest CC0 pack and record it):
+- Kenney (kenney.nl): Nature Kit (trees, rocks, flowers, mushrooms), Survival Kit
+  (workbench, campfire, tools), Furniture Kit, Fantasy Town Kit, Pirate Kit (boats, docks),
+  Interface Sounds, Impact Sounds, Music Jingles.
+- Quaternius (quaternius.com): stylized nature packs for variety (trees, bushes, rocks).
+- KayKit (kaylousberg.itch.io): forest and nature packs, hats and props.
+- Poly Pizza: individual models, but LICENSES VARY. Use only CC0, or CC-BY with an entry
+  in CREDITS.md. Avoid Sketchfab and anything without a clear license.
+- Cosmetics and creature extras: keep the procedural primitives as the default; add CC0
+  hats only as optional overrides.
+Rules:
+- assets/sources.json lists every pack: id, name, author, page URL, license, download
+  type (direct | page | manual), which files to keep, and where they go.
+- scripts/fetch-assets.mjs downloads "direct" and "page" sources (parse the page for the
+  .zip link). For sources that need a click (itch.io, Patreon, Drive) it prints exact
+  manual steps and the folder to drop the zip into. It verifies what it fetched.
+- scripts/optimize-assets.mjs uses @gltf-transform/cli: dedupe, prune, weld, quantize,
+  meshopt, merge by material. Output GLB to public/assets/models plus manifest.json.
+- scripts/check-assets.mjs runs in CI and FAILS if: a model has no LICENSES.json entry,
+  a license is not CC0 or attributed CC-BY, a prop exceeds its triangle or size budget,
+  or total models exceed the budget in section 13.
+- Every asset has a procedural fallback (instanced primitives). The game must run with
+  an empty public/assets folder. Use manifest ids, never hard-coded file paths.
+- scripts/make-placeholders.mjs creates SVG placeholders for the UI icons and logo in
+  public/assets/ui with a README telling me exactly which file names to replace.
+- Models used by the game: trees (oak, pine), cactus, mushroom, rocks, geodes, flowers,
+  workbench, campfire, torch, furniture, boats and docks (R3+), and optional hats.
+
+11. RELEASES (each playable, each with acceptance tests)
+R0 Foundation: repo, docs (stage A), scaffold (B), port with parity tests (C), asset
+   pipeline (D). The new dev server shows the same game as the prototype.
+R1 Land: the 240 m landmass with chunked rendering, CC0 instanced flora via the
+   manifest, toon shading, creature outline, plain-CSS HUD, local save and load, Light
+   and Full quality auto-pick with an FPS governor.
+R2 Sky: sky islands, thermals as world features, bridges, trampolines, void respawn.
+R3 Water I: sea, shores, swim and dive, per-form perks, underwater look, seabed resources.
+R4 Water II: lakes, rivers with currents, swamp, frozen water, raft pieces.
+R5 Polish: WebAudio chimes plus CC0 ambient and UI sounds, cosmetics with optional CC0
+   hat models, accessibility (focus, 44 px touch targets, reduced motion), perf tuning,
+   release candidate.
+Later (do NOT build now): multiplayer (PartyKit), cloud notes (Supabase). Only define
+src/gameplay/events.js so these can be added without refactoring.
+
+12. TESTS AND CI
+Recreate these as Node tests (assertions, not prints). Keep the thresholds:
+- Slime: settles about 0.5 m above ground; jump rise about 0.5 m (tap), 1.6 m (0.3 s hold),
+  5.3 m (0.85 s hold); blob passes a 0.95 m tunnel and the cube does not; sticky climbs a
+  5 m wall and plain slime does not; melt below 0.6 m tall and back above 0.85 m.
+- World: seeded flora counts are stable; no particle enters a trunk; a hut with a door
+  gap admits and a wall blocks.
+- Wind (Steady and Ride): idle drift under 0.3 m for all three forms; headwinds never
+  slow; tailwind faster; updrafts only lift while Riding; wisp motes stay within the tether
+  in violent gusts.
+- Wisp: tap hop; rise costs about 20/s and Float about 3/s; no breath is ever spent on or
+  near the ground (include a 60 s random-input fuzz test); out of breath means no rising
+  until touchdown; it always comes down by itself; down-gust completes from 40 random places
+  with exactly one shockwave and never gets stuck.
+- Stone: pitons climb and hang; sail fall cap and one landing shockwave; pebble passes the
+  tunnel and grows back; hover shorter than the slime's.
+- Verb parity audit: every form can jump, climb, glide, squeeze and hover.
+- Craft and build: recipes, bench rule, snapping, overlap refusal, perks, removal, save
+  and load, bad data ignored.
+- Page smoke test: with real three.js and a stub renderer and DOM, drive every form,
+  action, weather and terrain for thousands of frames without an exception.
+- Mutation check: for the key rules, a script that breaks the rule and confirms a test fails.
+CI (GitHub Actions): install, lint, tests, assets:check, build, fail on bundle over budget.
+
+13. PERFORMANCE BUDGET (target phone)
+- Initial JS (gzipped) under 400 KB; first load under 2.5 MB; total models under 4 MB gzipped;
+  each prop under 20 KB and 2,000 triangles; textures 256 to 512 px or none.
+- 25 to 35 draw calls, 40,000 to 60,000 visible triangles, under 120 MB memory.
+- Light quality (default on touch): 162-particle slime, 48 motes, pixel ratio at most 1.25,
+  shadow map 1024, 350 weather particles, no outline blur, no caustics.
+- An FPS governor lowers quality when frames stay slow and never raises it mid-session.
+- Allocate nothing per frame in hot loops. Use InstancedMesh for all repeated flora and pieces.
+
+14. TASK FILES FOR THE LOCAL MODEL (tasks/R*/NNN-name.md)
+One task per file, small enough for a weak model. Use exactly this format:
+  ID and title | Release | Depends on
+  GOAL: one sentence.
+  FILES: at most 2 files to edit or create.
+  READ FIRST: exact paths and line ranges or function names.
+  STEPS: numbered, concrete, 3 to 8 steps.
+  DONE WHEN: the exact command and the expected output (for example "npm test -- water" shows 4 passed).
+  DO NOT: things to avoid (no refactors, no new features, no new dependencies).
+  SIZE: under 150 changed lines.
+Generate full task lists for R1 and R2 (about 40 to 80 tasks) and a one-line outline per
+task for R3 to R5. Order tasks so every one leaves the game running and the tests green.
+
+15. STAGES (stop where marked)
+A. Read the prototype. Write all documents as drafts plus DECISIONS.md. STOP: I review.
+B. Create the repo tree, configs, scripts, CI and an empty-but-running app. STOP: I review.
+C. Port the prototype with parity tests; recreate the test suite.
+D. Run the asset pipeline; report a table of every pack, license and size; wire manifest ids.
+E. Write the task files for R1 and R2 and outlines for the rest; update PLAN.md statuses.
+F. Report: what works, what you could not do (for example downloads that need a click),
+   and the exact manual steps I must do.
+Commit after every step with a short message. Never leave the build or tests red.
+
+16. FINAL RULES FOR YOU
+- Honesty first: say plainly what is untested (no real-device testing) and what failed.
+- No new features beyond this prompt. When in doubt, choose the simpler option and log it.
