@@ -6,6 +6,7 @@
 
 import * as THREE from 'three';
 import { createScene } from '../render/scene.js';
+import { buildGroundChunks, createGroundMaterial } from '../render/ground.js';
 import Phys from '../gameplay/physics.js';
 import Terrain from '../gameplay/terrain.js';
 import Env from '../gameplay/env.js';
@@ -205,11 +206,31 @@ function buildFlora() {
   spores.forEach((f, i) => { f.mesh = sp; f.idx = i; f.size = 0.15; setI(sp, i, f.x, f.y + 0.3, f.z, 0.15, 0.15, 0.15, f.color); });
   flush(pm); flush(sp);
 }
+let groundChunks = null;
+let groundCulling = null;
+
 function loadTerrain(id) {
   if (worldGroup) { scene.remove(worldGroup); worldGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  if (groundChunks) {
+    for (const mesh of groundChunks) {
+      scene.remove(mesh);
+      if (mesh.geometry) mesh.geometry.dispose();
+      if (mesh.material && !mesh.material.isShared) mesh.material.dispose();
+    }
+    groundChunks = null;
+    groundCulling = null;
+  }
   clearItems(); shaking = []; hutParts = []; hutLight = null;
   world = Terrain.build(id); worldGroup = new THREE.Group();
-  buildGround(); buildProps(); buildFlora(); scene.add(worldGroup);
+  
+  // Chunked ground
+  const groundMat = createGroundMaterial(world, checker);
+  const groundResult = buildGroundChunks(scene, world, groundMat);
+  groundChunks = groundResult.chunks;
+  groundCulling = groundResult.updateCulling;
+  groundMat.isShared = true; // prevent disposal per-chunk
+  
+  buildProps(); buildFlora(); scene.add(worldGroup);
   env = Env.create(world, 5); env.override = $('weather').value || 'auto';
   if (typeof initBuildState === 'function' && craftReady) initBuildState();
   applyTime(parseFloat($('time').value));
@@ -1068,6 +1089,7 @@ function frame(now) {
   if (wisp) writeWisp(); else writeBodyMesh();
   updatePieces(dt, gT); updateGhost(); fadeT -= dt; if (fadeT <= 0) { fadeT = 0.4; refreshCraft(); }
   updateFace(dt); updateCosmetics(dt, gT); updateCore(dt, gT); updateCamera(dt); updateWindDebug(); updateHud(lastSample || Env.sample(env, 0, 0, 0));
+  if (groundCulling) groundCulling(cam);
   renderer.render(scene, cam);
 }
 
