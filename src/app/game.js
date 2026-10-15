@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { createScene } from '../render/scene.js';
 import { buildGroundChunks, createGroundMaterial } from '../render/ground.js';
 import { buildFlora } from '../render/flora.js';
+import { createBodyMesh, createWispMesh, updateOutlineForQuality } from '../render/creature.js';
 import Phys from '../gameplay/physics.js';
 import Terrain from '../gameplay/terrain.js';
 import Env from '../gameplay/env.js';
