@@ -19,6 +19,8 @@ import Build from '../gameplay/build.js';
 import createCraftPanel from '../ui/craft-panel.js';
 import { createBuildPanel } from '../ui/build-panel.js';
 import { createCustomizePanel } from '../ui/customize.js';
+import { createInput } from './input.js';
+import { createTouchControls } from '../ui/touch.js';
 
 const customizePanel = createCustomizePanel({
   $, profile, scene, syncLookColors, buildCore, spawnForm, emoManual,
@@ -29,6 +31,21 @@ const buildCustomizeUI = customizePanel.buildCustomizeUI;
 const makeHead = customizePanel.makeHead;
 const makeBack = customizePanel.makeBack;
 const makeFace = customizePanel.makeFace;
+
+const input = createInput();
+const inp = input.state;
+const keys = input.keys;
+const joy = input.joy;
+input.attach();
+
+const touchControls = createTouchControls({
+  $, joy,
+  touchJump: inp.touchJump, setTouchJump: (v) => { inp.touchJump = v; },
+  pendingFloat: inp.pendingFloat, setPendingFloat: (v) => { inp.pendingFloat = v; },
+  pendingPound: inp.pendingPound, setPendingPound: (v) => { inp.pendingPound = v; },
+  toggleMelt: () => { toggleMelt(); },
+  touchRide: inp.touchRide, setTouchRide: (v) => { inp.touchRide = v; }
+});
 
 // Optional GLTF loader: the prototype used an optional CDN GLTFLoader and every
 // cosmetic keeps a procedural-primitive fallback (see tryGLB guard below).
@@ -564,7 +581,7 @@ function updateCamera(dt) {
 }
 
 /* ================= actions and input ================= */
-let meltOn = false, springOn = false, pendingPound = false, pendingHeart = false, pendingFloat = false, modeSel = 0, touchRide = false;
+let meltOn = false, springOn = false, modeSel = 0;
 function updateActionLabels() {
   const w = formKind === 'wisp', st = formKind === 'stone';
   $('aMelt').textContent = w ? 'Diffuse (M)' : st ? 'Pebble (M)' : 'Puddle melt (M)'; $('aSpring').textContent = w ? 'Condense (C)' : 'Coiled spring (C)'; $('aPound').textContent = w ? 'Down-gust (F)' : 'Ground pound (F)';
@@ -579,33 +596,28 @@ function toggleMelt() { if (formKind === 'wisp') modeSel = modeSel === -1 ? 0 : 
 function toggleSpring() { if (formKind === 'wisp') modeSel = modeSel === 1 ? 0 : 1; else { springOn = !springOn; P.spring = springOn; } syncActionButtons(); }
 $('aMelt').addEventListener('click', e => { toggleMelt(); e.currentTarget.blur(); });
 $('aSpring').addEventListener('click', e => { toggleSpring(); e.currentTarget.blur(); });
-$('aFloat').addEventListener('click', e => { pendingFloat = true; e.currentTarget.blur(); });
-$('aHeart').addEventListener('click', e => { pendingHeart = true; e.currentTarget.blur(); });
-$('aPound').addEventListener('click', e => { pendingPound = true; e.currentTarget.blur(); });
+$('aFloat').addEventListener('click', e => { inp.pendingFloat = true; e.currentTarget.blur(); });
+$('aHeart').addEventListener('click', e => { inp.pendingHeart = true; e.currentTarget.blur(); });
+$('aPound').addEventListener('click', e => { inp.pendingPound = true; e.currentTarget.blur(); });
 
-const keys = new Set(); let keyJump = false, touchJump = false; const joy = { x: 0, y: 0 };
-function typing(e) { const t = e.target && e.target.tagName; return t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA'; }
 let windDebug = false;
 window.addEventListener('keydown', e => {
-  if (typing(e)) return;
   const k = e.key.toLowerCase();
-  if (e.code === 'Space') { e.preventDefault(); keyJump = true; return; }
-  if (k.startsWith('arrow') || k === 'tab') e.preventDefault();
   if (e.repeat) return;
   if (k === 'q') azT += Math.PI / 2; else if (k === 'e') azT -= Math.PI / 2;
   else if (k === 'r') spawnForm(formKind, world.spawn); else if (k === 't') toggleSlow();
   else if (k === 'm') toggleMelt(); else if (k === 'c') toggleSpring();
-  else if (k === 'h') pendingHeart = true; else if (k === 'f') pendingPound = true; else if (k === 'b') windDebug = !windDebug;
+  else if (k === 'h') inp.pendingHeart = true; else if (k === 'f') inp.pendingPound = true; else if (k === 'b') windDebug = !windDebug;
   else if (k === 'tab') { const order = ['slime', 'wisp', 'stone']; switchForm(order[(order.indexOf(formKind) + 1) % 3]); }
-  else if (k === 'v') pendingFloat = true;
+  else if (k === 'v') inp.pendingFloat = true;
   else if (k === 'p') toggleBuild(); else if (k === '[') cyclePiece(-1); else if (k === ']') cyclePiece(1); else if (k === 'x') rotateGhost();
   else if (k === 'enter') placeGhost(); else if (k === 'backspace' || k === 'delete') removeNear();
   else if (k >= '1' && k <= '8') emoManual(Profile.MANUAL[+k - 1]);
   else if (k === '=' || k === '+') zoom(0.82); else if (k === '-') zoom(1.22);
-  else keys.add(k);
+  else if (k === 'w') { windDebug = !windDebug; $('windArrow').style.display = windDebug ? 'block' : 'none'; }
+  else if (k === '/') { debugInfo = !debugInfo; $('debugInfo').style.display = debugInfo ? 'block' : 'none'; }
 });
-window.addEventListener('keyup', e => { if (e.code === 'Space') keyJump = false; keys.delete(e.key.toLowerCase()); });
-window.addEventListener('blur', () => { keys.clear(); keyJump = false; touchJump = false; });
+window.addEventListener('blur', () => { keys.clear(); inp.touchJump = false; });
 window.addEventListener('wheel', e => zoom(e.deltaY > 0 ? 1.1 : 0.9), { passive: true });
 function zoom(f) { view = Math.max(3.5, Math.min(26, view * f)); resize(); }
 let slow = false;
@@ -617,33 +629,20 @@ $('rotR').addEventListener('click', e => { azT -= Math.PI / 2; e.currentTarget.b
 $('zoomIn').addEventListener('click', e => { zoom(0.82); e.currentTarget.blur(); });
 $('zoomOut').addEventListener('click', e => { zoom(1.22); e.currentTarget.blur(); });
 if (coarse) $('touch').classList.add('on');
-(function () {
-  const el = $('joy'), knob = $('knob'); let id = null;
-  function set(e) { const r = el.getBoundingClientRect(), R = r.width / 2; let dx = (e.clientX - (r.left + R)) / R, dy = (e.clientY - (r.top + R)) / R; const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; } joy.x = dx; joy.y = -dy; knob.style.transform = 'translate(' + dx * R * 0.7 + 'px,' + dy * R * 0.7 + 'px)'; }
-  el.addEventListener('pointerdown', e => { id = e.pointerId; el.setPointerCapture(id); set(e); });
-  el.addEventListener('pointermove', e => { if (e.pointerId === id) set(e); });
-  const end = e => { if (e.pointerId === id) { id = null; joy.x = joy.y = 0; knob.style.transform = ''; } };
-  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
-  const jb = $('jbtn'); jb.addEventListener('pointerdown', e => { jb.setPointerCapture(e.pointerId); touchJump = true; });
-  const jend = () => { touchJump = false; }; jb.addEventListener('pointerup', jend); jb.addEventListener('pointercancel', jend);
-  $('vbtn').addEventListener('pointerdown', () => { pendingFloat = true; });
-  $('pbtn').addEventListener('pointerdown', () => { pendingPound = true; }); $('mbtn').addEventListener('pointerdown', () => { toggleMelt(); });
-  const ab = $('abtn'); ab.addEventListener('pointerdown', e => { ab.setPointerCapture(e.pointerId); touchRide = true; }); const aend = () => { touchRide = false; }; ab.addEventListener('pointerup', aend); ab.addEventListener('pointercancel', aend);
-})();
-const inp = { mx: 0, mz: 0, jumpHeld: false, melt: false, pound: false, heart: false, wind: [0, 0, 0] };
 const winp = { mx: 0, mz: 0, jumpHeld: false, dash: false, mode: 0, wind: [0, 0, 0], wetAmt: 0, bw: [1, 0, 0, 0], time: 0, fx: 0, fz: 1 };
 let moveMag = 0;
 function readInput() {
-  let ix = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0) + joy.x;
-  let iz = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0) + joy.y;
+  let ix = inp.moveX;
+  let iz = inp.moveZ;
   const l = Math.hypot(ix, iz); if (l > 1) { ix /= l; iz /= l; } moveMag = Math.min(1, l);
   const sa = Math.sin(az), ca = Math.cos(az);
   const mx = -sa * iz + ca * ix, mz = -ca * iz - sa * ix;
-  inp.mx = mx; inp.mz = mz; inp.jumpHeld = keyJump || touchJump; inp.melt = meltOn; inp.pound = pendingPound; inp.heart = pendingHeart;
-  inp.ride = winp.ride = keys.has('shift') || touchRide; winp.pound = pendingPound; winp.floatToggle = pendingFloat;
+  inp.mx = mx; inp.mz = mz; inp.jumpHeld = inp.jumpHeld || inp.touchJump; inp.melt = meltOn; inp.pound = inp.actionF || inp.pendingPound; inp.heart = inp.actionH || inp.pendingHeart;
+  inp.ride = winp.ride = inp.rideHeld || inp.touchRide; winp.pound = inp.actionF || inp.pendingPound; winp.floatToggle = inp.actionV || inp.pendingFloat;
   winp.mx = mx; winp.mz = mz; winp.jumpHeld = inp.jumpHeld; winp.dash = false; winp.mode = modeSel; winp.fx = facing.x; winp.fz = facing.z;
-  if (pendingHeart && wisp) { const c = com(); popHearts(c[0], c[1], c[2]); emoTrigger('love', 2); chime([659, 784, 988, 1319], 0.05); }
-  pendingPound = false; pendingHeart = false; pendingFloat = false;
+  if ((inp.actionH || inp.pendingHeart) && wisp) { const c = com(); popHearts(c[0], c[1], c[2]); emoTrigger('love', 2); chime([659, 784, 988, 1319], 0.05); }
+  inp.pendingPound = false; inp.pendingHeart = false; inp.pendingFloat = false;
+  input.endFrame();
   if (l > 0.15) { const m = Math.hypot(mx, mz) || 1; facing.x += (mx / m - facing.x) * 0.2; facing.z += (mz / m - facing.z) * 0.2; const f = Math.hypot(facing.x, facing.z) || 1; facing.x /= f; facing.z /= f; }
 }
 
