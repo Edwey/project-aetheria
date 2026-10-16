@@ -73,7 +73,7 @@ export function createBuildPanel(deps) {
     if (txt !== lastGhostTxt) { lastGhostTxt = txt; $('buildInfo').textContent = txt; }
   }
 
-  function placeGhost(addPieceObjFn, renderInvFn, chimeFn, emoTriggerFn, saveSaveFn, setCorePulse) {
+  function placeGhost(addPieceObjFn, renderInvFn, chimeFn, emoTriggerFn, saveSaveFn) {
     if (!buildMode || !ghostG || !ghostG.valid) return;
     const rec = Build.place(bs, ghostG);
     if (!rec) return;
@@ -81,7 +81,6 @@ export function createBuildPanel(deps) {
     addPieceObjFn(rec);
     renderInvFn();
     chimeFn([392, 523, 659], 0.05);
-    setCorePulse(1);
     emoTriggerFn('proud', 1.6);
     saveSaveFn();
   }

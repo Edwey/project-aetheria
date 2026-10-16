@@ -16,6 +16,8 @@ import Wisp from '../gameplay/wisp.js';
 import Profile from '../gameplay/profile.js';
 import Craft from '../gameplay/craft.js';
 import Build from '../gameplay/build.js';
+import createCraftPanel from '../ui/craft-panel.js';
+import { createBuildPanel } from '../ui/build-panel.js';
 
 // Optional GLTF loader: the prototype used an optional CDN GLTFLoader and every
 // cosmetic keeps a procedural-primitive fallback (see tryGLB guard below).
@@ -935,40 +937,10 @@ function clearPieceObjs() { pieceObjs.forEach(i => pieceGroup.remove(i.obj)); pi
 function initBuildState() {
   clearPieceObjs(); bs = Build.create(world);
   Build.load(bs, saveData.pieces[world.name]); bs.list.forEach(addPieceObj);
+  setBs(bs);
 }
 
-// ghost preview
-let buildMode = false, selPiece = 'workbench', ghostYaw = 0, ghostObj = null, ghostType = '', ghostG = null, lastGhostTxt = '';
-function setGhostObj(type) {
-  if (ghostObj) scene.remove(ghostObj); ghostType = type;
-  const info = buildPieceObj(type, null); info.obj.traverse(o => { if (o.isMesh) { o.material = ghostMat; o.castShadow = false; } });
-  ghostObj = info.obj; ghostObj.visible = false; scene.add(ghostObj);
-}
-function toggleBuild() { buildMode = !buildMode; $('bMode').setAttribute('aria-pressed', buildMode); if (!buildMode && ghostObj) ghostObj.visible = false; }
-function cyclePiece(d) { const list = Build.PLACEABLE; selPiece = list[(list.indexOf(selPiece) + d + list.length) % list.length]; $('bPiece').value = selPiece; }
-function rotateGhost() { ghostYaw = (ghostYaw + 90) % 360; }
-function updateGhost() {
-  if (!buildMode) { $('buildInfo').textContent = 'Build mode is off (P)'; return; }
-  if (ghostType !== selPiece) setGhostObj(selPiece);
-  const c = com(), ahead = (selPiece === 'foundation' || selPiece === 'roof') ? 4.5 : 3.5, tx = c[0] + facing.x * ahead, tz = c[2] + facing.z * ahead;
-  const g = Build.ghost(bs, selPiece, { x: c[0], y: c[1], z: c[2] }, tx, tz, ghostYaw, formKind);
-  if (g.valid && (inv[selPiece] || 0) < 1) { g.valid = false; g.reason = 'None in inventory (craft one)'; }
-  ghostG = g; ghostObj.position.set(g.x, g.y, g.z); ghostObj.rotation.y = g.yaw * Math.PI / 180; ghostObj.visible = true;
-  ghostMat.color.setHex(g.valid ? 0x55ee88 : 0xf43f5e);
-  const txt = Craft.ITEMS[selPiece] + ' (you have ' + (inv[selPiece] || 0) + '): ' + (g.valid ? 'ready, press Enter or tap Place' : g.reason);
-  if (txt !== lastGhostTxt) { lastGhostTxt = txt; $('buildInfo').textContent = txt; }
-}
-function placeGhost() {
-  if (!buildMode || !ghostG || !ghostG.valid) return;
-  const rec = Build.place(bs, ghostG); if (!rec) return;
-  inv[selPiece]--; addPieceObj(rec); renderInv(); chime([392, 523, 659], 0.05); corePulse = 1; emoTrigger('proud', 1.6); saveSave();
-}
-function removeNear() {
-  const c = com(), p = Build.nearestPiece(bs, c[0], c[2], 5); if (!p) return;
-  const gone = Build.remove(bs, p.id) || [];
-  gone.forEach(r => { const i = pieceObjs.get(r.id); if (i) { pieceGroup.remove(i.obj); pieceObjs.delete(r.id); } inv[r.type] = (inv[r.type] || 0) + 1; });
-  renderInv(); chime([330, 262], 0.05); saveSave();
-}
+
 let fadeT = 0, lightT = 0;
 function updatePieces(dt, t) {
   if (!bs) return; const c = com();
@@ -991,28 +963,29 @@ function updatePieces(dt, t) {
 // crafting panel
 const craftBtns = [];
 function nearBench() { const c = com(); return bs ? Build.nearBench(bs, c[0], c[2], Craft.BENCH_RANGE) : false; }
-function renderCraft() {
-  const box = $('craftList'); box.innerHTML = ''; craftBtns.length = 0;
-  Craft.RECIPES.forEach(r => {
-    const row = document.createElement('div'); row.className = 'rec';
-    const name = document.createElement('div'); name.className = 'rname'; name.textContent = Craft.ITEMS[r.out] + (r.station === 'bench' ? ' (bench)' : '');
-    const cost = document.createElement('div'); cost.className = 'rcost'; cost.textContent = Craft.costText(r);
-    const btn = document.createElement('button'); btn.textContent = 'Craft';
-    btn.addEventListener('click', () => { const res = Craft.craft(inv, r, nearBench()); if (res.ok) { renderInv(); chime([523, 659, 784], 0.05); corePulse = 1; saveSave(); } btn.blur(); });
-    row.append(name, cost, btn); box.appendChild(row); craftBtns.push({ r, btn });
-  });
-  refreshCraft();
-}
-function refreshCraft() { const nb = nearBench(); craftBtns.forEach(b => { const c = Craft.canCraft(inv, b.r, nb); b.btn.disabled = !c.ok; b.btn.title = c.reason; }); }
+const craftPanel = createCraftPanel({ $, inv, craftBtns, nearBench, chime, onCraft: () => { corePulse = 1; }, saveSave, renderInv });
+const renderCraft = craftPanel.renderCraft;
+const refreshCraft = craftPanel.refreshCraft;
+
+// build panel
+const buildPanel = createBuildPanel({ $, scene, ghostMat, com, facing, inv, formKind, pieceGroup, pieceObjs, chime, emoTrigger, saveSave, renderInv });
+const toggleBuild = buildPanel.toggleBuild;
+const cyclePiece = buildPanel.cyclePiece;
+const rotateGhost = buildPanel.rotateGhost;
+const updateGhost = buildPanel.updateGhost;
+const placeGhost = () => { buildPanel.placeGhost(addPieceObj, renderInv, chime, emoTrigger, saveSave); corePulse = 1; };
+const removeNear = () => buildPanel.removeNear(renderInv, chime, saveSave);
+const setBs = buildPanel.setBs;
+
 const bPiece = $('bPiece');
 Build.PLACEABLE.forEach(id => { const o = document.createElement('option'); o.value = id; o.textContent = Craft.ITEMS[id]; bPiece.appendChild(o); });
-bPiece.value = selPiece; bPiece.addEventListener('change', () => { selPiece = bPiece.value; bPiece.blur(); });
+bPiece.value = buildPanel.selPiece; bPiece.addEventListener('change', () => { /* handled by buildPanel */ bPiece.blur(); });
 $('bMode').addEventListener('click', e => { toggleBuild(); e.currentTarget.blur(); });
 $('bRot').addEventListener('click', e => { rotateGhost(); e.currentTarget.blur(); });
 $('bPlace').addEventListener('click', e => { placeGhost(); e.currentTarget.blur(); });
 $('bRemove').addEventListener('click', e => { removeNear(); e.currentTarget.blur(); });
 $('giveRes').addEventListener('click', e => { Craft.RES.forEach(k => { inv[k] = Math.min(Craft.stackCap(formKind), inv[k] + 10); }); renderInv(); saveSave(); e.currentTarget.blur(); });
-$('c').addEventListener('pointerdown', () => { if (buildMode && !coarse) placeGhost(); });
+$('c').addEventListener('pointerdown', () => { if (buildPanel.buildMode && !coarse) placeGhost(); });
 craftReady = true; renderInv();
 
 /* ================= main loop ================= */

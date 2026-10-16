@@ -11,7 +11,7 @@ import Craft from '../gameplay/craft.js';
  * @returns {object} Craft panel controller
  */
 function createCraftPanel(deps) {
-  const { $, inv, craftBtns, nearBench, chime, corePulse, emoTrigger, saveSave, renderInv } = deps;
+  const { $, inv, craftBtns, nearBench, chime, onCraft, saveSave, renderInv } = deps;
 
   const craftBtnsRef = craftBtns;
 
@@ -25,7 +25,7 @@ function createCraftPanel(deps) {
       const name = document.createElement('div'); name.className = 'rname'; name.textContent = Craft.ITEMS[r.out] + (r.station === 'bench' ? ' (bench)' : '');
       const cost = document.createElement('div'); cost.className = 'rcost'; cost.textContent = Craft.costText(r);
       const btn = document.createElement('button'); btn.textContent = 'Craft';
-      btn.addEventListener('click', () => { const res = Craft.craft(inv, r, nearBench()); if (res.ok) { renderInv(); chime([523, 659, 784], 0.05); deps.corePulse = 1; deps.saveSave(); } btn.blur(); });
+      btn.addEventListener('click', () => { const res = Craft.craft(inv, r, nearBench()); if (res.ok) { renderInv(); chime([523, 659, 784], 0.05); onCraft(); saveSave(); } btn.blur(); });
       row.append(name, cost, btn); box.appendChild(row); craftBtnsRef.push({ r, btn });
     });
     refreshCraft();
