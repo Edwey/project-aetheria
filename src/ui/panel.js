@@ -16,7 +16,7 @@ export function createPanel(deps) {
     $, profile, P, PRESETS, Phys, formKind, quality, coarse,
     saveSoon, switchForm, choosePreset, spawnForm,
     syncSliders, syncFormButtons,
-    applyTime, env, formKind: formKindRef, quality: qualityRef
+    applyTime
   } = deps;
 
   // Form buttons
@@ -94,14 +94,25 @@ export function createPanel(deps) {
     deps.saveSoon();
   }
 
-  // Quality select
+  // Quality select (governor-aware when deps.governor exists, else legacy numeric)
   const qualityEl = $('quality');
-  qualityEl.value = String(deps.quality);
-  qualityEl.addEventListener('change', e => {
-    deps.quality = parseInt(e.target.value, 10);
-    deps.spawnForm(deps.formKind, null, true);
-    e.target.blur();
-  });
+  if (deps.governor) {
+    qualityEl.value = deps.governor.quality;
+    qualityEl.addEventListener('change', e => {
+      const v = e.target.value;
+      if (v === 'light') { deps.governor.quality = 'light'; deps.setQuality(2); }
+      else { deps.governor.quality = 'full'; deps.setQuality(3); }
+      deps.spawnForm(deps.formKind, null, true);
+      e.target.blur();
+    });
+  } else {
+    qualityEl.value = String(deps.quality);
+    qualityEl.addEventListener('change', e => {
+      deps.setQuality(parseInt(e.target.value, 10));
+      deps.spawnForm(deps.formKind, null, true);
+      e.target.blur();
+    });
+  }
 
   // Weather select
   const weatherEl = $('weather');
@@ -123,7 +134,7 @@ export function createPanel(deps) {
       if (deps.formKind === 'slime') deps.spawnForm('slime', null, true);
       deps.saveSoon();
     },
-    sliderEls: {},
+    sliderEls,
     P,
     PRESETS,
     FORMS: [['slime', 'Slime'], ['wisp', 'Wisp'], ['stone', 'Stone']]

@@ -9,6 +9,7 @@ import { createScene } from '../render/scene.js';
 import { buildGroundChunks, createGroundMaterial } from '../render/ground.js';
 import { buildFlora } from '../render/flora.js';
 import { createBodyMesh, createWispMesh, updateOutlineForQuality } from '../render/creature.js';
+import { createPanel } from '../ui/panel.js';
 import Phys from '../gameplay/physics.js';
 import Terrain from '../gameplay/terrain.js';
 import Env from '../gameplay/env.js';
@@ -24,6 +25,7 @@ import { createTouchControls } from '../ui/touch.js';
 import { startLoop } from './loop.js';
 import { createGovernor } from './quality.js';
 import { saveGame, flushGame, loadGame, registerAutoFlush } from './save.js';
+import { loadManifest, getModelUrl, hasModel } from './assets.js';
 
 
 // Optional GLTF loader: the prototype used an optional CDN GLTFLoader and every
@@ -57,57 +59,6 @@ const PRESETS = {
 PRESETS.cube.sticky = 0.3;
 const sizeJump = () => Math.pow(1 / profile.look.size, 0.3), sizeSpeed = () => Math.pow(profile.look.size, -0.2);
 
-/* ================= panel: form, body, sliders ================= */
-const FORMS = [['slime', 'Slime'], ['wisp', 'Wisp'], ['stone', 'Stone']];
-const formsEl = $('forms');
-FORMS.forEach(([id, label]) => {
-  const b = document.createElement('button'); b.textContent = label; b.dataset.id = id; b.setAttribute('aria-pressed', id === formKind);
-  b.addEventListener('click', () => { switchForm(id); b.blur(); }); formsEl.appendChild(b);
-});
-function syncFormButtons() { [...formsEl.children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === formKind)); }
-
-const SLIDERS = [
-  ['stiff', 'Shape hold', 0, 1, 0.01, v => v.toFixed(2)], ['pressure', 'Squish', 0.6, 1.5, 0.01, v => v.toFixed(2)],
-  ['skin', 'Skin tension', 0.05, 1, 0.01, v => v.toFixed(2)], ['grip', 'Grip', 0, 1, 0.01, v => v.toFixed(2)],
-  ['sticky', 'Stickiness', 0, 1, 0.01, v => v.toFixed(2)], ['jmax', 'Max jump', 8, 20, 0.5, v => Phys.jumpHeight({ jmax: v }, 1).height.toFixed(1) + ' m']
-];
-const sliderEls = {};
-SLIDERS.forEach(([key, label, min, max, step, fmt]) => {
-  const d = document.createElement('div'); d.className = 'sl';
-  const l = document.createElement('label'); l.textContent = label; l.htmlFor = 's_' + key;
-  const o = document.createElement('output');
-  const r = document.createElement('input'); r.type = 'range'; r.id = 's_' + key; r.min = min; r.max = max; r.step = step; r.value = P[key];
-  r.addEventListener('input', () => { P[key] = parseFloat(r.value); profile.body[key] = P[key]; o.textContent = fmt(P[key]); saveSoon(); });
-  r.addEventListener('pointerup', () => r.blur());
-  d.append(l, o, r); $('sliders').appendChild(d); sliderEls[key] = { r, o, fmt }; o.textContent = fmt(P[key]);
-});
-function syncSliders() { for (const k in sliderEls) { sliderEls[k].r.value = P[k]; sliderEls[k].o.textContent = sliderEls[k].fmt(P[k]); } }
-const bodiesEl = $('bodies');
-Object.keys(PRESETS).forEach(id => {
-  const b = document.createElement('button'); b.textContent = PRESETS[id].label; b.dataset.id = id; b.setAttribute('aria-pressed', id === profile.body.preset);
-  b.addEventListener('click', () => { choosePreset(id); b.blur(); }); bodiesEl.appendChild(b);
-});
-function choosePreset(id) {
-  const p = PRESETS[id]; profile.body.preset = id;
-  ['stiff', 'pressure', 'skin', 'grip', 'sticky'].forEach(k => { P[k] = p[k]; profile.body[k] = p[k]; });
-  syncSliders(); [...bodiesEl.children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
-  if (formKind === 'slime') spawnForm('slime', null, true); saveSoon();
-}
-$('quality').value = governor.quality;
-$('quality').addEventListener('change', e => {
-  const newQuality = e.target.value;
-  if (newQuality === 'light') {
-    governor.quality = 'light';
-    quality = 2;
-  } else {
-    governor.quality = 'full';
-    quality = 3;
-  }
-  spawnForm(formKind, null, true);
-  e.target.blur();
-});
-
-
 /* ================= three.js ================= */
 const S = createScene(coarse, $('c'));
 const renderer = S.renderer;
@@ -139,12 +90,22 @@ const applyTime = (t) => {
   const hh = Math.floor(t), mm = Math.floor((t - hh) * 60);
   $('timeOut').textContent = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
 };
+// NOTE: time + weather input listeners live in ui/panel.js (R1-012).
 
-$('time').addEventListener('input', e => applyTime(parseFloat(e.target.value)));
-$('time').addEventListener('pointerup', e => e.target.blur());
-
-$('time').addEventListener('input', e => applyTime(parseFloat(e.target.value)));
-$('time').addEventListener('pointerup', e => e.target.blur());
+/* ================= panel: form, body, sliders ================= */
+// R1-012: built by ui/panel.js AFTER applyTime exists (panel stores it for
+// event handlers). Getters keep form/quality/env live; game.js keeps owning
+// the bindings (spawnForm etc. assign them).
+const sliderEls = {};
+const panel = createPanel({
+  $, profile, P, PRESETS, Phys, coarse, saveSoon, switchForm, spawnForm,
+  sliderEls,
+  governor, setQuality: (v) => { quality = v; },
+  get formKind() { return formKind; },
+  get env() { return env; },
+  applyTime,
+});
+const { syncFormButtons, syncSliders, choosePreset } = panel;
 
 /* ================= world ================= */
 let world = null, worldGroup = null, env = null;
@@ -481,11 +442,15 @@ function updateCore(dt, t) {
 }
 
 /* ================= cosmetics (primitive meshes; optional GLB overrides) ================= */
-let ASSETS = null;
-try { if (typeof fetch === 'function') fetch('assets/manifest.json').then(r => r.ok ? r.json() : null).then(j => { ASSETS = j; }).catch(() => {}); } catch (e) { /* no assets folder */ }
+// R1-018: canonical manifest ids via app/assets.js (was: legacy
+// assets/manifest.json fetch). Non-blocking: procedural fallbacks rule
+// until it resolves. NOTE: THREE.GLTFLoader is absent from the three r128
+// module build, so GLB overrides stay dormant until a loader lands (R5).
+loadManifest().catch(() => {});
 function tryGLB(id, group) {
-  if (!ASSETS || !ASSETS[id] || !THREE.GLTFLoader) return;
-  try { new THREE.GLTFLoader().load(ASSETS[id], g => { while (group.children.length) group.remove(group.children[0]); group.add(g.scene); }, undefined, () => {}); } catch (e) { /* keep primitives */ }
+  const url = getModelUrl(id);
+  if (!url || !THREE.GLTFLoader) return;
+  try { new THREE.GLTFLoader().load(url, g => { while (group.children.length) group.remove(group.children[0]); group.add(g.scene); }, undefined, () => {}); } catch (e) { /* keep primitives */ }
 }
 
 const cosm = { head: null, face: null, back: null, aura: null, trail: null };
@@ -782,7 +747,7 @@ function updateWeather(dt) {
   slimeMat.color.setRGB(1, 1, 1); slimeMat.emissive.copy(userEmis); slimeMat.emissiveIntensity = 0.55; stoneMat.color.setRGB(1, 1, 1);
   if (d) { tmpC2.setHex(d.tint); slimeMat.color.lerp(tmpC2, 0.35 * wxAmt); stoneMat.color.lerp(tmpC2, 0.25 * wxAmt); slimeMat.emissive.lerp(tmpC.setHex(d.emi), wxAmt); slimeMat.emissiveIntensity = lerp(0.55, d.ei, wxAmt); }
 }
-$('weather').addEventListener('change', e => { if (env) env.override = e.target.value; e.target.blur(); });
+// NOTE: weather select listener lives in ui/panel.js (R1-012).
 
 /* ================= wind debug arrows ================= */
 const windArrows = []; let windArrowGroup = new THREE.Group(); scene.add(windArrowGroup);
