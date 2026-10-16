@@ -23,35 +23,8 @@ import { createInput } from './input.js';
 import { createTouchControls } from '../ui/touch.js';
 import { startLoop } from './loop.js';
 import { createGovernor } from './quality.js';
+import { saveGame, flushGame, loadGame, registerAutoFlush } from './save.js';
 
-const customizePanel = createCustomizePanel({
-  $, profile, scene, syncLookColors, buildCore, spawnForm, emoManual,
-  buildCosmetics, updateCosmetics, topC, botC, wingGeo, anchors, cosm, trailHist, makePoints, updatePointSizes, tryGLB,
-  saveSoon, updateLastLabel: () => { lastLabel = ''; }
-});
-const buildCustomizeUI = customizePanel.buildCustomizeUI;
-const makeHead = customizePanel.makeHead;
-const makeBack = customizePanel.makeBack;
-const makeFace = customizePanel.makeFace;
-
-const input = createInput();
-const inp = input.state;
-const keys = input.keys;
-const joy = input.joy;
-input.attach();
-
-const touchControls = createTouchControls({
-  $, joy,
-  touchJump: inp.touchJump, setTouchJump: (v) => { inp.touchJump = v; },
-  pendingFloat: inp.pendingFloat, setPendingFloat: (v) => { inp.pendingFloat = v; },
-  pendingPound: inp.pendingPound, setPendingPound: (v) => { inp.pendingPound = v; },
-  toggleMelt: () => { toggleMelt(); },
-  touchRide: inp.touchRide, setTouchRide: (v) => { inp.touchRide = v; }
-});
-
-const governor = createGovernor(coarse ? 'light' : 'full');
-let quality = governor.quality === 'full' ? 3 : 2;
-const slowToggle = { setSlow: null };
 
 // Optional GLTF loader: the prototype used an optional CDN GLTFLoader and every
 // cosmetic keeps a procedural-primitive fallback (see tryGLB guard below).
@@ -63,6 +36,11 @@ const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
 const lerp = (a, b, t) => a + (b - a) * t;
 const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 const FIXED = 1 / 60;
+
+// Quality governor must exist before the quality select wiring below;
+// it only needs `coarse`. (Moved up from the R1-014/015/016 wiring block.)
+const governor = createGovernor(coarse ? 'light' : 'full');
+let quality = governor.quality === 'full' ? 3 : 2;
 
 /* ================= profile ================= */
 let profile = Profile.load();
@@ -847,20 +825,40 @@ function updateHud(s) {
 
 
 /* ================= craft, build, save ================= */
-const SAVE_KEY = 'aetheria.save.v1';
-let saveData = { v: 1, inv: {}, pieces: {} }, saveT2 = 0;
+let saveData = { v: 1, inv: {}, pieces: {} };
+
 function loadSave() {
-  try {
-    const s = JSON.parse(window.localStorage.getItem(SAVE_KEY) || 'null');
-    if (s && s.inv) { saveData = { v: 1, inv: {}, pieces: s.pieces || {} }; Object.keys(inv).forEach(k => { if (typeof s.inv[k] === 'number' && isFinite(s.inv[k])) inv[k] = Math.max(0, Math.min(9999, s.inv[k] | 0)); }); }
-  } catch (e) { /* first visit or storage blocked */ }
+  const loaded = loadGame();
+  if (loaded && loaded.inv) {
+    saveData = { v: 1, inv: {}, pieces: loaded.pieces || {} };
+    Object.keys(inv).forEach(k => {
+      if (typeof loaded.inv[k] === 'number' && isFinite(loaded.inv[k])) {
+        inv[k] = Math.max(0, Math.min(9999, loaded.inv[k] | 0));
+      }
+    });
+  }
 }
+
 function saveSave() {
-  clearTimeout(saveT2);
-  saveT2 = setTimeout(() => { try { saveData.inv = inv; if (bs && world) saveData.pieces[world.name] = Build.serialize(bs); window.localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); } catch (e) { /* ignore */ } }, 500);
+  saveData.inv = inv;
+  if (bs && world) saveData.pieces[world.name] = Build.serialize(bs);
+  saveGame(saveData);
 }
-function flushSave() { clearTimeout(saveT2); try { saveData.inv = inv; if (bs && world) saveData.pieces[world.name] = Build.serialize(bs); window.localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); Profile.save(profile); } catch (e) { /* ignore */ } }
-window.addEventListener('beforeunload', flushSave); window.addEventListener('pagehide', flushSave);
+
+function flushSave() {
+  saveData.inv = inv;
+  if (bs && world) saveData.pieces[world.name] = Build.serialize(bs);
+  Profile.save(profile);
+  flushGame(saveData);
+}
+
+// Register auto-flush handlers
+registerAutoFlush(() => {
+  saveData.inv = inv;
+  if (bs && world) saveData.pieces[world.name] = Build.serialize(bs);
+  return saveData;
+});
+
 loadSave(); renderInv();
 
 let bs = null;                              // build state for the current terrain
@@ -1009,6 +1007,36 @@ function render(dt) {
   renderer.render(scene, cam);
 }
 
+
+// R1-014/015/016 module wiring (moved inside initGame: needs $, profile, scene)
+// (governor + quality live near the top: the quality select wiring uses them.)
+const customizePanel = createCustomizePanel({
+  $, profile, scene, syncLookColors, buildCore, spawnForm, emoManual,
+  buildCosmetics, updateCosmetics, topC, botC, wingGeo, anchors, cosm, trailHist, makePoints, updatePointSizes, tryGLB,
+  saveSoon, updateLastLabel: () => { lastLabel = ''; }
+});
+const buildCustomizeUI = customizePanel.buildCustomizeUI;
+const makeHead = customizePanel.makeHead;
+const makeBack = customizePanel.makeBack;
+const makeFace = customizePanel.makeFace;
+
+const input = createInput();
+const inp = input.state;
+const keys = input.keys;
+const joy = input.joy;
+input.attach();
+
+const touchControls = createTouchControls({
+  $, joy,
+  touchJump: inp.touchJump, setTouchJump: (v) => { inp.touchJump = v; },
+  pendingFloat: inp.pendingFloat, setPendingFloat: (v) => { inp.pendingFloat = v; },
+  pendingPound: inp.pendingPound, setPendingPound: (v) => { inp.pendingPound = v; },
+  toggleMelt: () => { toggleMelt(); },
+  touchRide: inp.touchRide, setTouchRide: (v) => { inp.touchRide = v; }
+});
+
+const slowToggle = { setSlow: null };
+
 startLoop({
   fixedStepFn: fixedStep,
   renderFn: render,
@@ -1025,6 +1053,6 @@ tsel.addEventListener('change', () => { flushSave(); loadTerrain(tsel.value).the
 resize(); syncLookColors(); applyTime(14); buildCustomizeUI();
 await loadTerrain('aetheria'); initBuildState(); spawnForm(formKind, world.spawn); syncLookColors();
 if (window.__SLIMELAB_DEBUG) window.__lab = { spawnAt: (x, z) => spawnForm(formKind, [x, Phys.groundHeight(world, x, z) + 1.5, z]), inv: inv, com: () => com(), world: () => world };   // test hook, only when the flag is set
-requestAnimationFrame(t => { last = t; frame(t); });
+// NOTE: the rAF loop lives in startLoop() (app/loop.js, R1-016); no second loop here.
 
 }

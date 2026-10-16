@@ -28,6 +28,15 @@ export function createInput() {
     touchRide: false,
     touchJump: false,
     modeSel: 0,
+    // Physics-facing fields written by game.js readInput()/fixedStep.
+    // `wind` must exist before fixedStep assigns inp.wind[0..2].
+    mx: 0,
+    mz: 0,
+    wind: [0, 0, 0],
+    ride: false,
+    melt: false,
+    pound: false,
+    heart: false,
   };
 
   function typing(e) {
