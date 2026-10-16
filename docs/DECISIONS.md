@@ -311,11 +311,21 @@ would risk behaviour change; decomposition happens incrementally as R1 tasks
 **Change me if**: you want the big-bang split before R1.
 
 ### Tunnel test uses melt-squeeze + aetheria tunnel
-**Decision**: the original "cube does not pass" setup was not recoverable from
+**Decision**: the original "cube does not pass" setup wasn't recoverable from
 the prototype (both shapes cross the in-world 0.95 m tunnel, slope-assisted).
 Tests lock what the physics supports: blob crosses the real 0.95 m tunnel, and
 melted slime passes a 0.7 m gap that blocks full size (melt 1.09 m -> 0.56 m).
 **Change me if**: playtests show a shape-based jam worth encoding.
+
+### Sun Grotto is now a REAL in-world tunnel (2026-10-16 correction)
+**Decision**: the old test drove across open ground — aetheria had no tunnel at
+(8,8). Added `T.tunnel(8,8,5,0.95,1.8)` lifted by a hut-style flattened site
+(`GROT_H`), with flora excluded in a 7 m radius. Verified behavior: full-size
+bodies stall at the mouth (x≈5.4), melted slime passes (x≈34). The prompt's
+"cube does not pass" clause stays unrecoverable (cube is a slime preset, melts
+too) — the test locks melt-squeeze instead. `T.tunnel` gained an optional `y0`
+base height (defaults 0, no behavior change for existing callers).
+**Change me if**: you want a different grotto site or gap height.
 
 ### Build.load ignores null rows
 **Decision**: one-line `!d` guard so corrupt saves (null entries) load what is

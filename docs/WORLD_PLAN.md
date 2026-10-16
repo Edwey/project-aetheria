@@ -94,11 +94,11 @@ extend bridge anchor. Never: change physics numbers.
 
 ## 7. What I need from you (max 5, defaults marked *)
 
-1. Island themes/landmarks: keep Ember-geode / Spore-garden / Lookout-tower? (*yes)
-2. Old test tunnels (-10,15) and (4,-16): keep as grottos, move, or drop? (*keep (8,8) only, drop the other two)
-3. Starter hut: keep prototype hut as the home at (-20,16)? (*yes)
-4. Sky access emphasis: thermals-first with bridges optional, or bridges-first? (*thermals first)
-5. Anything on this map positioned wrong for the vibe you want? (free text)
-
-Reply with corrections; I will update this file + WORLD.md + tasks/R1/R2 and start
-building R1-002→R1-004 against the agreed map.
+APPROVED 2026-10-16 (all defaults):
+1. Island themes/landmarks: KEEP as drafted.
+2. Old test tunnels: KEEP (8,8) as Sun Grotto (now a real in-world 0.95 m
+   tunnel, flattened site, melted-only passage — implemented in terrain.js);
+   the (-10,15)/(4,-16) tunnels live in the `walls` lab course, untouched.
+3. Starter hut: KEEP at (-20,16).
+4. Sky access: THERMALS FIRST, bridges optional.
+5. Open vibe question: no correction received — map stands as drafted.

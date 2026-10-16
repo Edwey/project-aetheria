@@ -54,11 +54,11 @@ function builder(A) {
       T.box(x0 + px*cy, H/2, z0 - px*sy, platformLen/2, H/2, wid/2, yaw, 0, 0, color);
     }
   };
-  T.tunnel = function (cx, cz, len, gapH, gapW, color) {
-    const wall = 0.3, hw = gapW/2 + wall/2;
-    T.box(cx, gapH/2, cz - hw, len/2, gapH/2, wall/2, 0, 0, 0, color);
-    T.box(cx, gapH/2, cz + hw, len/2, gapH/2, wall/2, 0, 0, 0, color);
-    T.box(cx, gapH + 0.25, cz, len/2, 0.25, hw + wall/2, 0, 0, 0, color);
+  T.tunnel = function (cx, cz, len, gapH, gapW, color, y0) {
+    const wall = 0.3, hw = gapW/2 + wall/2, by = y0 || 0;
+    T.box(cx, by + gapH/2, cz - hw, len/2, gapH/2, wall/2, 0, 0, 0, color);
+    T.box(cx, by + gapH/2, cz + hw, len/2, gapH/2, wall/2, 0, 0, 0, color);
+    T.box(cx, by + gapH + 0.25, cz, len/2, 0.25, hw + wall/2, 0, 0, 0, color);
   };
   T.border = function () {
     const c = 0x8f8a80;
@@ -95,9 +95,14 @@ function hRaw(x, z) {
 }
 const HUT = { cx: -20, cz: 16, half: 4 };
 const HUT_H = hRaw(HUT.cx, HUT.cz);
+// Sun Grotto: 0.95 m squeeze tunnel site (WORLD_PLAN.md P2). Ground is
+// flattened here like the hut so the tunnel mouths sit level.
+const GROT = { cx: 8, cz: 8 };
+const GROT_H = hRaw(GROT.cx, GROT.cz);
 function hAeth(x, z) {
   const d = Math.hypot(x - HUT.cx, z - HUT.cz), t = 1 - sm(7, 13, d);
-  return hRaw(x, z) * (1 - t) + HUT_H * t;
+  const dg = Math.hypot(x - GROT.cx, z - GROT.cz), tg = 1 - sm(4.5, 9, dg);
+  return (hRaw(x, z) * (1 - t) + HUT_H * t) * (1 - tg) + GROT_H * tg;
 }
 function colorAeth(x, z, h, ny) {
   const w = biomeW(x, z), p = 0.5 + 0.5*Math.sin(x*0.5)*Math.sin(z*0.45);
@@ -122,7 +127,7 @@ function buildAetheria(T, A) {
   const placed = [];
   const slopeAt = (x, z) => { const e = 0.6; return Math.hypot(hAeth(x+e, z) - hAeth(x-e, z), hAeth(x, z+e) - hAeth(x, z-e)) / (2*e); };
   const free = (x, z, d) => { for (const p of placed) { const dx = x - p[0], dz = z - p[1], m = (d + p[2]) * 0.5; if (dx*dx + dz*dz < m*m) return false; } return true; };
-  const awayFromHut = (x, z) => Math.hypot(x - HUT.cx, z - HUT.cz) > 11 && Math.hypot(x + 12, z - 14) > 3.5;
+  const awayFromHut = (x, z) => Math.hypot(x - HUT.cx, z - HUT.cz) > 11 && Math.hypot(x + 12, z - 14) > 3.5 && Math.hypot(x - GROT.cx, z - GROT.cz) > 7;
   function scatter(count, minD, test) {
     const out = [];
     for (let tries = 0; tries < count * 500 && out.length < count; tries++) {
@@ -186,6 +191,9 @@ function buildAetheria(T, A) {
   T.box(cx + hf - 0.9, floorTop + 0.6, cz - 1.5, 0.45, 0.6, 0.9, 0, 0, 0, 0x4a4a52, { tag: 'fireplace' });
   T.box(cx - hf + 1.1, floorTop + 0.3, cz + 1.8, 0.9, 0.3, 1.2, 0, 0, 0, 0x6d8cc2, { tag: 'bed' });
   T.visualOnly.push({ c: [cx + 0.3, floorTop + 0.02, cz + 0.4], h: [1.6, 0.02, 1.1], color: 0xd1566b });
+  // Sun Grotto squeeze tunnel (0.95 m gap): melted slime (or pebble) fits,
+  // full-size bodies stall at the mouth. Mouths face +-x at GROT.cx +/- 2.5.
+  T.tunnel(GROT.cx, GROT.cz, 5, 0.95, 1.8, 0xc9b27c, GROT_H);
   return { flora, hut: { cx, cz, hy: floorTop, half: hf } };
 }
 

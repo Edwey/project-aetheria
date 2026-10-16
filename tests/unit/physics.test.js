@@ -64,10 +64,18 @@ export const tests = {
     assert.ok(full > 3.5, `full=${full}`);
   },
 
-  'blob passes the 0.95 m aetheria tunnel': () => {
-    const { body, world, P } = settledSlime('slime', 'sphere', 3, 8);
-    for (let i = 0; i < 720; i++) Phys.stepBody(body, world, P, idleInp({ mx: 1 }), DT);
-    assert.ok(body.com[0] > 10.5, `x=${body.com[0]} (tunnel exit ~10.5)`);
+  'melted slime squeezes through Sun Grotto (0.95 m); full size stalls': () => {
+    // Real tunnel in the aetheria world at (8,8): mouth x=5.5, exit x=10.5.
+    // (Prompt's cube-blocks claim was unrecoverable: cube is a slime preset, so
+    // it melts too. This locks the underlying squeeze mechanic instead.)
+    const run = (melt) => {
+      const { body, world, P } = settledSlime('slime', 'sphere', 3, 8);
+      const Q = slimeP('slime', { sticky: 0 });
+      for (let i = 0; i < 720; i++) Phys.stepBody(body, world, Q, idleInp({ mx: 1, melt }), DT);
+      return body.com[0];
+    };
+    assert.ok(run(false) < 8, 'full size stalls at the grotto mouth');
+    assert.ok(run(true) > 10.5, 'melted slime squeezes through');
   },
 
   'melted slime squeezes through a 0.7 m gap that blocks full size': () => {
