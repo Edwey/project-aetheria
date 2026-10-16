@@ -360,6 +360,18 @@ staged but UNWIRED. Rule: every R1 wiring task must pass `scripts/shot.mjs`
 (zero console errors + screenshot) before commit, not just build+tests.
 **Change me if**: you want the re-attempt to happen differently.
 
+### KayKit dropped from scope
+**Decision**: KayKit removed from `assets/sources.json` (license unverifiable
+without a human on itch.io). Kenney's 8 packs + Quaternius cover every model
+the game needs (trees, rocks, workbench, boats, hats via procedural fallback).
+**Change me if**: KayKit publishes a clear CC0 pack with a direct link.
+
+### WORLD_PLAN.md is the reviewable world proposal
+**Decision**: concrete map/POIs/islands/routes drafted in `docs/WORLD_PLAN.md`
+for user review (R1-002 already moved spawn to (-24,28); tunnel/thermal/island
+numbers in tasks are first guesses until R2-007 reachability passes).
+**Change me if**: the user corrects any placement (update plan + WORLD.md + tasks).
+
 ## Notes on Decisions
 
 ### Decision Process
