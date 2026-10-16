@@ -26,28 +26,28 @@ Each release is playable and has acceptance tests. We deliver as numbered releas
 
 ---
 
-### R1: Land
+### R1: Land (Current Status: In Progress)
 **Goal**: The 240m landmass with chunked rendering, CC0 instanced flora, toon shading, creature outline, plain-CSS HUD, local save/load, and quality auto-pick.
 
 **Deliverables**:
-- World API with 40m chunk meshes (6×6 chunks)
-- Per-chunk instanced flora via manifest
-- Toon shading (MeshToonMaterial with 3-4 step ramp)
-- Creature outline (inverted-hull pass)
-- Plain-CSS HUD (no framework)
-- Local save/load (localStorage + IndexedDB for large data)
-- Light and Full quality with FPS governor
-- Auto quality selection based on device capabilities
+- [x] World API with 40m chunk meshes (6×6 chunks) - R1-007, R1-008
+- [x] Per-chunk instanced flora via manifest - R1-009
+- [x] Toon shading (MeshToonMaterial with 3-4 step ramp) - R1-007
+- [ ] Creature outline (inverted-hull pass) - pending
+- [x] Plain-CSS HUD (no framework) - R1-011
+- [x] Local save/load (localStorage + IndexedDB for large data) - R1-010
+- [x] Light and Full quality with FPS governor - R1-012
+- [x] Auto quality selection based on device capabilities - R1-012
 
 **Acceptance Tests**:
-- All flora renders correctly with instancing
-- Chunks outside view are culled
-- HUD displays correctly on mobile and desktop
-- Save/load persists inventory and build state
-- Quality governor responds to FPS drops
-- Light quality runs at 30+ FPS on target phone
+- [x] All flora renders correctly with instancing
+- [x] Chunks outside view are culled
+- [ ] HUD displays correctly on mobile and desktop - partial
+- [ ] Save/load persists inventory and build state - needs verification
+- [ ] Quality governor responds to FPS drops - needs verification
+- [ ] Light quality runs at 30+ FPS on target phone - needs verification
 
-**Status**: Task files ready (tasks/R1/001-021) — execute in order
+**Status**: In Progress (R1-007 through R1-012 complete, R1-013 onward pending)
 
 ---
 

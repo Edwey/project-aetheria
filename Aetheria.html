@@ -1,177 +1,244 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-screen="title">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Slime Lab</title>
+<meta name="theme-color" content="#cfe9f3">
+<title>Aetheria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --sky: #cfe9f3; --panel: rgba(255,255,255,.86); --ink: #16301f; --muted: #4f6b58; --line: rgba(22,48,31,.18);
-  --accent: #2fbf62; --accent-ink: #052612; --track: rgba(22,48,31,.14);
+  --ui: 1;
+  --ink: #18321f; --muted: #587063; --paper: rgba(255, 251, 240, .9); --paper2: rgba(255, 251, 240, .96); --line: rgba(24, 50, 31, .16);
+  --accent: #2fbf62; --accent-ink: #062812; --warm: #ffb43a; --shadow: 0 .4rem 1.4rem rgba(20, 40, 30, .22);
+  --sky-top: #8fd3f4; --sky-bot: #e9f7ee;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --sky: #14202b; --panel: rgba(18,30,24,.86); --ink: #e4f5ea; --muted: #9ab8a4; --line: rgba(228,245,234,.2);
-    --accent: #55e08a; --accent-ink: #04210f; --track: rgba(228,245,234,.18);
-  }
+  :root:not([data-theme="light"]) { --ink: #eaf7ee; --muted: #a5c1ae; --paper: rgba(20, 32, 26, .88); --paper2: rgba(20, 32, 26, .96); --line: rgba(234, 247, 238, .2); --accent: #55e08a; --shadow: 0 .4rem 1.4rem rgba(0, 0, 0, .45); }
 }
-:root[data-theme="dark"] {
-  --sky: #14202b; --panel: rgba(18,30,24,.86); --ink: #e4f5ea; --muted: #9ab8a4; --line: rgba(228,245,234,.2);
-  --accent: #55e08a; --accent-ink: #04210f; --track: rgba(228,245,234,.18);
-}
-html { scroll-padding-top: env(safe-area-inset-top, 0px); }
-html, body { height: 100%; margin: 0; overflow: hidden; background: var(--sky); color: var(--ink);
-  font-family: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif; touch-action: none; -webkit-user-select: none; user-select: none; }
+html { font-size: calc(16px * var(--ui)); scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; margin: 0; overflow: hidden; color: var(--ink); font-family: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+body { background: linear-gradient(180deg, var(--sky-top), var(--sky-bot)); }
+[hidden] { display: none !important; }
+#sky { position: fixed; inset: 0; }
 canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20, 40, 30, .28) 100%); }
 
-#panel { position: fixed; left: max(10px, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + 10px); width: 268px; max-width: calc(100vw - 20px);
-  max-height: calc(100% - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; background: var(--panel); border: 1px solid var(--line);
-  border-radius: 14px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 13px; }
-#panel > summary { list-style: none; cursor: pointer; padding: 10px 14px; font-weight: 800; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
-#panel > summary::-webkit-details-marker { display: none; }
-#panel > summary::after { content: "\25BE"; color: var(--muted); transition: transform .15s; }
-#panel:not([open]) > summary::after { transform: rotate(90deg); }
-#panel .body { padding: 0 14px 12px; display: grid; gap: 11px; }
-.lbl { font-weight: 800; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-button, select { font: inherit; color: var(--ink); }
-.seg button, .row button { background: transparent; border: 1px solid var(--line); border-radius: 9px; padding: 7px 6px; cursor: pointer; font-weight: 700; }
-.seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-select { width: 100%; padding: 7px 8px; border-radius: 9px; border: 1px solid var(--line); background: transparent; }
-select option { color: #111; }
-.sl { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; }
-.sl label { font-weight: 700; }
-.sl output { color: var(--muted); font-variant-numeric: tabular-nums; }
-.sl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: 2px 0 0; }
-.row { display: flex; gap: 6px; align-items: center; }
-.row button { flex: 1; }
-input[type=color] { width: 38px; height: 30px; border: 1px solid var(--line); border-radius: 8px; background: transparent; padding: 2px; }
-.hint { color: var(--muted); line-height: 1.45; font-size: 12px; margin: 0; }
-
-#inv { position: fixed; right: max(10px, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 10px); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; font-size: 13px; min-width: 150px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); pointer-events: none; }
-#inv .biome { font-weight: 800; font-size: 14px; }
-#inv .wx { color: var(--muted); margin-bottom: 6px; }
-#inv ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-#inv li { display: flex; justify-content: space-between; gap: 14px; font-variant-numeric: tabular-nums; }
-#inv li span:first-child { color: var(--muted); }
-.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.acts button { background: transparent; border: 1px solid var(--line); border-radius: 9px; padding: 7px 6px; cursor: pointer; font-weight: 700; }
-.acts button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-@media (max-width: 640px) { #inv { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 200px); right: 10px; } }
-.seg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-.seg3 button { background: transparent; border: 1px solid var(--line); border-radius: 9px; padding: 7px 4px; cursor: pointer; font-weight: 700; }
-.seg3 button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: .15rem solid var(--accent); outline-offset: .12rem; }
 button:disabled { opacity: .4; cursor: not-allowed; }
-details#cust { border: 1px solid var(--line); border-radius: 10px; }
-details#cust > summary { cursor: pointer; padding: 8px 10px; font-weight: 800; }
-#custBody { display: grid; gap: 9px; padding: 4px 10px 10px; }
-input.txt { width: 100%; box-sizing: border-box; padding: 7px 8px; border-radius: 9px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; }
-button.wide { width: 100%; background: transparent; border: 1px solid var(--line); border-radius: 9px; padding: 7px; cursor: pointer; font-weight: 700; }
-#windArrow { display: inline-block; color: var(--accent); }
-.rec { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--line); }
-.rec .rname { font-weight: 700; } .rec .rcost { grid-column: 1; color: var(--muted); font-size: 12px; } .rec button { grid-row: 1 / span 2; grid-column: 2; background: transparent; border: 1px solid var(--line); border-radius: 9px; padding: 6px 10px; cursor: pointer; font-weight: 700; }
-details.sec { border: 1px solid var(--line); border-radius: 10px; } details.sec > summary { cursor: pointer; padding: 8px 10px; font-weight: 800; } details.sec > div.inner { display: grid; gap: 8px; padding: 4px 10px 10px; }
-#buildInfo { color: var(--muted); font-size: 12px; line-height: 1.4; min-height: 2.8em; }
-#vbtn { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 294px); bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); width: 70px; height: 70px; border-radius: 50%; background: var(--panel); color: var(--ink); border: 1px solid var(--line); font-weight: 800; font-size: 12px; pointer-events: auto; touch-action: none; }
-#abtn { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 214px); bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); width: 70px; height: 70px; border-radius: 50%; background: var(--panel); color: var(--ink); border: 1px solid var(--line); font-weight: 800; font-size: 12px; pointer-events: auto; touch-action: none; }
-#jump { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); width: min(340px, calc(100vw - 32px)); pointer-events: none; text-align: center; }
-#jump .txt { font-weight: 800; font-size: 14px; margin-bottom: 6px; text-shadow: 0 1px 0 var(--sky); }
-#jump .bar { height: 12px; border-radius: 8px; background: var(--track); overflow: hidden; border: 1px solid var(--line); }
-#jump .fill { height: 100%; width: 0%; background: var(--accent); }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 1rem; box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.btn, .seg button, .seg3 button, .acts button, .row button, button.wide { background: var(--paper2); border: 1px solid var(--line); border-radius: .75rem; padding: .5rem .8rem; font-weight: 800; transition: transform .08s, background .12s; }
+.btn:active, .seg button:active, .seg3 button:active, .acts button:active, .row button:active, button.wide:active { transform: scale(.96); }
+.seg button[aria-pressed="true"], .seg3 button[aria-pressed="true"], .acts button[aria-pressed="true"], .row button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.big { font-size: 1.15rem; font-weight: 900; padding: .8rem 1.6rem; border-radius: 1rem; background: var(--accent); color: var(--accent-ink); border: 0; box-shadow: 0 .25rem 0 rgba(0, 0, 0, .18), var(--shadow); }
+button.big:active { transform: translateY(.12rem); box-shadow: 0 .1rem 0 rgba(0, 0, 0, .18); }
+button.wide { width: 100%; }
+.iconbtn { width: 2.7rem; height: 2.7rem; border-radius: 50%; border: 1px solid var(--line); background: var(--paper2); font-size: 1.2rem; display: grid; place-items: center; box-shadow: var(--shadow); }
+.lbl { font-weight: 800; font-size: .78rem; color: var(--muted); margin: .2rem 0 .25rem; text-transform: uppercase; letter-spacing: .04em; }
+.hint { color: var(--muted); font-size: .85rem; line-height: 1.45; margin: .3rem 0; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; } .seg3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+.acts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; } .row { display: flex; gap: .4rem; align-items: center; } .row > * { flex: 1; }
+.stack { display: grid; gap: .6rem; }
+select, input.txt { width: 100%; box-sizing: border-box; padding: .5rem .6rem; border-radius: .7rem; border: 1px solid var(--line); background: var(--paper2); }
+select option { color: #111; }
+.sl { display: grid; grid-template-columns: 1fr auto; gap: 0 .5rem; align-items: center; } .sl label { font-weight: 700; } .sl output { color: var(--muted); font-variant-numeric: tabular-nums; }
+.sl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: .15rem 0 0; } input[type=color] { width: 3rem; height: 2rem; border: 1px solid var(--line); border-radius: .5rem; background: transparent; padding: .1rem; }
+.sl input[type=color] { grid-column: 2; justify-self: end; }
+.rec { display: grid; grid-template-columns: 1fr auto; gap: 0 .6rem; align-items: center; padding: .35rem 0; border-bottom: 1px solid var(--line); }
+.rec .rname { font-weight: 800; } .rec .rcost { grid-column: 1; color: var(--muted); font-size: .8rem; } .rec button { grid-row: 1 / span 2; grid-column: 2; background: var(--paper2); border: 1px solid var(--line); border-radius: .7rem; padding: .4rem .8rem; font-weight: 800; }
+#buildInfo { color: var(--muted); font-size: .85rem; line-height: 1.4; min-height: 2.6em; }
+.key { display: inline-block; min-width: 1.5rem; padding: .08rem .4rem; text-align: center; border: 1px solid var(--line); border-bottom-width: .2rem; border-radius: .4rem; background: var(--paper2); font-weight: 900; font-size: .78rem; }
 
-#touch { position: fixed; inset: 0; pointer-events: none; display: none; }
-#touch.on { display: block; }
-#joy { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 22px); bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); width: 124px; height: 124px; border-radius: 50%;
-  background: var(--panel); border: 1px solid var(--line); pointer-events: auto; touch-action: none; }
-#knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: var(--accent); opacity: .9; }
-#jbtn { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 24px); bottom: calc(env(safe-area-inset-bottom, 0px) + 66px); width: 96px; height: 96px; border-radius: 50%;
-  background: var(--accent); color: var(--accent-ink); border: none; font-weight: 800; font-size: 16px; pointer-events: auto; touch-action: none; }
-#pbtn, #mbtn { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 134px); width: 70px; height: 70px; border-radius: 50%; background: var(--panel); color: var(--ink); border: 1px solid var(--line); font-weight: 800; font-size: 13px; pointer-events: auto; touch-action: none; }
-#pbtn { bottom: calc(env(safe-area-inset-bottom, 0px) + 58px); }
-#mbtn { bottom: calc(env(safe-area-inset-bottom, 0px) + 138px); }
-#jbtn:active { filter: brightness(.9); }
+/* ---- HUD ---- */
+#hud { position: fixed; inset: 0; pointer-events: none; }
+html:not([data-screen="play"]) #hud, html:not([data-screen="play"]) #touch { display: none; }
+#hud > * { pointer-events: auto; }
+#chip { position: absolute; left: max(.7rem, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + .7rem); display: flex; align-items: center; gap: .6rem; padding: .35rem .9rem .35rem .35rem; }
+#chip .who { line-height: 1.15; } #chipName { font-weight: 900; } #chipForm { font-size: .78rem; color: var(--muted); font-weight: 700; }
+#inv { position: absolute; right: max(.7rem, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + .7rem); padding: .6rem .9rem; min-width: 9.5rem; text-align: right; pointer-events: none; }
+#inv .biome { font-weight: 900; font-size: 1.02rem; } #inv .wx { color: var(--muted); font-size: .8rem; font-weight: 700; margin-top: .1rem; } #inv .clock { font-weight: 900; font-size: .95rem; margin-top: .2rem; font-variant-numeric: tabular-nums; }
+#windArrow { display: inline-block; color: var(--accent); }
+#toasts { position: absolute; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + .8rem); width: min(26rem, 92vw); display: grid; gap: .45rem; pointer-events: none; }
+.toast { padding: .55rem .9rem; border-radius: .9rem; background: var(--paper2); border: 1px solid var(--line); box-shadow: var(--shadow); font-weight: 800; font-size: .92rem; line-height: 1.35; animation: pop .25s ease-out; }
+.toast.tip::before { content: "Tip  "; color: var(--accent); font-weight: 900; } .toast.item { width: fit-content; justify-self: center; background: var(--accent); color: var(--accent-ink); border: 0; }
+@keyframes pop { from { transform: translateY(-.6rem) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+#hotbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 4.6rem); max-width: min(46rem, 96vw); }
+#invList { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+.slot { position: relative; width: 3.1rem; height: 3.1rem; border-radius: .85rem; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); display: grid; place-items: center; font-size: 1.4rem; padding: 0; backdrop-filter: blur(8px); }
+.slot .ct { position: absolute; right: .2rem; bottom: .05rem; font-size: .7rem; font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 0 0 .2rem var(--paper2); }
+.slot.dim { opacity: .55; } .slot.sel { outline: .16rem solid var(--accent); }
+#jump { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + .8rem); width: min(26rem, calc(100vw - 2rem)); text-align: center; pointer-events: none; }
+#jump .txt { font-weight: 800; font-size: .9rem; margin-bottom: .3rem; text-shadow: 0 .05rem .3rem var(--paper2), 0 0 .5rem var(--paper2); }
+#jump .bar { height: .7rem; border-radius: .5rem; background: rgba(24, 50, 31, .16); overflow: hidden; border: 1px solid var(--line); } #jump .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), #8affb0); }
+#abilities { position: absolute; right: max(.7rem, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + .8rem); display: grid; gap: .3rem; justify-items: end; }
+.ab { display: flex; align-items: center; gap: .45rem; padding: .25rem .6rem .25rem .3rem; border-radius: .8rem; background: var(--paper); border: 1px solid var(--line); font-weight: 800; font-size: .8rem; box-shadow: var(--shadow); backdrop-filter: blur(8px); }
+.ab[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.ab small { color: var(--muted); font-weight: 700; margin-left: .15rem; } .ab[aria-pressed="true"] small { color: inherit; }
+
+/* ---- overlays: title, menu, loading, intro ---- */
+.overlay { position: fixed; inset: 0; display: grid; place-items: center; z-index: 20; }
+#title { background: linear-gradient(180deg, rgba(20, 60, 50, .35), rgba(20, 60, 50, 0) 40%, rgba(20, 40, 30, .45)); }
+.titlebox { text-align: center; padding: 1rem; }
+.logo { font-weight: 900; font-size: clamp(2.6rem, 11vw, 6rem); letter-spacing: .12em; line-height: 1; color: #fff; text-shadow: 0 .25rem 0 #2fa95a, 0 .5rem 0 rgba(0, 0, 0, .18), 0 1rem 2rem rgba(0, 0, 0, .35); }
+.tag { color: #fff; font-weight: 800; font-size: clamp(.95rem, 3vw, 1.3rem); margin: .8rem 0 1.6rem; text-shadow: 0 .1rem .5rem rgba(0, 0, 0, .5); }
+.titlebtns { display: grid; gap: .6rem; width: min(18rem, 80vw); margin: 0 auto; } .titlebtns .btn { padding: .65rem; font-size: 1rem; }
+#titleInfo { color: #fff; font-weight: 700; font-size: .85rem; margin-top: 1.2rem; text-shadow: 0 .1rem .4rem rgba(0, 0, 0, .6); }
+#menu { background: rgba(10, 24, 18, .5); }
+.sheet { width: min(58rem, 96vw); height: min(40rem, 92vh); display: grid; grid-template-columns: 13rem 1fr; background: var(--paper2); border: 1px solid var(--line); border-radius: 1.2rem; box-shadow: var(--shadow); overflow: hidden; }
+.tabs { display: flex; flex-direction: column; gap: .35rem; padding: .8rem; border-right: 1px solid var(--line); background: rgba(47, 191, 98, .1); }
+.tabs .brand { font-weight: 900; letter-spacing: .1em; padding: .3rem .4rem .6rem; }
+.tabs button[data-tab] { text-align: left; padding: .6rem .8rem; border: 0; border-radius: .8rem; background: transparent; font-weight: 800; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tabs .close { margin-top: auto; }
+.panes { overflow-y: auto; padding: 1rem 1.2rem 1.4rem; touch-action: pan-y; }
+.pane { display: none; gap: .6rem; } .pane.on { display: grid; align-content: start; }
+.pane h2 { margin: .1rem 0 .2rem; font-size: 1.25rem; } .pane h3 { margin: .8rem 0 .1rem; font-size: 1rem; }
+@media (max-width: 720px) { .sheet { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } .tabs { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: .5rem; } .tabs .brand { display: none; } .tabs .close { margin: 0 0 0 auto; white-space: nowrap; } .tabs button[data-tab] { white-space: nowrap; } }
+.help-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .6rem; }
+.hcard { background: var(--paper); border: 1px solid var(--line); border-radius: .9rem; padding: .7rem .8rem; } .hcard h4 { margin: 0 0 .3rem; font-size: .95rem; } .hcard ul { margin: 0; padding-left: 1.1rem; font-size: .86rem; line-height: 1.55; } .hcard p { margin: .2rem 0; font-size: .86rem; line-height: 1.5; }
+#loading { background: rgba(10, 24, 18, .55); color: #fff; font-weight: 900; font-size: 1.2rem; z-index: 40; } #loading .dot { display: inline-block; width: 1rem; height: 1rem; border-radius: 50%; background: var(--accent); margin-right: .6rem; animation: bob 1s infinite ease-in-out; vertical-align: middle; }
+@keyframes bob { 50% { transform: translateY(-.5rem); } }
+#intro { background: rgba(10, 24, 18, .45); z-index: 30; } #intro .card { padding: 1.2rem 1.4rem; width: min(26rem, 92vw); background: var(--paper2); }
+#intro h2 { margin: 0 0 .5rem; } #intro ul { padding-left: 1.2rem; line-height: 1.7; margin: .3rem 0 1rem; }
+
+/* ---- touch controls ---- */
+#touch { position: fixed; inset: 0; pointer-events: none; display: none; } #touch.on { display: block; }
+#joy { position: absolute; left: calc(env(safe-area-inset-left, 0px) + 1.4rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 3.8rem); width: 7.6rem; height: 7.6rem; border-radius: 50%; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); pointer-events: auto; touch-action: none; }
+#knob { position: absolute; left: 50%; top: 50%; width: 3.2rem; height: 3.2rem; margin: -1.6rem 0 0 -1.6rem; border-radius: 50%; background: var(--accent); opacity: .9; }
+#jbtn { position: absolute; right: calc(env(safe-area-inset-right, 0px) + 1.4rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem); width: 6rem; height: 6rem; border-radius: 50%; background: var(--accent); color: var(--accent-ink); border: 0; font-weight: 900; font-size: 1.05rem; box-shadow: var(--shadow); pointer-events: auto; touch-action: none; }
+#pbtn, #mbtn, #abtn, #vbtn { position: absolute; width: 4.2rem; height: 4.2rem; border-radius: 50%; background: var(--paper); color: var(--ink); border: 1px solid var(--line); font-weight: 900; font-size: .78rem; box-shadow: var(--shadow); pointer-events: auto; touch-action: none; }
+#pbtn { right: calc(env(safe-area-inset-right, 0px) + 8.4rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 3.6rem); }
+#mbtn { right: calc(env(safe-area-inset-right, 0px) + 8.4rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 8.2rem); }
+#abtn { right: calc(env(safe-area-inset-right, 0px) + 13rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 3.6rem); }
+#vbtn { right: calc(env(safe-area-inset-right, 0px) + 13rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 8.2rem); }
+@media (pointer: coarse) { #abilities { display: none; } #hotbar { bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); left: calc(env(safe-area-inset-left, 0px) + 10.5rem); transform: none; max-width: calc(100vw - 25rem); } #jump { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 4.2rem); } .slot { width: 2.6rem; height: 2.6rem; font-size: 1.15rem; } }
 </style>
 </head>
 <body>
+<div id="sky"></div>
 <canvas id="c"></canvas>
+<div id="vignette"></div>
 
-<details id="panel" open>
-  <summary>Slime Lab</summary>
-  <div class="body">
-    <div>
-      <div class="lbl">Form (Tab switches)</div>
-      <div class="seg3" id="forms"></div>
-    </div>
-    <div>
-      <div class="lbl">Slime body</div>
-      <div class="seg" id="bodies"></div>
-    </div>
-    <div>
-      <div class="lbl">Terrain</div>
-      <select id="terrain" aria-label="Terrain"></select>
-    </div>
-    <div>
-      <div class="lbl">Slime quality</div>
-      <select id="quality" aria-label="Slime quality"><option value="3">Full (642 particles)</option><option value="2">Light (162 particles)</option></select>
-    </div>
-    <div>
-      <div class="lbl">Actions</div>
-      <div class="acts">
-        <button id="aMelt" aria-pressed="false">Puddle melt (M)</button>
-        <button id="aSpring" aria-pressed="false">Coiled spring (C)</button>
-        <button id="aFloat" aria-pressed="false">Float (V)</button>
-        <button id="aHeart">Heart pop (H)</button>
-        <button id="aPound">Ground pound (F)</button>
-      </div>
-    </div>
-    <div>
-      <div class="lbl">Weather</div>
-      <select id="weather" aria-label="Weather"><option value="auto">Follow biome</option><option value="off">Clear</option><option value="rain">Sun shower</option><option value="sand">Sand flurry</option><option value="snow">Snowfall</option><option value="spore">Spore aurora</option></select>
-    </div>
-    <div class="sl"><label for="time">Time of day</label><output id="timeOut">14:00</output><input type="range" id="time" min="0" max="24" step="0.1" value="14"></div>
-    <div id="sliders" style="display:grid;gap:9px"></div>
-    <details class="sec" id="craft"><summary>Craft</summary><div class="inner">
-      <div id="craftList"></div>
-      <button id="giveRes" class="wide">Test: +10 of each resource</button>
-    </div></details>
-    <details class="sec" id="build"><summary>Build</summary><div class="inner">
-      <select id="bPiece" aria-label="Piece to place"></select>
-      <div class="acts"><button id="bMode" aria-pressed="false">Build mode (P)</button><button id="bPlace">Place (Enter)</button><button id="bRot">Rotate (X)</button><button id="bRemove">Remove near (Del)</button></div>
-      <div id="buildInfo">Build mode is off (P)</div>
-    </div></details>
-    <details id="cust"><summary>Customize and cosmetics</summary><div id="custBody"></div></details>
-    <div class="row">
-      <button id="slow" aria-pressed="false">Slow-mo</button>
-      <button id="reset">Respawn</button>
-    </div>
-    <div class="row">
-      <button id="rotL">Rotate left</button><button id="rotR">Rotate right</button>
-    </div>
-    <div class="row">
-      <button id="zoomOut">Zoom out</button><button id="zoomIn">Zoom in</button>
-    </div>
-    <p class="hint">WASD or arrows move. Slime and stone: hold Space to charge a jump, release to jump; hold it in the air to glide (stone: crystal sail) and hang briefly at the top. Wisp: tap Space to hop, hold Space to rise (costs breath fast), press V to float and hold your height (costs breath slowly); otherwise it sinks. Breath refills on the ground. Push into a wall to climb (slime sticky, stone pitons, wisp wall-hug). M: melt (slime), pebble (stone), diffuse (wisp). C: spring or condense. F: pound or down-gust. H: heart. Hold Shift to Ride the wind (it never moves you otherwise). Tab switches form. 1 to 8 are emotes. B shows wind. P toggles build mode, [ ] pick a piece, X rotates, Enter places, Del removes. Q/E rotate the camera, wheel zooms, R respawns, T slow-mo.</p>
-  </div>
-</details>
-
-<div id="inv" aria-live="polite"><div class="biome" id="biomeLbl">Slime Lab</div><div class="wx"><span id="windArrow">&#10148;</span> <span id="wxLbl">Clear</span></div><ul id="invList"></ul></div>
-
-<div id="jump"><div class="txt" id="jtxt">Tap Space for a hop, hold for a big jump</div><div class="bar"><div class="fill" id="jfill"></div></div></div>
+<div id="hud">
+  <div id="chip" class="card"><button id="menuBtn" class="iconbtn" aria-label="Open menu">&#9776;</button><div class="who"><div id="chipName">Slimey</div><div id="chipForm">Slime</div></div></div>
+  <div id="inv" class="card" aria-live="polite"><div class="biome" id="biomeLbl">Aetheria</div><div class="wx"><span id="windArrow">&#10148;</span> <span id="wxLbl">Clear</span></div><div class="clock" id="clock">14:00</div></div>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="hotbar"><div id="invList"></div></div>
+  <div id="abilities"></div>
+  <div id="jump"><div class="txt" id="jtxt">Tap Space for a hop, hold for a big jump</div><div class="bar"><div class="fill" id="jfill"></div></div></div>
+</div>
 
 <div id="touch">
   <div id="joy"><div id="knob"></div></div>
-  <button id="vbtn">Float</button>
-  <button id="abtn">Ride</button>
-  <button id="mbtn">Melt</button>
-  <button id="pbtn">Pound</button>
-  <button id="jbtn">Jump</button>
+  <button id="vbtn">Float</button><button id="abtn">Ride</button><button id="mbtn">Melt</button><button id="pbtn">Pound</button><button id="jbtn">Jump</button>
 </div>
+
+<div id="title" class="overlay">
+  <div class="titlebox">
+    <div class="logo">AETHERIA</div>
+    <div class="tag">A peaceful world for slimes, wisps and stones</div>
+    <div class="titlebtns">
+      <button id="playBtn" class="big">Play</button>
+      <button id="newWorldBtn" class="btn">New world</button>
+      <button id="howBtn" class="btn">How to play</button>
+      <button id="setBtn" class="btn">Settings</button>
+    </div>
+    <div id="titleInfo"></div>
+  </div>
+</div>
+
+<div id="menu" class="overlay" hidden>
+  <div class="sheet" role="dialog" aria-label="Menu">
+    <div class="tabs" role="tablist">
+      <div class="brand">AETHERIA</div>
+      <button id="tabBtn_creature" data-tab="creature" aria-selected="true" role="tab">Creature</button>
+      <button id="tabBtn_craft" data-tab="craft" aria-selected="false" role="tab">Craft and build</button>
+      <button id="tabBtn_world" data-tab="world" aria-selected="false" role="tab">World</button>
+      <button id="tabBtn_settings" data-tab="settings" aria-selected="false" role="tab">Settings</button>
+      <button id="tabBtn_help" data-tab="help" aria-selected="false" role="tab">How to play</button>
+      <button id="menuClose" class="btn close">Close (Esc)</button>
+    </div>
+    <div class="panes">
+      <section id="pane_creature" class="pane on" data-pane="creature">
+        <h2>Your creature</h2>
+        <div><div class="lbl">Form (Tab switches)</div><div class="seg3" id="forms"></div></div>
+        <div><div class="lbl">Slime body</div><div class="seg" id="bodies"></div></div>
+        <div id="sliders" class="stack"></div>
+        <h3>Look and cosmetics</h3>
+        <div id="custBody" class="stack"></div>
+        <h3>Abilities</h3>
+        <div class="acts"><button id="aMelt" aria-pressed="false">Puddle melt (M)</button><button id="aSpring" aria-pressed="false">Coiled spring (C)</button><button id="aFloat" aria-pressed="false">Float (V)</button><button id="aHeart">Heart pop (H)</button><button id="aPound">Ground pound (F)</button></div>
+      </section>
+      <section id="pane_craft" class="pane" data-pane="craft">
+        <h2>Craft</h2>
+        <div id="craftList"></div>
+        <button id="giveRes" class="wide">Creative: +10 of each resource</button>
+        <h2>Build</h2>
+        <select id="bPiece" aria-label="Piece to place"></select>
+        <div class="acts"><button id="bMode" aria-pressed="false">Build mode (P)</button><button id="bPlace">Place (Enter)</button><button id="bRot">Rotate (X)</button><button id="bRemove">Remove near (Del)</button></div>
+        <div id="buildInfo">Build mode is off (P)</div>
+      </section>
+      <section id="pane_world" class="pane" data-pane="world">
+        <h2>World</h2>
+        <div class="lbl">Seed</div>
+        <div class="row"><input id="seed" class="txt" type="text" inputmode="numeric" maxlength="9" value="1" aria-label="World seed"><button id="seedDice" aria-label="Random seed" style="flex:0 0 3rem">&#127922;</button></div>
+        <div class="lbl">Island size</div>
+        <select id="worldSize" aria-label="Island size"><option value="small">Small: cosy and quick</option><option value="medium" selected>Medium</option><option value="large">Large: best on a computer</option></select>
+        <button id="genWorld" class="big wide">Generate island</button>
+        <div class="hint" id="worldInfo"></div>
+        <div class="hint">The same seed and size always make the same island. Seed 1 is the classic layout. Other seeds shuffle the four biomes, reshape the hills and coast, and move the hut.</div>
+        <h3>Time and weather</h3>
+        <div class="lbl">Day and night</div>
+        <select id="dayMode" aria-label="Day and night"><option value="auto">Automatic (12 minute day)</option><option value="fixed">Fixed (use the slider)</option></select>
+        <div class="sl"><label for="time">Time of day</label><output id="timeOut">14:00</output><input type="range" id="time" min="0" max="24" step="0.1" value="14"></div>
+        <div class="lbl">Weather</div>
+        <select id="weather" aria-label="Weather"><option value="auto">Follow the biome</option><option value="off">Clear</option><option value="rain">Sun shower</option><option value="sand">Sand flurry</option><option value="snow">Snowfall</option><option value="spore">Spore aurora</option></select>
+        <h3>Test grounds</h3>
+        <select id="terrain" aria-label="World or test ground"></select>
+        <button id="reset" class="wide">Respawn</button>
+      </section>
+      <section id="pane_settings" class="pane" data-pane="settings">
+        <h2>Settings</h2>
+        <div class="lbl">Graphics quality</div>
+        <select id="quality" aria-label="Graphics quality"><option value="auto">Auto (recommended)</option><option value="light">Light: phones and old laptops</option><option value="full">Full</option><option value="ultra">Ultra: sharp 4K screens</option></select>
+        <div class="sl"><label for="resScale">Resolution scale</label><output id="resOut">1.00x</output><input type="range" id="resScale" min="0.5" max="2" step="0.05" value="1"></div>
+        <div class="sl"><label for="uiScale">Interface size</label><output id="uiOut">1.00x</output><input type="range" id="uiScale" min="0.8" max="1.5" step="0.05" value="1"></div>
+        <div class="sl"><label for="volume">Sound volume</label><output id="volOut">70%</output><input type="range" id="volume" min="0" max="1" step="0.05" value="0.7"></div>
+        <div class="acts"><button id="tipsOn" aria-pressed="true">Tips: on</button><button id="reduceMotion" aria-pressed="false">Reduce motion: off</button></div>
+        <h3>Camera</h3>
+        <div class="acts"><button id="rotL">Rotate left (Q)</button><button id="rotR">Rotate right (E)</button><button id="zoomIn">Zoom in (+)</button><button id="zoomOut">Zoom out (-)</button></div>
+        <button id="slow" class="wide" aria-pressed="false">Slow motion (T)</button>
+        <button id="resetTips" class="wide">Show the tips again</button>
+        <div class="hint" id="qualityInfo"></div>
+      </section>
+      <section id="pane_help" class="pane" data-pane="help">
+        <h2>How to play</h2>
+        <div class="help-grid">
+          <div class="hcard"><h4>Move and look</h4><ul><li><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> or arrows to move. On a phone use the stick.</li><li><span class="key">Q</span> <span class="key">E</span> turn the camera, mouse wheel zooms.</li><li><span class="key">Tab</span> changes form. <span class="key">1</span> to <span class="key">8</span> are emotes. <span class="key">Esc</span> is this menu.</li></ul></div>
+          <div class="hcard"><h4>Slime (liquid)</h4><ul><li>Hold <span class="key">Space</span> to squash down, release to jump. The longer you hold, the higher you go.</li><li>Hold <span class="key">Space</span> in the air to glide.</li><li>Push into a wall to climb it (needs Stickiness).</li><li><span class="key">M</span> melts into a puddle to slip under gaps. <span class="key">F</span> pounds the ground.</li></ul></div>
+          <div class="hcard"><h4>Wisp (gas)</h4><ul><li>Tap <span class="key">Space</span> to hop. Hold it to rise, which uses breath fast.</li><li>Press <span class="key">V</span> to float: you hold your height and breath drains slowly. Otherwise you sink.</li><li>On the ground your breath refills. Out of breath means no more rising until you touch down.</li><li><span class="key">F</span> dives for a shockwave. <span class="key">C</span> condenses, <span class="key">M</span> spreads out.</li></ul></div>
+          <div class="hcard"><h4>Stone (solid)</h4><ul><li>Rolls fast and keeps its shape.</li><li>Push into a wall to climb with pitons. You can hang there as long as you like.</li><li>Hold <span class="key">Space</span> in the air for the crystal sail. It lands with a shockwave.</li><li><span class="key">M</span> shrinks to a pebble to fit through small gaps.</li></ul></div>
+          <div class="hcard"><h4>Wind</h4><ul><li>Wind never pushes you around by default, so you can stand still safely.</li><li>Hold <span class="key">Shift</span> to ride it: tailwinds speed you up, headwinds never slow you, and updrafts lift you.</li><li>Press <span class="key">B</span> to see the wind arrows.</li></ul></div>
+          <div class="hcard"><h4>Gather, craft, build</h4><ul><li>Run into trunks to shake loose wood and sap. Pound geodes and clay. Roll over flowers.</li><li>Items fly into your Core when you are near.</li><li>Open Craft and build in this menu. Press <span class="key">P</span> to place things: <span class="key">Enter</span> places, <span class="key">X</span> turns, <span class="key">Del</span> removes.</li></ul></div>
+          <div class="hcard"><h4>Physics in plain words</h4><p>Your slime is a soft jelly made of hundreds of tiny points. It squashes when it lands, stretches when it jumps and wobbles when it stops. The wisp is a cloud of motes held together by its glowing Core. The stone is the same body made completely stiff.</p><p>Everyone can do everything. The forms only differ in how they do it and what they are best at.</p></div>
+        </div>
+        <button id="resetTips2" class="wide">Show the tips again</button>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="intro" class="overlay" hidden>
+  <div class="card"><h2>Welcome</h2><ul><li>Move with <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> or the stick.</li><li>Hold <span class="key">Space</span> to charge a jump, then let go.</li><li>Run into a tree to shake loose some wood.</li><li>Press <span class="key">Esc</span> for crafting, looks and settings.</li></ul><button id="introGo" class="big wide">Let's go</button></div>
+</div>
+<div id="loading" class="overlay" hidden><div><span class="dot"></span>Making your island</div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" onerror="void 0"></script>
@@ -457,7 +524,7 @@ function forEachContact(w, X, Y, Z, r, hit) {
 function collide(b, w, mu) {
   if (!w.grid) buildGrid(w);
   const n = b.n, x = b.x, px = b.px, cf = b.cflag, cn = b.cn, nf = b.nofric;
-  const A = w.A, lim = A - 0.12, hmax = w.hmax;
+  const A = w.A, lim = A - 0.12, hmax = w.hmax, cR = w.clampR || 0;
   const GC = w.grid.CS, GN = w.grid.n, cells = w.grid.cells;
 
   function resolve(i3, i, nx, ny, nz, pen) {
@@ -481,6 +548,7 @@ function collide(b, w, mu) {
     pen = x[i3] - lim;       if (pen > 0) x[i3] -= pen;
     pen = -lim - x[i3+2];    if (pen > 0) x[i3+2] += pen;
     pen = x[i3+2] - lim;     if (pen > 0) x[i3+2] -= pen;
+    if (cR) { const rr = Math.hypot(x[i3], x[i3+2]); if (rr > cR) { const f = cR / rr; x[i3] *= f; x[i3+2] *= f; } }   // round island: frictionless, never sticky
 
     const X = x[i3], Y = x[i3+1], Z = x[i3+2];
     if (Y - RP - MARGIN < hmax) {
@@ -876,131 +944,148 @@ function builder(A) {
   return T;
 }
 
-/* ================= Aetheria: four blended biomes ================= */
+/* ================= Aetheria: a seeded island with four blended biomes ================= */
 const BIOMES = ['Lush Plains', 'Sunstone Dunes', 'Frostpeak Taiga', 'Mystic Grove'];
-function biomeW(x, z) {
-  const xw = x + 5*Math.sin(z*0.06 + 1) + 2*Math.sin(z*0.17);
-  const zw = z + 5*Math.sin(x*0.055) + 2*Math.sin(x*0.19 + 2);
-  const e = sm(-7, 7, xw), s = sm(-7, 7, zw);
-  return [(1-e)*s, e*s, (1-e)*(1-s), e*(1-s)]; // plains, dunes, taiga, grove
-}
-function hPlains(x, z) { return 0.9*Math.sin(x*0.11 + 1)*Math.cos(z*0.09) + 0.5*Math.sin(x*0.23 + z*0.19) + 0.15*Math.sin(x*0.7)*Math.sin(z*0.6); }
-function hDunes(x, z) {
-  const u = x*0.17 + z*0.11 + 1.4*Math.sin(z*0.045);
-  return 3.0*Math.pow(0.5 + 0.5*Math.sin(u), 1.6) + 0.08*Math.sin(x*1.3 + z*0.9);
-}
-function hTaiga(x, z) {
-  const r = Math.hypot(x, z), m = sm(8, 58, r);
-  const ridge = 1 - Math.abs(Math.sin(x*0.085 + Math.sin(z*0.06)*1.6) * Math.cos(z*0.075 + 1));
-  return m*(5 + 7*ridge) + 0.7*Math.sin(x*0.21 + z*0.17) + 0.35*Math.sin(x*0.5)*Math.sin(z*0.43);
-}
-function hGrove(x, z) { return 1.6*Math.sin(x*0.2)*Math.sin(z*0.17) + 1.0*Math.sin(x*0.09 + z*0.12 + 2) + 0.4*Math.sin(x*0.55 + z*0.5); }
-function hRaw(x, z) {
-  const w = biomeW(x, z);
-  return w[0]*hPlains(x, z) + w[1]*hDunes(x, z) + w[2]*hTaiga(x, z) + w[3]*hGrove(x, z);
-}
-const HUT = { cx: -20, cz: 16, half: 4 };
-const HUT_H = hRaw(HUT.cx, HUT.cz);
-function hAeth(x, z) {
-  const d = Math.hypot(x - HUT.cx, z - HUT.cz), t = 1 - sm(7, 13, d);
-  return hRaw(x, z) * (1 - t) + HUT_H * t;
-}
-function colorAeth(x, z, h, ny) {
-  const w = biomeW(x, z), p = 0.5 + 0.5*Math.sin(x*0.5)*Math.sin(z*0.45);
-  const steep = sm(0.92, 0.72, ny); // 0 flat, 1 steep
-  let r = 0, g = 0, b = 0;
-  { const c = [0.40 + 0.08*p, 0.72 + 0.06*p, 0.35], d = [0.58, 0.47, 0.34];
-    r += w[0]*lerp(c[0], d[0], steep*0.8); g += w[0]*lerp(c[1], d[1], steep*0.8); b += w[0]*lerp(c[2], d[2], steep*0.8); }
-  { const c = [0.93 - 0.06*p, 0.80 - 0.06*p, 0.54 - 0.05*p], d = [0.80, 0.62, 0.40];
-    r += w[1]*lerp(c[0], d[0], steep*0.7); g += w[1]*lerp(c[1], d[1], steep*0.7); b += w[1]*lerp(c[2], d[2], steep*0.7); }
-  { let c = [0.26, 0.46, 0.36]; const rock = [0.55, 0.56, 0.60], snow = [0.95, 0.97, 1.0];
-    const sr = Math.min(1, steep*1.4), sn = sm(5.5, 8.0, h) * (1 - steep*0.7);
-    c = [lerp(c[0], rock[0], sr), lerp(c[1], rock[1], sr), lerp(c[2], rock[2], sr)];
-    c = [lerp(c[0], snow[0], sn), lerp(c[1], snow[1], sn), lerp(c[2], snow[2], sn)];
-    r += w[2]*c[0]; g += w[2]*c[1]; b += w[2]*c[2]; }
-  { const t = [0.34, 0.56, 0.55], v = [0.52, 0.38, 0.68], k = sm(0.35, 0.75, p);
-    r += w[3]*lerp(t[0], v[0], k); g += w[3]*lerp(t[1], v[1], k); b += w[3]*lerp(t[2], v[2], k); }
-  return [r, g, b];
-}
+const SIZES = { small: 40, medium: 60, large: 80 };
+function shuffled(r, arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = (r() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
-function buildAetheria(T, A) {
-  const r = rng(11);
-  const placed = [];
-  const slopeAt = (x, z) => { const e = 0.6; return Math.hypot(hAeth(x+e, z) - hAeth(x-e, z), hAeth(x, z+e) - hAeth(x, z-e)) / (2*e); };
-  const free = (x, z, d) => { for (const p of placed) { const dx = x - p[0], dz = z - p[1], m = (d + p[2]) * 0.5; if (dx*dx + dz*dz < m*m) return false; } return true; };
-  const awayFromHut = (x, z) => Math.hypot(x - HUT.cx, z - HUT.cz) > 11 && Math.hypot(x + 12, z - 14) > 3.5;
-  function scatter(count, minD, test) {
-    const out = [];
-    for (let tries = 0; tries < count * 500 && out.length < count; tries++) {
-      const x = (r()*2 - 1)*(A - 4), z = (r()*2 - 1)*(A - 4);
-      if (!awayFromHut(x, z) || !test(x, z, biomeW(x, z)) || !free(x, z, minD)) continue;
-      placed.push([x, z, minD]); out.push([x, z]);
-    }
-    return out;
+// Seed 1 is the original hand-tuned layout (plains SW, dunes SE, taiga NW, grove NE, hut at -20,16). Any other seed shuffles the biome
+// quadrants, shifts every noise phase, varies amplitudes and the dune direction, wobbles the coast and moves the hut and spawn.
+function makeAetheria(opts) {
+  opts = opts || {};
+  const seed = (opts.seed === undefined ? 1 : opts.seed) | 0;
+  const sizeName = SIZES[opts.size] ? opts.size : 'medium', A = SIZES[sizeName];
+  const classic = seed === 1;
+  const R = rng(seed * 2654435761 + 1013904223);
+  const ph = []; for (let i = 0; i < 14; i++) ph.push(classic ? 0 : R() * Math.PI * 2);
+  const amp = []; for (let i = 0; i < 4; i++) amp.push(classic ? 1 : 0.85 + R() * 0.3);
+  const perm = classic ? [0, 1, 2, 3] : shuffled(R, [0, 1, 2, 3]);        // quadrant (SW, SE, NW, NE) -> biome id
+  const warp = classic ? 5 : 3 + R() * 4, duneRot = classic ? 0 : (R() - 0.5) * 1.6, dca = Math.cos(duneRot), dsa = Math.sin(duneRot);
+  const SIGN = [[-1, 1], [1, 1], [-1, -1], [1, -1]], pq = perm.indexOf(0);
+  const HUT = classic ? { cx: -20, cz: 16, half: 4 } : { cx: SIGN[pq][0] * A * 0.38 + (R() - 0.5) * 4, cz: SIGN[pq][1] * A * 0.38 + (R() - 0.5) * 4, half: 4 };
+  const spawn = classic ? [-12, 14] : [HUT.cx - Math.sign(HUT.cx) * 8, HUT.cz - Math.sign(HUT.cz) * 2];
+
+  function biomeW(x, z) {
+    const xw = x + warp*Math.sin(z*0.06 + 1 + ph[0]) + 2*Math.sin(z*0.17 + ph[1]);
+    const zw = z + warp*Math.sin(x*0.055 + ph[2]) + 2*Math.sin(x*0.19 + 2 + ph[3]);
+    const e = sm(-7, 7, xw), s = sm(-7, 7, zw), w = [0, 0, 0, 0];
+    w[perm[0]] = (1-e)*s; w[perm[1]] = e*s; w[perm[2]] = (1-e)*(1-s); w[perm[3]] = e*(1-s);
+    return w;                                                           // plains, dunes, taiga, grove
   }
-  const flora = { trees: [], rocks: [], geodes: [], clays: [], flowers: [] };
-  const addTree = (kind, x, z, s, trunkR, trunkH) => {
-    const y = hAeth(x, z);
-    const col = T.cyl(x, y - 0.2, z, trunkR * s, trunkH * s + 0.2, { tag: 'tree', kind });
-    const tr = { kind, x, y, z, s, col, cd: 0, rnd: r() };
-    if (kind === 'mushroom') tr.cap = T.sphere(x, y + 1.9 * s, z, 0.95 * s, 0x9b6bd6, { tag: 'cap' });
-    flora.trees.push(tr);
-  };
-  scatter(42, 4.0, (x, z, w) => w[0] > 0.8 && slopeAt(x, z) < 0.35).forEach(p => addTree('oak', p[0], p[1], 0.85 + r()*0.5, 0.32, 2.4));
-  scatter(100, 2.8, (x, z, w) => w[2] > 0.8 && hAeth(x, z) < 7.8 && slopeAt(x, z) < 0.6).forEach(p => addTree('pine', p[0], p[1], 0.8 + r()*0.6, 0.26, 1.8));
-  scatter(28, 4.5, (x, z, w) => w[1] > 0.8 && slopeAt(x, z) < 0.4).forEach(p => addTree('cactus', p[0], p[1], 0.8 + r()*0.6, 0.38, 2.4));
-  scatter(38, 4.0, (x, z, w) => w[3] > 0.8 && slopeAt(x, z) < 0.45).forEach(p => addTree('mushroom', p[0], p[1], 0.8 + r()*0.7, 0.22, 1.8));
-  scatter(20, 3.0, (x, z, w) => Math.max(w[0], w[1], w[2], w[3]) > 0.6 && slopeAt(x, z) < 0.7).forEach(p => {
-    const rad = 0.6 + r()*0.9, y = hAeth(p[0], p[1]) + rad*0.3;
-    flora.rocks.push(T.sphere(p[0], y, p[1], rad, 0x8c8a85, { tag: 'rock' }));
-  });
-  [[1, 5], [2, 4], [3, 4]].forEach(([bi, n]) => {
-    scatter(n, 4.0, (x, z, w) => w[bi] > 0.8 && slopeAt(x, z) < 0.5).forEach(p => {
-      flora.geodes.push(T.sphere(p[0], hAeth(p[0], p[1]) + 0.2, p[1], 0.55, 0x9a6bff, { tag: 'geode' }));
-    });
-  });
-  [[0, 4], [3, 4]].forEach(([bi, n]) => {
-    scatter(n, 4.0, (x, z, w) => w[bi] > 0.8 && slopeAt(x, z) < 0.4).forEach(p => {
-      flora.clays.push(T.sphere(p[0], hAeth(p[0], p[1]) + 0.1, p[1], 0.6, 0x8aa0b4, { tag: 'clay' }));
-    });
-  });
-  const addFlowers = (n, bi, type, colors) => {
-    for (let tries = 0, got = 0; tries < n * 40 && got < n; tries++) {
-      const x = (r()*2 - 1)*(A - 4), z = (r()*2 - 1)*(A - 4), w = biomeW(x, z);
-      if (w[bi] < 0.75 || !awayFromHut(x, z) || slopeAt(x, z) > 0.5) continue;
-      let ok = true; for (const t of flora.trees) { if (Math.abs(t.x - x) < 1 && Math.abs(t.z - z) < 1) { ok = false; break; } }
-      if (!ok) continue;
-      flora.flowers.push({ x, y: hAeth(x, z), z, type, color: colors[(r()*colors.length) | 0], alive: true, timer: 0 }); got++;
-    }
-  };
-  addFlowers(90, 0, 'petal', [0xff8fb8, 0xffd75e, 0xffffff, 0xc89bff]);
-  addFlowers(24, 1, 'petal', [0xff9a3c, 0xffc04d]);
-  addFlowers(32, 2, 'petal', [0x8fd3ff, 0xcfe9ff]);
-  addFlowers(70, 3, 'spore', [0x7ff5dd, 0xb08cff, 0x8affc0]);
+  const hP = (x, z) => amp[0] * (0.9*Math.sin(x*0.11 + 1 + ph[4])*Math.cos(z*0.09 + ph[5]) + 0.5*Math.sin(x*0.23 + z*0.19 + ph[6]) + 0.15*Math.sin(x*0.7)*Math.sin(z*0.6));
+  const hD = (x, z) => { const xr = x*dca - z*dsa, zr = x*dsa + z*dca, u = xr*0.17 + zr*0.11 + 1.4*Math.sin(zr*0.045 + ph[7]); return amp[1]*3.0*Math.pow(0.5 + 0.5*Math.sin(u), 1.6) + 0.08*Math.sin(x*1.3 + z*0.9); };
+  const hT = (x, z) => { const r = Math.hypot(x, z), m = sm(8, A * 0.967, r), ridge = 1 - Math.abs(Math.sin(x*0.085 + Math.sin(z*0.06 + ph[8])*1.6) * Math.cos(z*0.075 + 1 + ph[9])); return amp[2]*m*(5 + 7*ridge) + 0.7*Math.sin(x*0.21 + z*0.17 + ph[10]) + 0.35*Math.sin(x*0.5)*Math.sin(z*0.43); };
+  const hG = (x, z) => amp[3] * (1.6*Math.sin(x*0.2 + ph[11])*Math.sin(z*0.17 + ph[12]) + 1.0*Math.sin(x*0.09 + z*0.12 + 2 + ph[13])) + 0.4*Math.sin(x*0.55 + z*0.5);
+  function hRaw(x, z) { const w = biomeW(x, z); return w[0]*hP(x, z) + w[1]*hD(x, z) + w[2]*hT(x, z) + w[3]*hG(x, z); }
+  const HUT_H = hRaw(HUT.cx, HUT.cz);
+  // island shape: a wobbly circle. Flat beach band, then a cliff down to the cloud sea.
+  function edgeD(x, z) { const r = Math.hypot(x, z) / A; if (r < 1e-6) return 0; const a = Math.atan2(z, x); return r * (1 + 0.025*Math.sin(3*a + ph[0]*1.7) + 0.015*Math.sin(5*a + ph[1]*1.3)); }
+  function hAeth(x, z) {
+    const d0 = Math.hypot(x - HUT.cx, z - HUT.cz), t = 1 - sm(7, 13, d0);
+    let h = hRaw(x, z) * (1 - t) + HUT_H * t; const d = edgeD(x, z);
+    h = lerp(h, 0.6, sm(0.60, 0.78, d));
+    return lerp(h, -3.4, sm(0.86, 0.95, d));
+  }
+  function colorAeth(x, z, h, ny) {
+    const w = biomeW(x, z), p = 0.5 + 0.5*Math.sin(x*0.5)*Math.sin(z*0.45), steep = sm(0.92, 0.72, ny);
+    let r = 0, g = 0, b = 0;
+    { const c = [0.40 + 0.08*p, 0.72 + 0.06*p, 0.35], d = [0.58, 0.47, 0.34];
+      r += w[0]*lerp(c[0], d[0], steep*0.8); g += w[0]*lerp(c[1], d[1], steep*0.8); b += w[0]*lerp(c[2], d[2], steep*0.8); }
+    { const c = [0.93 - 0.06*p, 0.80 - 0.06*p, 0.54 - 0.05*p], d = [0.80, 0.62, 0.40];
+      r += w[1]*lerp(c[0], d[0], steep*0.7); g += w[1]*lerp(c[1], d[1], steep*0.7); b += w[1]*lerp(c[2], d[2], steep*0.7); }
+    { let c = [0.26, 0.46, 0.36]; const rock = [0.55, 0.56, 0.60], snow = [0.95, 0.97, 1.0];
+      const sr = Math.min(1, steep*1.4), sn = sm(5.5, 8.0, h) * (1 - steep*0.7);
+      c = [lerp(c[0], rock[0], sr), lerp(c[1], rock[1], sr), lerp(c[2], rock[2], sr)];
+      c = [lerp(c[0], snow[0], sn), lerp(c[1], snow[1], sn), lerp(c[2], snow[2], sn)];
+      r += w[2]*c[0]; g += w[2]*c[1]; b += w[2]*c[2]; }
+    { const t = [0.34, 0.56, 0.55], v = [0.52, 0.38, 0.68], k = sm(0.35, 0.75, p);
+      r += w[3]*lerp(t[0], v[0], k); g += w[3]*lerp(t[1], v[1], k); b += w[3]*lerp(t[2], v[2], k); }
+    const d = edgeD(x, z), sk = sm(0.68, 0.78, d) * (1 - sm(0.85, 0.88, d)) * 0.9, ck = sm(0.85, 0.91, d);   // beach sand, then cliff rock
+    r = lerp(r, 0.93, sk); g = lerp(g, 0.86, sk); b = lerp(b, 0.66, sk);
+    r = lerp(r, 0.50 - 0.08*p, ck); g = lerp(g, 0.45 - 0.06*p, ck); b = lerp(b, 0.42, ck);
+    return [r, g, b];
+  }
 
-  // test hut with roof and near-wall cutaway (plains)
-  const cx = HUT.cx, cz = HUT.cz, hy = HUT_H, hf = HUT.half, wallH = 3, th = 0.3, floorTop = hy + 0.2;
-  T.box(cx, hy + 0.1, cz, hf + 0.3, 0.1, hf + 0.3, 0, 0, 0, 0xb98a5a, { tag: 'floor' });
-  T.box(cx, floorTop + wallH/2, cz - hf, hf, wallH/2, th/2, 0, 0, 0, 0xd9b98a, { tag: 'wall', n: [0, -1] });
-  const gap = 1.3, segW = (hf - gap) / 2;
-  T.box(cx - gap - segW, floorTop + wallH/2, cz + hf, segW, wallH/2, th/2, 0, 0, 0, 0xd9b98a, { tag: 'wall', n: [0, 1] });
-  T.box(cx + gap + segW, floorTop + wallH/2, cz + hf, segW, wallH/2, th/2, 0, 0, 0, 0xd9b98a, { tag: 'wall', n: [0, 1] });
-  T.box(cx - hf, floorTop + wallH/2, cz, th/2, wallH/2, hf, 0, 0, 0, 0xcaa77a, { tag: 'wall', n: [-1, 0] });
-  T.box(cx + hf, floorTop + wallH/2, cz, th/2, wallH/2, hf, 0, 0, 0, 0xcaa77a, { tag: 'wall', n: [1, 0] });
-  T.box(cx, floorTop + wallH + 0.15, cz, hf + 0.7, 0.15, hf + 0.7, 0, 0, 0, 0xb5523b, { tag: 'roof' });
-  T.box(cx - 1.6, floorTop + 0.4, cz - 1.2, 0.9, 0.4, 0.55, 0, 0, 0, 0x8a5a33, { tag: 'prop' });
-  T.box(cx + hf - 0.9, floorTop + 0.6, cz - 1.5, 0.45, 0.6, 0.9, 0, 0, 0, 0x4a4a52, { tag: 'fireplace' });
-  T.box(cx - hf + 1.1, floorTop + 0.3, cz + 1.8, 0.9, 0.3, 1.2, 0, 0, 0, 0x6d8cc2, { tag: 'bed' });
-  T.visualOnly.push({ c: [cx + 0.3, floorTop + 0.02, cz + 0.4], h: [1.6, 0.02, 1.1], color: 0xd1566b });
-  return { flora, hut: { cx, cz, hy: floorTop, half: hf } };
+  function buildAetheria(T, A) {
+    const r = rng(11);
+    const placed = [];
+    const slopeAt = (x, z) => { const e = 0.6; return Math.hypot(hAeth(x+e, z) - hAeth(x-e, z), hAeth(x, z+e) - hAeth(x, z-e)) / (2*e); };
+    const free = (x, z, d) => { for (const p of placed) { const dx = x - p[0], dz = z - p[1], m = (d + p[2]) * 0.5; if (dx*dx + dz*dz < m*m) return false; } return true; };
+    const awayFromHut = (x, z) => Math.hypot(x - HUT.cx, z - HUT.cz) > 11 && Math.hypot(x - spawn[0], z - spawn[1]) > 3.5;
+    const cnt = n => Math.max(1, Math.round(n * 0.6 * (A / 60) * (A / 60)));   // the island is round, so counts follow its area
+    const onIsland = (x, z) => Math.hypot(x, z) < A * 0.76;
+    function scatter(count, minD, test) {
+      const out = [];
+      for (let tries = 0; tries < count * 500 && out.length < count; tries++) {
+        const x = (r()*2 - 1)*(A - 4), z = (r()*2 - 1)*(A - 4);
+        if (!onIsland(x, z) || !awayFromHut(x, z) || !test(x, z, biomeW(x, z)) || !free(x, z, minD)) continue;
+        placed.push([x, z, minD]); out.push([x, z]);
+      }
+      return out;
+    }
+    const flora = { trees: [], rocks: [], geodes: [], clays: [], flowers: [] };
+    const addTree = (kind, x, z, s, trunkR, trunkH) => {
+      const y = hAeth(x, z);
+      const col = T.cyl(x, y - 0.2, z, trunkR * s, trunkH * s + 0.2, { tag: 'tree', kind });
+      const tr = { kind, x, y, z, s, col, cd: 0, rnd: r() };
+      if (kind === 'mushroom') tr.cap = T.sphere(x, y + 1.9 * s, z, 0.95 * s, 0x9b6bd6, { tag: 'cap' });
+      flora.trees.push(tr);
+    };
+    scatter(cnt(42), 4.0, (x, z, w) => w[0] > 0.8 && slopeAt(x, z) < 0.35).forEach(p => addTree('oak', p[0], p[1], 0.85 + r()*0.5, 0.32, 2.4));
+    scatter(cnt(100), 2.8, (x, z, w) => w[2] > 0.8 && hAeth(x, z) < 7.8 && slopeAt(x, z) < 0.6).forEach(p => addTree('pine', p[0], p[1], 0.8 + r()*0.6, 0.26, 1.8));
+    scatter(cnt(28), 4.5, (x, z, w) => w[1] > 0.8 && slopeAt(x, z) < 0.4).forEach(p => addTree('cactus', p[0], p[1], 0.8 + r()*0.6, 0.38, 2.4));
+    scatter(cnt(38), 4.0, (x, z, w) => w[3] > 0.8 && slopeAt(x, z) < 0.45).forEach(p => addTree('mushroom', p[0], p[1], 0.8 + r()*0.7, 0.22, 1.8));
+    scatter(cnt(20), 3.0, (x, z, w) => Math.max(w[0], w[1], w[2], w[3]) > 0.6 && slopeAt(x, z) < 0.7).forEach(p => {
+      const rad = 0.6 + r()*0.9, y = hAeth(p[0], p[1]) + rad*0.3;
+      flora.rocks.push(T.sphere(p[0], y, p[1], rad, 0x8c8a85, { tag: 'rock' }));
+    });
+    [[1, 5], [2, 4], [3, 4]].forEach(([bi, n]) => {
+      scatter(cnt(n), 4.0, (x, z, w) => w[bi] > 0.8 && slopeAt(x, z) < 0.5).forEach(p => {
+        flora.geodes.push(T.sphere(p[0], hAeth(p[0], p[1]) + 0.2, p[1], 0.55, 0x9a6bff, { tag: 'geode' }));
+      });
+    });
+    [[0, 4], [3, 4]].forEach(([bi, n]) => {
+      scatter(cnt(n), 4.0, (x, z, w) => w[bi] > 0.8 && slopeAt(x, z) < 0.4).forEach(p => {
+        flora.clays.push(T.sphere(p[0], hAeth(p[0], p[1]) + 0.1, p[1], 0.6, 0x8aa0b4, { tag: 'clay' }));
+      });
+    });
+    const addFlowers = (n, bi, type, colors) => {
+      for (let tries = 0, got = 0; tries < n * 40 && got < n; tries++) {
+        const x = (r()*2 - 1)*(A - 4), z = (r()*2 - 1)*(A - 4), w = biomeW(x, z);
+        if (!onIsland(x, z) || w[bi] < 0.75 || !awayFromHut(x, z) || slopeAt(x, z) > 0.5) continue;
+        let ok = true; for (const t of flora.trees) { if (Math.abs(t.x - x) < 1 && Math.abs(t.z - z) < 1) { ok = false; break; } }
+        if (!ok) continue;
+        flora.flowers.push({ x, y: hAeth(x, z), z, type, color: colors[(r()*colors.length) | 0], alive: true, timer: 0 }); got++;
+      }
+    };
+    addFlowers(cnt(90), 0, 'petal', [0xff8fb8, 0xffd75e, 0xffffff, 0xc89bff]);
+    addFlowers(cnt(24), 1, 'petal', [0xff9a3c, 0xffc04d]);
+    addFlowers(cnt(32), 2, 'petal', [0x8fd3ff, 0xcfe9ff]);
+    addFlowers(cnt(70), 3, 'spore', [0x7ff5dd, 0xb08cff, 0x8affc0]);
+  
+    // test hut with roof and near-wall cutaway (plains)
+    const cx = HUT.cx, cz = HUT.cz, hy = HUT_H, hf = HUT.half, wallH = 3, th = 0.3, floorTop = hy + 0.2;
+    T.box(cx, hy + 0.1, cz, hf + 0.3, 0.1, hf + 0.3, 0, 0, 0, 0xb98a5a, { tag: 'floor' });
+    T.box(cx, floorTop + wallH/2, cz - hf, hf, wallH/2, th/2, 0, 0, 0, 0xd9b98a, { tag: 'wall', n: [0, -1] });
+    const gap = 1.3, segW = (hf - gap) / 2;
+    T.box(cx - gap - segW, floorTop + wallH/2, cz + hf, segW, wallH/2, th/2, 0, 0, 0, 0xd9b98a, { tag: 'wall', n: [0, 1] });
+    T.box(cx + gap + segW, floorTop + wallH/2, cz + hf, segW, wallH/2, th/2, 0, 0, 0, 0xd9b98a, { tag: 'wall', n: [0, 1] });
+    T.box(cx - hf, floorTop + wallH/2, cz, th/2, wallH/2, hf, 0, 0, 0, 0xcaa77a, { tag: 'wall', n: [-1, 0] });
+    T.box(cx + hf, floorTop + wallH/2, cz, th/2, wallH/2, hf, 0, 0, 0, 0xcaa77a, { tag: 'wall', n: [1, 0] });
+    T.box(cx, floorTop + wallH + 0.15, cz, hf + 0.7, 0.15, hf + 0.7, 0, 0, 0, 0xb5523b, { tag: 'roof' });
+    T.box(cx - 1.6, floorTop + 0.4, cz - 1.2, 0.9, 0.4, 0.55, 0, 0, 0, 0x8a5a33, { tag: 'prop' });
+    T.box(cx + hf - 0.9, floorTop + 0.6, cz - 1.5, 0.45, 0.6, 0.9, 0, 0, 0, 0x4a4a52, { tag: 'fireplace' });
+    T.box(cx - hf + 1.1, floorTop + 0.3, cz + 1.8, 0.9, 0.3, 1.2, 0, 0, 0, 0x6d8cc2, { tag: 'bed' });
+    T.visualOnly.push({ c: [cx + 0.3, floorTop + 0.02, cz + 0.4], h: [1.6, 0.02, 1.1], color: 0xd1566b });
+    return { flora, hut: { cx, cz, hy: floorTop, half: hf } };
+  }
+
+  return { label: 'Generated island', A, h: hAeth, noBorder: true, color: colorAeth, biome: biomeW, spawn, clampR: A * 0.80, seed, size: sizeName, hut: HUT, edgeD, build(T, A2) { return buildAetheria(T, A2); } };
 }
 
 /* ================= definitions ================= */
 const defs = {
-  aetheria: {
-    label: 'Aetheria (4 biomes)', A: 60, h: hAeth, noBorder: true, color: colorAeth, biome: biomeW, spawn: [-12, 14],
-    build(T, A) { return buildAetheria(T, A); }
-  },
+  aetheria: { label: 'Generated island' },
   playground: {
     label: 'Playground', A: 26, ground: [0.46, 0.70, 0.44], dirt: [0.58, 0.46, 0.34], checker: true,
     h: () => 0,
@@ -1068,8 +1153,8 @@ const defs = {
   }
 };
 
-function build(name) {
-  const d = defs[name] || defs.aetheria;
+function build(name, opts) {
+  const d = (name === 'aetheria' || !defs[name]) ? makeAetheria(opts) : defs[name];
   const A = d.A || 26;
   const T = builder(A);
   const extra = d.build(T, A) || {};
@@ -1089,12 +1174,13 @@ function build(name) {
     ground: d.ground || [0.5, 0.7, 0.4], dirt: d.dirt || [0.58, 0.46, 0.34], checker: !!d.checker,
     colorAt: d.color || null, biomeAt: d.biome || null,
     flora: extra.flora || null, hut: extra.hut || null,
+    clampR: d.clampR || 0, seed: d.seed, sizeName: d.size, edgeD: d.edgeD || null,
     spawn: [sp[0], d.h(sp[0], sp[1]) + 1.6, sp[1]]
   };
 }
 
 const list = Object.keys(defs).map(k => ({ id: k, label: defs[k].label }));
-return { build, list, BIOMES };
+return { build, list, BIOMES, SIZES };
 })();
 if (typeof module !== 'undefined') module.exports = Terrain;
 
@@ -1380,6 +1466,7 @@ function step(wp, w, P, inp, dt) {
       const k = 3*i;
       if (x[k] < -lim) { x[k] = -lim; if (v[k] < 0) v[k] = 0; } else if (x[k] > lim) { x[k] = lim; if (v[k] > 0) v[k] = 0; }
       if (x[k+2] < -lim) { x[k+2] = -lim; if (v[k+2] < 0) v[k+2] = 0; } else if (x[k+2] > lim) { x[k+2] = lim; if (v[k+2] > 0) v[k+2] = 0; }
+      if (w.clampR) { const rr = Math.hypot(x[k], x[k+2]); if (rr > w.clampR) { const nx = x[k] / rr, nz = x[k+2] / rr, f = w.clampR / rr; x[k] *= f; x[k+2] *= f; const vr = v[k] * nx + v[k+2] * nz; if (vr > 0) { v[k] -= vr * nx; v[k+2] -= vr * nz; } } }
       { // the Core keeps the cloud together: hard tether to the centroid
         const dx = x[k] - wp.com[0], dy = x[k+1] - wp.com[1], dz = x[k+2] - wp.com[2], d2 = dx*dx + dy*dy + dz*dz, R = TETHER * size * (mode < 0 ? 1.3 : 1);
         if (d2 > R * R) { const d = Math.sqrt(d2), f = R / d, rv = (v[k]*dx + v[k+1]*dy + v[k+2]*dz) / d; x[k] = wp.com[0] + dx*f; x[k+1] = wp.com[1] + dy*f; x[k+2] = wp.com[2] + dz*f; if (rv > 0) { v[k] -= rv*dx/d; v[k+1] -= rv*dy/d; v[k+2] -= rv*dz/d; } }
@@ -1537,6 +1624,7 @@ function ghost(S, type, c, tx, tz, yaw, form) {
   const w = S.world, kind = KIND[type], pk = perks(form), g = { type, x: tx, y: 0, z: tz, yaw: yaw || 0, valid: false, reason: '', fId: 0, edge: -1, top: 0 };
   const lim = w.A - 3;
   if (Math.abs(tx) > lim || Math.abs(tz) > lim) { g.reason = 'Out of bounds'; return g; }
+  if (w.clampR && Math.hypot(tx, tz) > w.clampR - 3) { g.reason = 'Out of bounds'; return g; }
   const nearest = (list, px, pz, maxD) => { let best = null, bd = maxD; for (const o of list) { const d = Math.hypot(o.x - px, o.z - pz); if (d < bd) { bd = d; best = o; } } return best; };
   if (kind === 'floor') {
     let x = Math.round(tx / 2) * 2, z = Math.round(tz / 2) * 2, top = null, snapped = false;
@@ -1646,12 +1734,28 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 const FIXED = 1 / 60;
 
+/* ================= settings and screens ================= */
+const SETTINGS_KEY = 'aetheria.settings.v1';
+const settings = (function () {
+  let s = {}; try { s = JSON.parse(window.localStorage.getItem(SETTINGS_KEY) || '{}') || {}; } catch (e) { s = {}; }
+  const num = (v, lo, hi, def) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : def;
+  return {
+    quality: ['auto', 'light', 'full', 'ultra'].indexOf(s.quality) >= 0 ? s.quality : 'auto', resScale: num(s.resScale, 0.5, 2, 1), uiScale: num(s.uiScale, 0.8, 1.5, 1), volume: num(s.volume, 0, 1, 0.7),
+    tips: s.tips !== false, reduceMotion: typeof s.reduceMotion === 'boolean' ? s.reduceMotion : !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches),
+    seed: Number.isInteger(s.seed) ? s.seed : 1, size: ['small', 'medium', 'large'].indexOf(s.size) >= 0 ? s.size : 'medium', dayCycle: s.dayCycle !== false, played: !!s.played, seen: (s.seen && typeof s.seen === 'object') ? s.seen : {}
+  };
+})();
+let settingsTimer = 0;
+function flushSettings() { clearTimeout(settingsTimer); try { window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* ignore */ } }
+function saveSettings() { clearTimeout(settingsTimer); settingsTimer = setTimeout(flushSettings, 300); }
+const ui = { screen: 'title', menuFrom: 'play', tab: 'creature' };
+
 /* ================= profile ================= */
 let profile = Profile.load();
 let saveTimer = 0;
 function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => Profile.save(profile), 400); }
 let formKind = profile.form;
-let quality = coarse ? 2 : 3;
+let quality = 3;
 const P = Object.assign({ gscale: 1, jboost: 1, gripMul: 1, speedMul: 1, spring: false }, profile.body);
 const PRESETS = {
   blob:  { label: 'Blob',       shape: 'sphere', stiff: 0.22, pressure: 1.0, skin: 0.9,  grip: 0.55, sticky: 0.5 },
@@ -1698,14 +1802,12 @@ function choosePreset(id) {
   syncSliders(); [...bodiesEl.children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
   if (formKind === 'slime') spawnForm('slime', null, true); saveSoon();
 }
-$('quality').value = String(quality);
-$('quality').addEventListener('change', e => { quality = parseInt(e.target.value, 10); spawnForm(formKind, null, true); e.target.blur(); });
 
 /* ================= three.js ================= */
-const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: !coarse });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.25 : 2));
+const renderer = new THREE.WebGLRenderer({ canvas: $('c'), antialias: !coarse, alpha: true, powerPreference: 'high-performance' });
+renderer.setClearColor(0x000000, 0);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputEncoding = THREE.sRGBEncoding;
-const scene = new THREE.Scene(); scene.background = new THREE.Color(0xcfe9f3);
+const scene = new THREE.Scene();
 const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
 let view = 9;
 const pointMats = [];   // [material, metres] -> size in px follows zoom
@@ -1724,18 +1826,40 @@ const sc = sun.shadow.camera; sc.left = -22; sc.right = 22; sc.top = 22; sc.bott
 sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04; scene.add(sun); scene.add(sun.target);
 let sunOff = new THREE.Vector3(14, 26, 9), hutLight = null;
 const SKY_DAY = new THREE.Color(0xcfe9f3), SKY_DUSK = new THREE.Color(0xf2a56b), SKY_NIGHT = new THREE.Color(0x0b1330), SUN_C = new THREE.Color(0xfff3dc), MOON_C = new THREE.Color(0x8da2ff);
+const skyTmp = new THREE.Color(), skyTop = new THREE.Color(), SKY_TOPDAY = new THREE.Color(0x6fbdf0), SKY_TOPNIGHT = new THREE.Color(0x050a1c);
+function setSky(c, day) {
+  skyTop.copy(c).lerp(SKY_TOPNIGHT, 0.55 * (1 - day)).lerp(SKY_TOPDAY, 0.6 * day);
+  const r = document.documentElement; if (r.style && r.style.setProperty) { r.style.setProperty('--sky-bot', '#' + c.getHexString()); r.style.setProperty('--sky-top', '#' + skyTop.getHexString()); }
+}
 function applyTime(t) {
   const ang = (t - 6) / 12 * Math.PI, sh = Math.sin(ang), day = sm(-0.05, 0.25, sh);
   sun.intensity = lerp(0.4, 1.15, day); sun.color.copy(MOON_C).lerp(SUN_C, day); hemi.intensity = lerp(0.35, 0.95, day);
   sunOff.set(-Math.cos(ang) * 20, 8 + 22 * Math.abs(sh), 9);
-  const c = scene.background;
+  const c = skyTmp;
   if (sh > 0) c.copy(SKY_DUSK).lerp(SKY_DAY, sm(0.0, 0.45, sh)); else c.copy(SKY_DUSK).lerp(SKY_NIGHT, sm(0.0, -0.3, sh));
-  const hh = Math.floor(t), mm = Math.floor((t - hh) * 60);
-  $('timeOut').textContent = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+  setSky(c, day); if (cloudMat) cloudMat.color.copy(c).lerp(WHITE, 0.6).multiplyScalar(0.55 + 0.45 * day);
+  const hh = Math.floor(t), mm = Math.floor((t - hh) * 60), label = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+  $('timeOut').textContent = label; $('clock').textContent = label;
   if (hutLight) hutLight.intensity = lerp(1.3, 0.7, day);
 }
-$('time').addEventListener('input', e => applyTime(parseFloat(e.target.value)));
+$('time').addEventListener('input', e => { clockT = parseFloat(e.target.value); applyTime(clockT); });
 $('time').addEventListener('pointerup', e => e.target.blur());
+let clockT = 14, clockAcc = 0;
+
+/* ================= quality: Light, Full, Ultra (sharp on 4K), Auto with an fps governor ================= */
+const TIERS = { light: { pr: 1.25, shadow: 1024, level: 2, wx: 0.5 }, full: { pr: 2, shadow: 2048, level: 3, wx: 0.9 }, ultra: { pr: 3, shadow: 4096, level: 3, wx: 1 } };
+let tier = 'full', govScale = 1, wxScale = 1;
+const resolveTier = () => settings.quality === 'auto' ? (coarse ? 'light' : 'full') : settings.quality;
+function applyQuality(respawn) {
+  const T = TIERS[resolveTier()], prevLevel = quality; tier = resolveTier(); quality = T.level; wxScale = T.wx;
+  const dpr = window.devicePixelRatio || 1, pr = Math.max(0.5, Math.min(T.pr, dpr * settings.resScale * govScale));
+  renderer.setPixelRatio(pr);
+  if (sun.shadow.mapSize.x !== T.shadow) { sun.shadow.mapSize.set(T.shadow, T.shadow); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+  resize();
+  const qi = $('qualityInfo'); if (qi) qi.textContent = 'Now rendering at ' + pr.toFixed(2) + 'x pixels (' + tier + ' quality, ' + (T.level >= 3 ? 'full' : 'light') + ' creatures, ' + T.shadow + ' px shadows).';
+  if (respawn && quality !== prevLevel && (body || wisp)) spawnForm(formKind, null, true);
+}
+function applyUiScale() { const r = document.documentElement; if (r.style && r.style.setProperty) r.style.setProperty('--ui', String(settings.uiScale)); }
 const checker = (() => {
   const c = document.createElement('canvas'); c.width = c.height = 2; const g = c.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, 2, 2); g.fillStyle = '#e3e8e0'; g.fillRect(1, 0, 1, 1); g.fillRect(0, 1, 1, 1);
@@ -1748,6 +1872,9 @@ const softTex = (() => {
 })();
 
 /* ================= world ================= */
+const toonGrad = (function () { const d = new THREE.DataTexture(Uint8Array.from([95, 150, 205, 255]), 4, 1, THREE.LuminanceFormat); d.minFilter = d.magFilter = THREE.NearestFilter; d.generateMipmaps = false; d.needsUpdate = true; return d; })();
+function toonMat(o) { const p = Object.assign({}, o); delete p.roughness; delete p.metalness; delete p.flatShading; p.gradientMap = toonGrad; return new THREE.MeshToonMaterial(p); }
+const flatGeo = g => { g.computeVertexNormals(); return g; };
 let world = null, worldGroup = null, env = null;
 let hutParts = [], shaking = [];
 const dummy = new THREE.Object3D(), tmpC = new THREE.Color(), tmpC2 = new THREE.Color();
@@ -1773,16 +1900,16 @@ function buildGround() {
     else { const t = Math.min(1, Math.max(0, (0.94 - ny) / 0.2)), lift = 0.04 * h; for (let m = 0; m < 3; m++) col[3*k + m] = Math.min(1, world.ground[m] * (1 - t) + world.dirt[m] * t + lift); }
   }
   g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }); if (world.checker) mat.map = checker;
+  const mat = toonMat({ vertexColors: true }); if (world.checker) mat.map = checker;
   const mesh = new THREE.Mesh(g, mat); mesh.receiveShadow = true; worldGroup.add(mesh);
 }
 function buildProps() {
   const m4 = new THREE.Matrix4();
   world.boxes.forEach(b => {
-    const o = { color: b.color, roughness: 0.8 };
+    const o = { color: b.color };
     if (b.tag === 'wall' || b.tag === 'roof') o.transparent = true;
     if (b.tag === 'fireplace') { o.emissive = 0xff6a20; o.emissiveIntensity = 0.6; }
-    const mat = new THREE.MeshStandardMaterial(o);
+    const mat = toonMat(o);
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(b.h[0]*2, b.h[1]*2, b.h[2]*2), mat);
     mesh.position.set(b.c[0], b.c[1], b.c[2]); const R = b.R; m4.set(R[0], R[1], R[2], 0, R[3], R[4], R[5], 0, R[6], R[7], R[8], 0, 0, 0, 0, 1);
     mesh.quaternion.setFromRotationMatrix(m4); mesh.castShadow = true; mesh.receiveShadow = true; worldGroup.add(mesh);
@@ -1791,12 +1918,12 @@ function buildProps() {
     if (b.tag === 'fireplace') { hutLight = new THREE.PointLight(0xffa24a, 1, 11, 1.6); hutLight.position.set(b.c[0] - 0.9, b.c[1] + 0.5, b.c[2]); worldGroup.add(hutLight); }
   });
   (world.visualOnly || []).forEach(b => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(b.h[0]*2, b.h[1]*2, b.h[2]*2), new THREE.MeshStandardMaterial({ color: b.color, roughness: 1 }));
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(b.h[0]*2, b.h[1]*2, b.h[2]*2), toonMat({ color: b.color }));
     mesh.position.set(b.c[0], b.c[1], b.c[2]); mesh.receiveShadow = true; worldGroup.add(mesh);
   });
   world.spheres.forEach(s => {
     if (s.tag === 'geode' || s.tag === 'clay' || s.tag === 'rock' || s.tag === 'cap') return;
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(s.r, 32, 20), new THREE.MeshStandardMaterial({ color: s.color, roughness: 0.9 }));
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(s.r, 32, 20), toonMat({ color: s.color }));
     mesh.position.set(s.c[0], s.c[1], s.c[2]); mesh.castShadow = true; mesh.receiveShadow = true; worldGroup.add(mesh);
   });
 }
@@ -1805,10 +1932,10 @@ function buildFlora() {
   const stemGeo = new THREE.CylinderGeometry(1, 1, 1, 8); stemGeo.translate(0, 0.5, 0);
   const coneGeo = new THREE.ConeGeometry(1, 1, 9); coneGeo.translate(0, 0.5, 0);
   const trees = F.trees, n = { oak: 0, pine: 0, cactus: 0, mushroom: 0 }; trees.forEach(t => n[t.kind]++);
-  const stems = mkInst(stemGeo, new THREE.MeshStandardMaterial({ roughness: 0.9 }), trees.length);
-  const balls = mkInst(new THREE.SphereGeometry(1, 12, 9), new THREE.MeshStandardMaterial({ roughness: 0.85 }), n.oak + n.cactus);
-  const cones = mkInst(coneGeo, new THREE.MeshStandardMaterial({ roughness: 0.9 }), n.pine * 2);
-  const caps = mkInst(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshStandardMaterial({ roughness: 0.5, emissive: 0x3a2a66, emissiveIntensity: 0.9 }), n.mushroom);
+  const stems = mkInst(stemGeo, toonMat({}), trees.length);
+  const balls = mkInst(new THREE.SphereGeometry(1, 12, 9), toonMat({}), n.oak + n.cactus);
+  const cones = mkInst(coneGeo, toonMat({}), n.pine * 2);
+  const caps = mkInst(new THREE.SphereGeometry(1, 12, 8), toonMat({ emissive: 0x3a2a66, emissiveIntensity: 0.9 }), n.mushroom);
   let si = 0, bi = 0, ci = 0, pi = 0;
   const greens = [0x4fae4a, 0x5cbf55, 0x6bcf5e, 0x45a043], pines = [0x2f6b4a, 0x35785a, 0x2a5f44], capc = [0x9b6bd6, 0x4fd1c5, 0xc27ad6, 0x6ba8e6];
   const part = (t, mesh, i, x, y, z, sx, sy, sz, color) => { setI(mesh, i, x, y, z, sx, sy, sz, color); t.parts.push({ mesh, i, x, y, z, sx, sy, sz }); };
@@ -1820,28 +1947,47 @@ function buildFlora() {
     else { setI(stems, si++, t.x, t.y - 0.1, t.z, 0.22*s, 1.9*s, 0.22*s, 0xf1e6d2); part(t, caps, pi++, t.x, t.y + 1.95*s, t.z, 1.1*s, 0.7*s, 1.1*s, capc[(t.rnd * 4) | 0]); }
   });
   [stems, balls, cones, caps].forEach(flush);
-  const rocks = mkInst(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshStandardMaterial({ roughness: 0.95, flatShading: true }), F.rocks.length);
+  const rocks = mkInst(flatGeo(new THREE.IcosahedronGeometry(1, 1)), toonMat({}), F.rocks.length);
   F.rocks.forEach((r, i) => setI(rocks, i, r.c[0], r.c[1], r.c[2], r.r, r.r * 0.85, r.r, 0x8c8a85 + ((i * 0x050505) & 0x1f1f1f), i)); flush(rocks);
-  const geodes = mkInst(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ color: 0x9a6bff, emissive: 0x5a2ad0, emissiveIntensity: 0.9, roughness: 0.25, flatShading: true }), F.geodes.length);
+  const geodes = mkInst(new THREE.IcosahedronGeometry(1, 0), toonMat({ color: 0x9a6bff, emissive: 0x5a2ad0, emissiveIntensity: 0.9 }), F.geodes.length);
   F.geodes.forEach((g, i) => { g.mesh = geodes; g.idx = i; setI(geodes, i, g.c[0], g.c[1], g.c[2], g.r, g.r * 0.9, g.r, undefined, i); }); flush(geodes);
-  const clays = mkInst(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshStandardMaterial({ color: 0x8aa0b4, roughness: 1 }), F.clays.length);
+  const clays = mkInst(new THREE.SphereGeometry(1, 12, 8), toonMat({ color: 0x8aa0b4 }), F.clays.length);
   F.clays.forEach((g, i) => { g.mesh = clays; g.idx = i; setI(clays, i, g.c[0], g.c[1] - 0.15, g.c[2], g.r, g.r * 0.6, g.r, undefined, i); }); flush(clays);
   const petals = F.flowers.filter(f => f.type === 'petal'), spores = F.flowers.filter(f => f.type === 'spore');
-  const pm = mkInst(new THREE.SphereGeometry(1, 6, 5), new THREE.MeshStandardMaterial({ roughness: 0.6, emissive: 0x331122, emissiveIntensity: 0.5 }), petals.length);
-  const sp = mkInst(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: 0.4, emissive: 0x44ddbb, emissiveIntensity: 1.2 }), spores.length);
+  const pm = mkInst(new THREE.SphereGeometry(1, 6, 5), toonMat({ emissive: 0x331122, emissiveIntensity: 0.5 }), petals.length);
+  const sp = mkInst(new THREE.SphereGeometry(1, 8, 6), toonMat({ emissive: 0x44ddbb, emissiveIntensity: 1.2 }), spores.length);
   pm.castShadow = false; sp.castShadow = false;
   petals.forEach((f, i) => { f.mesh = pm; f.idx = i; f.size = 0.17; setI(pm, i, f.x, f.y + 0.16, f.z, 0.17, 0.17, 0.17, f.color); });
   spores.forEach((f, i) => { f.mesh = sp; f.idx = i; f.size = 0.15; setI(sp, i, f.x, f.y + 0.3, f.z, 0.15, 0.15, 0.15, f.color); });
   flush(pm); flush(sp);
 }
-function loadTerrain(id) {
+let cloudGroup = null, cloudPuffs = null, cloudMat = null, cloudData = []; const WHITE = new THREE.Color(0xffffff);
+function buildClouds() {
+  if (cloudGroup) { scene.remove(cloudGroup); cloudGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); }); cloudGroup = null; cloudPuffs = null; cloudMat = null; }
+  if (!world.clampR) return;
+  cloudGroup = new THREE.Group(); const A = world.A;
+  cloudMat = new THREE.MeshBasicMaterial({ color: 0xf6fbff, transparent: true, opacity: 0.97 });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(A * 10, A * 10), cloudMat); plane.rotation.x = -Math.PI / 2; plane.position.y = world.hmin + 0.55; cloudGroup.add(plane);
+  const N = 90; cloudPuffs = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 9, 6), toonMat({ color: 0xffffff }), N); cloudPuffs.frustumCulled = false; cloudData = [];
+  let a = 13; const rnd = () => { a = (a * 1664525 + 1013904223) >>> 0; return a / 4294967296; };
+  for (let i = 0; i < N; i++) { const ang = rnd() * 6.283, r = A * (0.88 + rnd() * 1.1), s = 3 + rnd() * 6; cloudData.push({ x: Math.cos(ang) * r, z: Math.sin(ang) * r, y: world.hmin + 0.5 + rnd() * 2.2, s, ph: rnd() * 6.28 }); }
+  cloudGroup.add(cloudPuffs); scene.add(cloudGroup); updateClouds(0);
+}
+function updateClouds(t) {
+  if (!cloudPuffs) return;
+  for (let i = 0; i < cloudData.length; i++) { const c = cloudData[i]; dummy.position.set(c.x + Math.sin(t * 0.05 + c.ph) * 1.5, c.y + Math.sin(t * 0.3 + c.ph) * 0.25, c.z); dummy.rotation.set(0, 0, 0); dummy.scale.set(c.s * 1.4, c.s * 0.5, c.s * 1.1); dummy.updateMatrix(); cloudPuffs.setMatrixAt(i, dummy.matrix); }
+  cloudPuffs.instanceMatrix.needsUpdate = true;
+}
+function loadTerrain(id, opts) {
   if (worldGroup) { scene.remove(worldGroup); worldGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   clearItems(); shaking = []; hutParts = []; hutLight = null;
-  world = Terrain.build(id); worldGroup = new THREE.Group();
-  buildGround(); buildProps(); buildFlora(); scene.add(worldGroup);
+  if (id === 'aetheria') opts = opts || { seed: settings.seed, size: settings.size };
+  world = Terrain.build(id, opts); worldGroup = new THREE.Group();
+  world.saveKey = (id === 'aetheria' && !(world.seed === 1 && world.sizeName === 'medium')) ? 'aetheria:' + world.seed + ':' + world.sizeName : id;
+  buildGround(); buildProps(); buildFlora(); scene.add(worldGroup); buildClouds();
   env = Env.create(world, 5); env.override = $('weather').value || 'auto';
   if (typeof initBuildState === 'function' && craftReady) initBuildState();
-  applyTime(parseFloat($('time').value));
+  applyTime(clockT); if (typeof updateWorldInfo === 'function') updateWorldInfo();
 }
 
 /* ================= items, audio, hearts, ring ================= */
@@ -1855,18 +2001,23 @@ const ITEM = {
   spore: { label: 'Spores', geo: () => new THREE.SphereGeometry(0.1, 8, 6), color: 0x7ff5dd, emi: 0x1f8a74 }
 };
 const inv = {}; Object.keys(Craft.ITEMS).forEach(k => inv[k] = 0);
-Object.values(ITEM).forEach(d => { d.g = d.geo(); d.m = new THREE.MeshStandardMaterial({ color: d.color, emissive: d.emi, emissiveIntensity: 1, roughness: 0.5 }); });
+Object.values(ITEM).forEach(d => { d.g = d.geo(); d.m = toonMat({ color: d.color, emissive: d.emi, emissiveIntensity: 1 }); });
 let craftReady = false;
 const invList = $('invList');
+const ICON = { timber: '\u{1FAB5}', sap: '\u{1F36F}', fiber: '\u{1F33F}', starstone: '\u{1F48E}', clay: '\u{1F3FA}', petal: '\u{1F338}', spore: '\u2728', twine: '\u{1F9F5}', torch: '\u{1F525}', campfire: '\u{1F525}', bowl: '\u{1F963}', workbench: '\u{1F6E0}', foundation: '\u2B1C', wall: '\u{1F9F1}', doorwall: '\u{1F6AA}', roof: '\u{1F3E0}', table: '\u{1F37D}', bed: '\u{1F6CF}' };
 function renderInv() {
   invList.innerHTML = '';
   Object.keys(Craft.ITEMS).forEach(k => {
     const raw = Craft.RES.indexOf(k) >= 0; if (!raw && !inv[k]) return;
-    const li = document.createElement('li'), a = document.createElement('span'), b = document.createElement('span');
-    a.textContent = Craft.ITEMS[k]; b.textContent = raw ? inv[k] + '/' + Craft.stackCap(formKind) : String(inv[k]); li.append(a, b); invList.appendChild(li);
+    const placeable = Build.PLACEABLE.indexOf(k) >= 0, b = document.createElement('button');
+    b.className = 'slot' + (raw && !inv[k] ? ' dim' : '') + (craftReady && placeable && buildMode && selPiece === k ? ' sel' : '');
+    b.title = Craft.ITEMS[k] + ': ' + inv[k] + (raw ? ' of ' + Craft.stackCap(formKind) : '') + (placeable ? ' (tap to place)' : ''); b.setAttribute('aria-label', b.title);
+    const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = ICON[k] || '?'; const ct = document.createElement('span'); ct.className = 'ct'; ct.textContent = String(inv[k]);
+    b.append(ic, ct); if (placeable) b.addEventListener('click', () => { selectPiece(k); b.blur(); }); invList.appendChild(b);
   });
   if (craftReady) renderCraft();
 }
+function selectPiece(type) { selPiece = type; $('bPiece').value = type; if (!buildMode) toggleBuild(); renderInv(); toast('Build: ' + Craft.ITEMS[type] + '. Enter places, X turns, P stops.', 'tip', 4200); }
 const items = [];
 function spawnItem(type, x, y, z, fly) {
   if (items.length > 80) { const o = items.shift(); scene.remove(o.mesh); }
@@ -1886,7 +2037,7 @@ function updateItems(dt) {
     }
     const dx = c[0] - it.x, dy = c[1] - it.y, dz = c[2] - it.z, d = Math.sqrt(dx*dx + dy*dy + dz*dz);
     if (it.age > 0.7 && d < 4.5) { it.fly = true; const sp = (3 + (4.5 - d) * 5) * dt, k = Math.min(1, sp / (d + 1e-6)); it.x += dx * k; it.y += dy * k; it.z += dz * k; }
-    if (d < 0.85 && it.age > 0.5 && inv[it.type] < Craft.stackCap(formKind)) { inv[it.type]++; scene.remove(it.mesh); items.splice(i, 1); renderInv(); chime([880], 0.05); emoTrigger('happy', 0.6); corePulse = 1; saveSave(); continue; }
+    if (d < 0.85 && it.age > 0.5 && inv[it.type] < Craft.stackCap(formKind)) { inv[it.type]++; scene.remove(it.mesh); items.splice(i, 1); renderInv(); chime([880], 0.05); emoTrigger('happy', 0.6); corePulse = 1; saveSave(); toastItem(it.type); stats.picks++; continue; }
     if (it.age > 70) { scene.remove(it.mesh); items.splice(i, 1); continue; }
     it.mesh.rotation.y += dt * 2.2; it.mesh.position.set(it.x, it.y + (it.fly ? 0 : Math.sin(it.age * 4 + it.bob) * 0.05), it.z);
   }
@@ -1894,9 +2045,10 @@ function updateItems(dt) {
 let ac = null;
 function chime(freqs, vol) {
   try {
-    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC || settings.volume <= 0.001) return;
+    const gainV = Math.max(0.0002, (vol || 0.06) * settings.volume * 1.4);
     if (!ac) ac = new AC(); if (ac.state === 'suspended') ac.resume();
-    freqs.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * 0.09; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || 0.06, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + 0.55); });
+    freqs.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i * 0.09; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(gainV, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + 0.55); });
   } catch (e) { /* audio is optional */ }
 }
 const heartTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.font = '52px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ff6fa5'; g.fillText('\u2665', 32, 36); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; })();
@@ -1907,6 +2059,31 @@ const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 40), new THREE.MeshB
 ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring); let ringT = 9;
 function ringAt(x, z) { ringT = 0; ring.position.set(x, Phys.groundHeight(world, x, z) + 0.1, z); ring.visible = true; }
 
+const DUSTN = 48, dustPos = new Float32Array(DUSTN * 3), dustCol = new Float32Array(DUSTN * 3), dust = [];
+for (let i = 0; i < DUSTN; i++) { dust.push({ x: 0, y: -999, z: 0, vx: 0, vy: 0, vz: 0, l: 0 }); dustPos[3 * i + 1] = -999; }
+const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3)); dustGeo.setAttribute('color', new THREE.BufferAttribute(dustCol, 3));
+const dustMat = new THREE.PointsMaterial({ size: 10, sizeAttenuation: false, map: softTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }); pointMats.push([dustMat, 0.45]);
+const dustPts = new THREE.Points(dustGeo, dustMat); dustPts.frustumCulled = false; scene.add(dustPts);
+let dustI = 0, dustCd = 0;
+function puff(x, y, z, n, sp) {
+  if (settings.reduceMotion) return;
+  for (let k = 0; k < n; k++) { const p = dust[dustI]; dustI = (dustI + 1) % DUSTN; const a = Math.random() * 6.283, s = sp * (0.4 + Math.random() * 0.8); p.x = x + Math.cos(a) * 0.3; p.z = z + Math.sin(a) * 0.3; p.y = y; p.vx = Math.cos(a) * s; p.vz = Math.sin(a) * s; p.vy = 0.5 + Math.random() * 1.2; p.l = 0.9; }
+}
+function updateDust(dt) {
+  for (let i = 0; i < DUSTN; i++) {
+    const p = dust[i];
+    if (p.l > 0) { p.l -= dt; p.vx *= 0.93; p.vz *= 0.93; p.vy -= 1.2 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; const f = Math.max(0, p.l / 0.9); dustCol[3*i] = 0.95 * f; dustCol[3*i+1] = 0.9 * f; dustCol[3*i+2] = 0.78 * f; dustPos[3*i] = p.x; dustPos[3*i+1] = p.y; dustPos[3*i+2] = p.z; }
+    else { dustPos[3*i+1] = -999; dustCol[3*i] = dustCol[3*i+1] = dustCol[3*i+2] = 0; }
+  }
+  dustGeo.attributes.position.needsUpdate = true; dustGeo.attributes.color.needsUpdate = true;
+}
+const chargeRing = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 48), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false })); chargeRing.rotation.x = -Math.PI / 2; chargeRing.visible = false; scene.add(chargeRing);
+function updateChargeRing() {
+  if (!body || body.charge <= 0.02 || isPaused()) { chargeRing.visible = false; return; }
+  const c = body.com; chargeRing.visible = true; chargeRing.position.set(c[0], Phys.groundHeight(world, c[0], c[2]) + 0.06, c[2]);
+  chargeRing.scale.setScalar(0.8 + 1.5 * body.charge * profile.look.size); chargeRing.material.opacity = 0.25 + 0.5 * body.charge; chargeRing.material.color.copy(avgC);
+}
+
 /* ================= creature: slime / stone body or wisp cloud ================= */
 const topC = new THREE.Color(), botC = new THREE.Color(), eyeC = new THREE.Color(), avgC = new THREE.Color();
 function syncLookColors() {
@@ -1914,9 +2091,13 @@ function syncLookColors() {
   avgC.copy(topC).lerp(botC, 0.5);
   slimeMat.opacity = profile.look.translucency; slimeMat.clearcoat = profile.look.gloss; slimeMat.roughness = 0.4 - 0.28 * profile.look.gloss;
   userEmis.copy(avgC).multiplyScalar(0.22); pupilMat.color.copy(eyeC); mouthMat.color.copy(eyeC);
-  wingMat.color.copy(avgC);
+  wingMat.color.copy(avgC); outlineMat.uniforms.col.value.copy(botC).multiplyScalar(0.45);
 }
 const slimeMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, emissive: 0x13311b, emissiveIntensity: 0.55, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.08, transparent: true, opacity: 0.86 });
+const outlineMat = new THREE.ShaderMaterial({ uniforms: { col: { value: new THREE.Color(0x1c4a2a) }, th: { value: 0.03 } }, side: THREE.BackSide,
+  vertexShader: 'uniform float th; void main() { vec3 p = position + normalize(normal) * th; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }',
+  fragmentShader: 'uniform vec3 col; void main() { gl_FragColor = vec4(col, 1.0); }' });
+let outline = null;
 const stoneMat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.75, flatShading: true });
 const userEmis = new THREE.Color(0x13311b);
 const wispMat = new THREE.PointsMaterial({ size: 20, sizeAttenuation: false, map: softTex, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -1931,6 +2112,7 @@ function events() { return wisp ? wisp.events : body.events; }
 
 function disposeCreature() {
   if (mesh) { scene.remove(mesh); geo.dispose(); mesh = null; }
+  if (outline) { scene.remove(outline); outline = null; }
   if (wispPts) { scene.remove(wispPts); wispGeo.dispose(); wispPts = null; }
   body = null; wisp = null; wispLight.visible = false;
 }
@@ -1954,6 +2136,7 @@ function spawnForm(kind, pos, keepPos) {
     geo.setAttribute('position', posAttr); geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(body.n * 3), 3)); geo.setAttribute('color', colAttr);
     geo.setIndex(new THREE.BufferAttribute(body.idx, 1));
     mesh = new THREE.Mesh(geo, kind === 'stone' ? stoneMat : slimeMat); mesh.castShadow = true; mesh.frustumCulled = false; scene.add(mesh);
+    outlineMat.uniforms.th.value = 0.03 * size; outline = new THREE.Mesh(geo, outlineMat); outline.frustumCulled = false; outline.renderOrder = -1; scene.add(outline);
     if (kind === 'stone') { // fixed patterned colours so rolling is visible
       for (let i = 0; i < body.n; i++) {
         const qy = body.q[3*i+1] / (0.6 * size), k = noise3(Math.round(body.q[3*i] * 5), Math.round(qy * 5), Math.round(body.q[3*i+2] * 5)), g = 0.78 + 0.3 * k;
@@ -2100,7 +2283,7 @@ function tryGLB(id, group) {
   if (!ASSETS || !ASSETS[id] || !THREE.GLTFLoader) return;
   try { new THREE.GLTFLoader().load(ASSETS[id], g => { while (group.children.length) group.remove(group.children[0]); group.add(g.scene); }, undefined, () => {}); } catch (e) { /* keep primitives */ }
 }
-const stdM = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6 }, o || {}));
+const stdM = (c, o) => toonMat(Object.assign({ color: c }, o || {}));
 function addM(g, geo, mat, x, y, z, rx, ry, rz, sx, sy, sz) { const m = new THREE.Mesh(geo, mat); m.position.set(x || 0, y || 0, z || 0); m.rotation.set(rx || 0, ry || 0, rz || 0); m.scale.set(sx || 1, sy || 1, sz || 1); m.castShadow = true; g.add(m); return m; }
 function makeHead(id) {
   const g = new THREE.Group(), sh = profile.look.size;
@@ -2205,7 +2388,7 @@ function updateCamera(dt) {
   const c = com();
   tgt.x += (c[0] - tgt.x) * Math.min(1, dt * 7); tgt.z += (c[2] - tgt.z) * Math.min(1, dt * 7); tgt.y += (c[1] - tgt.y) * Math.min(1, dt * 1.6);
   const lim = view * 0.6; tgt.y = Math.max(c[1] - lim, Math.min(c[1] + lim, tgt.y));
-  let sx = 0, sy = 0; if (shakeAmp > 0.002) { sx = (Math.random() - 0.5) * shakeAmp; sy = (Math.random() - 0.5) * shakeAmp; shakeAmp *= Math.pow(0.02, dt); }
+  let sx = 0, sy = 0; if (shakeAmp > 0.002 && !settings.reduceMotion) { sx = (Math.random() - 0.5) * shakeAmp; sy = (Math.random() - 0.5) * shakeAmp; shakeAmp *= Math.pow(0.02, dt); }
   const D = 120, ce = Math.cos(ELEV), se = Math.sin(ELEV);
   cam.position.set(tgt.x + Math.sin(az) * ce * D + sx, tgt.y + se * D + sy, tgt.z + Math.cos(az) * ce * D); cam.lookAt(tgt.x + sx, tgt.y + sy, tgt.z);
   sun.position.set(tgt.x + sunOff.x, tgt.y + sunOff.y, tgt.z + sunOff.z); sun.target.position.set(tgt.x, tgt.y, tgt.z);
@@ -2219,6 +2402,7 @@ function updateActionLabels() {
   $('mbtn').textContent = w ? 'Diffuse' : st ? 'Pebble' : 'Melt'; $('pbtn').textContent = w ? 'Gust' : 'Pound';
   $('aMelt').disabled = false; $('mbtn').disabled = false;
   $('aFloat').style.display = w ? '' : 'none'; $('vbtn').style.display = w ? '' : 'none';
+  renderAbilities(); updateChip();
 }
 function syncActionButtons() {
   $('aMelt').setAttribute('aria-pressed', formKind === 'wisp' ? modeSel === -1 : meltOn); $('aSpring').setAttribute('aria-pressed', formKind === 'wisp' ? modeSel === 1 : springOn);
@@ -2235,7 +2419,8 @@ const keys = new Set(); let keyJump = false, touchJump = false; const joy = { x:
 function typing(e) { const t = e.target && e.target.tagName; return t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA'; }
 let windDebug = false;
 window.addEventListener('keydown', e => {
-  if (typing(e)) return;
+  if (e.key === 'Escape') { e.preventDefault(); toggleMenu(); return; }
+  if (isPaused() || typing(e)) return;
   const k = e.key.toLowerCase();
   if (e.code === 'Space') { e.preventDefault(); keyJump = true; return; }
   if (k.startsWith('arrow') || k === 'tab') e.preventDefault();
@@ -2254,7 +2439,7 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { if (e.code === 'Space') keyJump = false; keys.delete(e.key.toLowerCase()); });
 window.addEventListener('blur', () => { keys.clear(); keyJump = false; touchJump = false; });
-window.addEventListener('wheel', e => zoom(e.deltaY > 0 ? 1.1 : 0.9), { passive: true });
+window.addEventListener('wheel', e => { if (!isPaused()) zoom(e.deltaY > 0 ? 1.1 : 0.9); }, { passive: true });
 function zoom(f) { view = Math.max(3.5, Math.min(26, view * f)); resize(); }
 let slow = false;
 function toggleSlow() { slow = !slow; $('slow').setAttribute('aria-pressed', slow); }
@@ -2355,7 +2540,7 @@ function updateShake(dt) {
   }
 }
 function onPound(e) {
-  shakeAmp = 0.5; ringAt(e.x, e.z); chime([196, 147], 0.08);
+  puff(e.x, Phys.groundHeight(world, e.x, e.z) + 0.1, e.z, 18, 3.4); shakeAmp = settings.reduceMotion ? 0 : 0.5; ringAt(e.x, e.z); chime([196, 147], 0.08);
   const F = world.flora; if (!F) return; const R = 3.8;
   F.geodes.forEach(g => { if (g.on && Math.hypot(g.c[0] - e.x, g.c[2] - e.z) < R && Math.abs(g.c[1] - e.y) < 2.5) { breakBreakable(g, 'starstone', 2 + ((Math.random() * 2) | 0)); chime([784, 988, 1175], 0.06); } });
   F.clays.forEach(g => { if (g.on && Math.hypot(g.c[0] - e.x, g.c[2] - e.z) < R && Math.abs(g.c[1] - e.y) < 2.5) { breakBreakable(g, 'clay', 2); chime([392, 494], 0.05); } });
@@ -2367,6 +2552,7 @@ function handleEvents() {
     const e = ev.shift();
     if (e.t === 'pound') onPound(e);
     else if (e.t === 'heart') { popHearts(e.x, e.y, e.z); chime([659, 784, 988, 1319], 0.05); emoTrigger('love', 2); }
+    else if (e.t === 'puff') { stats.jumps++; puff(e.x, Phys.groundHeight(world, e.x, e.z) + 0.1, e.z, 6, 1.4); }
     else if (e.t === 'dash') { chime([440, 660], 0.04); emoTrigger('excited', 0.8); }
   }
 }
@@ -2471,7 +2657,7 @@ function updateHud(s) {
   else { jfill.style.width = '0%'; jtxt.textContent = (body.lastPeak > 0 ? 'Last jump ' + body.lastPeak.toFixed(1) + ' m. ' : '') + 'Taps hop ' + Phys.jumpHeight(P, 0).height.toFixed(1) + ' m, full hold ' + Phys.jumpHeight(P, 1).height.toFixed(1) + ' m'; }
   let name = world.label; if (world.biomeAt) name = BIOMES[s.biome];
   const wlabel = curWx.type === 'none' || curWx.amt < 0.1 ? 'Clear' : WXD[curWx.type].name + ' ' + Math.round(curWx.amt * 100) + '%';
-  const label = profile.name + ' (' + formKind + ') in ' + name;
+  const label = name;
   if (label !== lastLabel) { lastLabel = label; $('biomeLbl').textContent = label; }
   const wtxt = wlabel + ' | Wind ' + s.strength.toFixed(1) + ' m/s' + (Math.abs(s.wind[1]) > 0.6 ? (s.wind[1] > 0 ? ' (updraft)' : ' (downdraft)') : '') + (inp.ride ? ' | riding' : (s.strength > 1.5 || Math.abs(s.wind[1]) > 0.6 ? ' | hold Shift to ride' : ''));
   if (wtxt !== lastWx) { lastWx = wtxt; $('wxLbl').textContent = wtxt; }
@@ -2487,7 +2673,7 @@ function addRange(label, min, max, step, get, set, fmt, onChange) { const i = do
 function addSelect(label, list, get, set) { const s = document.createElement('select'); list.forEach(([id, l]) => { const o = document.createElement('option'); o.value = id; o.textContent = l; s.appendChild(o); }); s.value = get(); s.addEventListener('change', () => { set(s.value); s.blur(); saveSoon(); }); const d = document.createElement('div'); const l = document.createElement('div'); l.className = 'lbl'; l.textContent = label; d.append(l, s); cust.appendChild(d); }
 function buildCustomizeUI() {
   const nm = document.createElement('input'); nm.type = 'text'; nm.maxLength = 16; nm.value = profile.name; nm.className = 'txt'; nm.setAttribute('aria-label', 'Creature name');
-  nm.addEventListener('input', () => { profile.name = nm.value.slice(0, 16) || 'Slimey'; lastLabel = ''; saveSoon(); });
+  nm.addEventListener('input', () => { profile.name = nm.value.slice(0, 16) || 'Slimey'; lastLabel = ''; updateChip(); saveSoon(); });
   const d = document.createElement('div'); const l = document.createElement('div'); l.className = 'lbl'; l.textContent = 'Name'; d.append(l, nm); cust.appendChild(d);
   addColor('Top colour', () => profile.look.top, v => profile.look.top = v);
   addColor('Bottom colour', () => profile.look.bottom, v => profile.look.bottom = v);
@@ -2519,9 +2705,9 @@ function loadSave() {
 }
 function saveSave() {
   clearTimeout(saveT2);
-  saveT2 = setTimeout(() => { try { saveData.inv = inv; if (bs && world) saveData.pieces[world.name] = Build.serialize(bs); window.localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); } catch (e) { /* ignore */ } }, 500);
+  saveT2 = setTimeout(() => { try { saveData.inv = inv; if (bs && world) saveData.pieces[world.saveKey] = Build.serialize(bs); window.localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); } catch (e) { /* ignore */ } }, 500);
 }
-function flushSave() { clearTimeout(saveT2); try { saveData.inv = inv; if (bs && world) saveData.pieces[world.name] = Build.serialize(bs); window.localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); Profile.save(profile); } catch (e) { /* ignore */ } }
+function flushSave() { clearTimeout(saveT2); try { saveData.inv = inv; if (bs && world) saveData.pieces[world.saveKey] = Build.serialize(bs); window.localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); Profile.save(profile); } catch (e) { /* ignore */ } }
 window.addEventListener('beforeunload', flushSave); window.addEventListener('pagehide', flushSave);
 loadSave(); renderInv();
 
@@ -2531,7 +2717,7 @@ const pieceObjs = new Map();                // piece id -> {obj, rec, fade:[mate
 const ghostMat = new THREE.MeshBasicMaterial({ color: 0x55ee88, transparent: true, opacity: 0.45, depthWrite: false });
 const fireLights = []; for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xffa24a, 0, 12, 1.6); scene.add(l); fireLights.push(l); }
 const WOOD = 0xb98a5a, LOG = 0xd9b98a, THATCH = 0xc9a24a;
-function mk(geo, color, x, y, z, o) { const mt = new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.85 }, o || {})); const me = new THREE.Mesh(geo, mt); me.position.set(x, y, z); me.castShadow = true; me.receiveShadow = true; return me; }
+function mk(geo, color, x, y, z, o) { const mt = toonMat(Object.assign({ color }, o || {})); const me = new THREE.Mesh(geo, mt); me.position.set(x, y, z); me.castShadow = true; me.receiveShadow = true; return me; }
 function buildPieceObj(type, rec) {
   const g = new THREE.Group(), info = { obj: g, rec, fade: [], kind: null, flames: [], light: !!Build.LIGHTS[type] };
   const box = (w, h, d, color, x, y, z, o) => { const me = mk(new THREE.BoxGeometry(w, h, d), color, x, y, z, o); g.add(me); return me; };
@@ -2571,7 +2757,7 @@ function addPieceObj(rec) {
 function clearPieceObjs() { pieceObjs.forEach(i => pieceGroup.remove(i.obj)); pieceObjs.clear(); }
 function initBuildState() {
   clearPieceObjs(); bs = Build.create(world);
-  Build.load(bs, saveData.pieces[world.name]); bs.list.forEach(addPieceObj);
+  Build.load(bs, saveData.pieces[world.saveKey]); bs.list.forEach(addPieceObj);
 }
 
 // ghost preview
@@ -2581,7 +2767,7 @@ function setGhostObj(type) {
   const info = buildPieceObj(type, null); info.obj.traverse(o => { if (o.isMesh) { o.material = ghostMat; o.castShadow = false; } });
   ghostObj = info.obj; ghostObj.visible = false; scene.add(ghostObj);
 }
-function toggleBuild() { buildMode = !buildMode; $('bMode').setAttribute('aria-pressed', buildMode); if (!buildMode && ghostObj) ghostObj.visible = false; }
+function toggleBuild() { buildMode = !buildMode; if (buildMode) buildUsed = true; $('bMode').setAttribute('aria-pressed', buildMode); if (!buildMode && ghostObj) ghostObj.visible = false; }
 function cyclePiece(d) { const list = Build.PLACEABLE; selPiece = list[(list.indexOf(selPiece) + d + list.length) % list.length]; $('bPiece').value = selPiece; }
 function rotateGhost() { ghostYaw = (ghostYaw + 90) % 360; }
 function updateGhost() {
@@ -2649,8 +2835,117 @@ $('bRot').addEventListener('click', e => { rotateGhost(); e.currentTarget.blur()
 $('bPlace').addEventListener('click', e => { placeGhost(); e.currentTarget.blur(); });
 $('bRemove').addEventListener('click', e => { removeNear(); e.currentTarget.blur(); });
 $('giveRes').addEventListener('click', e => { Craft.RES.forEach(k => { inv[k] = Math.min(Craft.stackCap(formKind), inv[k] + 10); }); renderInv(); saveSave(); e.currentTarget.blur(); });
-$('c').addEventListener('pointerdown', () => { if (buildMode && !coarse) placeGhost(); });
+$('c').addEventListener('pointerdown', () => { if (buildMode && !coarse && !isPaused()) placeGhost(); });
 craftReady = true; renderInv();
+
+
+/* ================= game shell: toasts, tips, abilities bar, screens, new world ================= */
+const stats = { moved: 0, jumps: 0, picks: 0, rode: 0, t: 0 }; let wasJump = false, wasFloat = false, buildUsed = false;
+function dropEl(el) { try { if (el.parentNode && el.parentNode.removeChild) el.parentNode.removeChild(el); } catch (e) { /* already gone */ } }
+const toastsEl = $('toasts');
+function toast(msg, kind, ms) {
+  const d = document.createElement('div'); d.className = 'toast' + (kind ? ' ' + kind : ''); d.textContent = msg; toastsEl.appendChild(d);
+  if (toastsEl.children.length > 3) dropEl(toastsEl.children[0]);
+  setTimeout(() => dropEl(d), ms || 5200); return d;
+}
+const pick = { type: null, n: 0, el: null, t: 0 };
+function toastItem(type) {
+  const now = performance.now(), label = ICON[type] + ' ' + Craft.ITEMS[type];
+  if (pick.type === type && pick.el && pick.el.parentNode && now - pick.t < 1800) { pick.n++; pick.el.textContent = '+' + pick.n + ' ' + label; pick.t = now; }
+  else { pick.type = type; pick.n = 1; pick.el = toast('+1 ' + label, 'item', 1800); pick.t = now; }
+}
+function nearTree(r) { const F = world.flora; if (!F) return false; const c = com(); return F.trees.some(t => Math.abs(t.x - c[0]) < r && Math.abs(t.z - c[2]) < r); }
+const HINTS = [
+  { id: 'move', when: () => stats.t > 2 && stats.moved < 3, text: () => 'Move with WASD, the arrow keys or the stick.' },
+  { id: 'jump', when: () => stats.moved > 6 && stats.jumps === 0, text: () => formKind === 'wisp' ? 'Tap Space to hop. Hold it to rise, which uses breath.' : 'Hold Space to squash down, then let go to jump. A longer hold jumps higher.' },
+  { id: 'harvest', when: () => stats.jumps > 0 && stats.picks === 0 && nearTree(9), text: () => 'Run into a tree to shake loose wood and sap.' },
+  { id: 'pickup', when: () => items.length > 0 && stats.picks === 0, text: () => 'Items drift into your Core when you get close.' },
+  { id: 'menu', when: () => stats.picks >= 3, text: () => 'Press Esc for crafting, your look and the settings.' },
+  { id: 'craft', when: () => inv.timber >= 5 && inv.workbench === 0 && !buildUsed, text: () => 'You can craft now: open the menu (Esc) and choose Craft and build.' },
+  { id: 'bench', when: () => inv.workbench > 0 && !buildUsed, text: () => 'Press P for build mode. Enter places the piece.' },
+  { id: 'ride', when: () => stats.t > 40 && lastSample && lastSample.strength > 2.5 && !inp.ride, text: () => 'Hold Shift to ride the wind. Tailwinds speed you up.' },
+  { id: 'float', when: () => formKind === 'wisp' && !!wisp && stats.jumps > 1 && !wisp.low && !wisp.floatMode, text: () => 'Press V to float and hold your height. Otherwise you slowly sink.' },
+  { id: 'forms', when: () => stats.t > 120, text: () => 'Press Tab to switch form: slime, wisp or stone. Each has its own strengths.' }
+];
+let hintT = 0, hintGap = 0;
+function updateHints(dt) {
+  if (ui.screen !== 'play' || ui.blocking) return; stats.t += dt;
+  if (!settings.tips) return; hintT -= dt; hintGap -= dt; if (hintT > 0 || hintGap > 0) return; hintT = 0.6;
+  for (const h of HINTS) { if (settings.seen[h.id]) continue; let ok = false; try { ok = h.when(); } catch (e) { ok = false; } if (ok) { settings.seen[h.id] = true; saveSettings(); toast(h.text(), 'tip', 7000); hintGap = 9; break; } }
+}
+const ABIL = {
+  slime: [['Space', 'Jump', 'hold, release'], ['Space', 'Glide', 'in the air'], ['M', 'Melt', 'toggle', 'melt'], ['C', 'Spring', 'toggle', 'spring'], ['F', 'Pound', '', 'pound'], ['H', 'Heart', '', 'heart']],
+  wisp: [['Space', 'Hop or rise', 'tap, hold'], ['V', 'Float', 'toggle', 'float'], ['F', 'Down-gust', '', 'pound'], ['C', 'Condense', 'toggle', 'spring'], ['M', 'Diffuse', 'toggle', 'melt'], ['H', 'Heart', '', 'heart']],
+  stone: [['Space', 'Jump', 'hold, release'], ['Space', 'Sail', 'in the air'], ['M', 'Pebble', 'toggle', 'melt'], ['C', 'Spring', 'toggle', 'spring'], ['F', 'Pound', '', 'pound'], ['H', 'Heart', '', 'heart']]
+};
+const ABIL_COMMON = [['Shift', 'Ride wind', 'hold'], ['P', 'Build', 'toggle', 'build'], ['Esc', 'Menu', '', 'menu']];
+let abBtns = [], abSig = '';
+function renderAbilities() {
+  const box = $('abilities'); box.innerHTML = ''; abBtns = []; abSig = '';
+  (ABIL[formKind] || []).concat(ABIL_COMMON).forEach(([key, label, small, act]) => {
+    const b = document.createElement('button'); b.className = 'ab'; if (!act) b.tabIndex = -1;
+    const k = document.createElement('span'); k.className = 'key'; k.textContent = key; const lb = document.createElement('span'); lb.textContent = label; b.append(k, lb);
+    if (small) { const s = document.createElement('small'); s.textContent = small; b.appendChild(s); }
+    if (act) { b.addEventListener('click', () => { doAbility(act); b.blur(); }); abBtns.push([act, b]); }
+    box.appendChild(b);
+  });
+}
+function abilityOn(act) {
+  if (act === 'melt') return formKind === 'wisp' ? modeSel === -1 : meltOn; if (act === 'spring') return formKind === 'wisp' ? modeSel === 1 : springOn;
+  if (act === 'float') return !!(wisp && wisp.floatMode); if (act === 'build') return craftReady && buildMode; return false;
+}
+function syncAbilities() { const sig = abBtns.map(([a]) => abilityOn(a) ? '1' : '0').join(''); if (sig === abSig) return; abSig = sig; abBtns.forEach(([a, b]) => b.setAttribute('aria-pressed', abilityOn(a))); }
+function doAbility(act) { if (act === 'melt') toggleMelt(); else if (act === 'spring') toggleSpring(); else if (act === 'pound') pendingPound = true; else if (act === 'heart') pendingHeart = true; else if (act === 'float') pendingFloat = true; else if (act === 'build') toggleBuild(); else if (act === 'menu') toggleMenu(); }
+function updateChip() { $('chipName').textContent = profile.name; $('chipForm').textContent = { slime: 'Slime', wisp: 'Wisp', stone: 'Stone' }[formKind] || formKind; }
+
+// screens: title -> play <-> menu
+const TABS = ['creature', 'craft', 'world', 'settings', 'help']; let viewPlay = 9;
+function showTab(n) { ui.tab = n; TABS.forEach(k => { $('pane_' + k).className = 'pane' + (k === n ? ' on' : ''); $('tabBtn_' + k).setAttribute('aria-selected', k === n); }); }
+function isPaused() { return ui.screen !== 'play' || ui.blocking; }
+function setScreen(s) {
+  const prev = ui.screen; ui.screen = s; document.documentElement.dataset.screen = (s === 'menu' ? 'play' : s);
+  $('title').hidden = s !== 'title'; $('menu').hidden = s !== 'menu';
+  if (s === 'title' && prev !== 'title') { viewPlay = view; view = 13; resize(); } else if (prev === 'title' && s !== 'title') { view = viewPlay; resize(); }
+  keys.clear(); keyJump = false; touchJump = false;
+}
+function openMenu(tab) { ui.menuFrom = ui.screen === 'title' ? 'title' : 'play'; if (tab) showTab(tab); setScreen('menu'); renderInv(); updateWorldInfo(); }
+function closeMenu() { if (buildMode && ui.menuFrom === 'play' && false) toggleBuild(); setScreen(ui.menuFrom); }
+function toggleMenu() { if (ui.screen === 'menu') closeMenu(); else if (ui.screen === 'play' && !ui.blocking) openMenu(); }
+function startPlay() { setScreen('play'); if (!settings.played) { settings.played = true; saveSettings(); ui.blocking = true; $('intro').hidden = false; } updateTitleInfo(); }
+function updateTitleInfo() { $('titleInfo').textContent = 'Island seed ' + settings.seed + ', ' + settings.size + ' size'; $('playBtn').textContent = settings.played ? 'Continue' : 'Play'; }
+function updateWorldInfo() { const wi = $('worldInfo'); if (!wi || !world) return; wi.textContent = world.clampR ? 'Now on seed ' + world.seed + ', ' + world.sizeName + ': a walkable island about ' + Math.round(world.clampR * 2) + ' m across.' : 'Now on a test ground: ' + world.label + '.'; }
+function generateWorld(seed, size) {
+  ui.blocking = true; $('loading').hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    flushSave(); settings.seed = seed; settings.size = size; saveSettings();
+    loadTerrain('aetheria', { seed, size }); tsel.value = 'aetheria'; spawnForm(formKind, world.spawn); lastLabel = '';
+    updateTitleInfo(); $('loading').hidden = true; ui.blocking = false; toast('Island ready: seed ' + seed + ', ' + size + '.', 'item', 2800);
+  }));
+}
+function bindShell() {
+  TABS.forEach(n => $('tabBtn_' + n).addEventListener('click', () => showTab(n)));
+  $('menuBtn').addEventListener('click', () => toggleMenu()); $('menuClose').addEventListener('click', () => closeMenu());
+  $('playBtn').addEventListener('click', () => startPlay()); $('newWorldBtn').addEventListener('click', () => openMenu('world'));
+  $('howBtn').addEventListener('click', () => openMenu('help')); $('setBtn').addEventListener('click', () => openMenu('settings'));
+  $('introGo').addEventListener('click', () => { $('intro').hidden = true; ui.blocking = false; });
+  $('seed').value = String(settings.seed); $('worldSize').value = settings.size;
+  $('seedDice').addEventListener('click', e => { $('seed').value = String(1 + Math.floor(Math.random() * 999999)); e.currentTarget.blur(); });
+  $('genWorld').addEventListener('click', e => { const sd = Math.max(0, Math.min(999999999, parseInt($('seed').value, 10) || 1)); $('seed').value = String(sd); generateWorld(sd, $('worldSize').value); e.currentTarget.blur(); if (ui.menuFrom === 'title') ui.menuFrom = 'play'; closeMenu(); });
+  $('dayMode').value = settings.dayCycle ? 'auto' : 'fixed'; $('time').disabled = settings.dayCycle;
+  $('dayMode').addEventListener('change', e => { settings.dayCycle = e.target.value === 'auto'; $('time').disabled = settings.dayCycle; saveSettings(); e.target.blur(); });
+  const q = $('quality'); q.value = settings.quality; q.addEventListener('change', e => { if (['auto', 'light', 'full', 'ultra'].indexOf(e.target.value) < 0) return; settings.quality = e.target.value; govScale = 1; applyQuality(true); saveSettings(); e.target.blur(); });
+  const bindRange = (id, outId, key, fmt, after) => { const r = $(id); r.value = settings[key]; $(outId).textContent = fmt(settings[key]); r.addEventListener('input', () => { settings[key] = parseFloat(r.value); $(outId).textContent = fmt(settings[key]); if (after) after(); saveSettings(); }); r.addEventListener('pointerup', () => r.blur()); };
+  bindRange('resScale', 'resOut', 'resScale', v => v.toFixed(2) + 'x', () => { govScale = 1; applyQuality(false); });
+  bindRange('uiScale', 'uiOut', 'uiScale', v => v.toFixed(2) + 'x', applyUiScale);
+  bindRange('volume', 'volOut', 'volume', v => Math.round(v * 100) + '%', null);
+  const toggle = (id, key, label) => { const b = $(id); const show = () => { b.textContent = label + (settings[key] ? 'on' : 'off'); b.setAttribute('aria-pressed', !!settings[key]); }; show(); b.addEventListener('click', () => { settings[key] = !settings[key]; show(); saveSettings(); b.blur(); }); };
+  toggle('tipsOn', 'tips', 'Tips: '); toggle('reduceMotion', 'reduceMotion', 'Reduce motion: ');
+  const again = () => { settings.seen = {}; saveSettings(); toast('The tips will show again.', 'item', 2200); };
+  $('resetTips').addEventListener('click', e => { again(); e.currentTarget.blur(); }); $('resetTips2').addEventListener('click', e => { again(); e.currentTarget.blur(); });
+  window.addEventListener('click', e => { const t = e.target; if (t && t.closest && t.closest('button')) chime([660], 0.025); });
+  window.addEventListener('pagehide', flushSettings); window.addEventListener('beforeunload', flushSettings);
+  applyUiScale(); applyQuality(false); showTab('creature'); updateTitleInfo(); setScreen('title'); renderAbilities(); updateChip();
+}
 
 /* ================= main loop ================= */
 let acc = 0, last = performance.now(), lastSample = null, prevVy = 0, idleT = 0, gT = 0;
@@ -2672,6 +2967,7 @@ function fixedStep() {
     if (tramCd > 0) tramCd -= FIXED;
     Phys.stepBody(body, world, activeP(), inp, FIXED);
     const v = body.vcom;
+    dustCd -= FIXED; if (body.groundTimer > 0 && prevVy < -6 && !body.pounding && dustCd <= 0) { puff(body.com[0], Phys.groundHeight(world, body.com[0], body.com[2]) + 0.1, body.com[2], 10, 2.2); dustCd = 0.3; }
     if (body.groundTimer > 0 && prevVy < -10 && !body.pounding) { emoTrigger('surprised', 0.9); shakeAmp = Math.max(shakeAmp, 0.12); }
     prevVy = v[1];
     if (v[1] < -13) emoTrigger('surprised', 0.5);
@@ -2682,22 +2978,30 @@ function fixedStep() {
   const mv = Math.hypot(vcom()[0], vcom()[2]);
   if (moveMag > 0.05 || keyJump || mv > 0.6) idleT = 0; else idleT += FIXED;
   if (idleT > 20) emoTrigger('sleepy', 0.3);
+  stats.moved += Math.hypot(vcom()[0], vcom()[2]) * FIXED; if (inp.ride) stats.rode += FIXED;
+  if (body) { if (body.jumpActive && !wasJump) { stats.jumps++; puff(body.com[0], Phys.groundHeight(world, body.com[0], body.com[2]) + 0.1, body.com[2], 6, 1.6); } wasJump = body.jumpActive; } else if (wisp) { if (wisp.floating && !wasFloat) stats.jumps++; wasFloat = wisp.floating; }
   handleEvents();
   const cc = com(); if (!isFinite(cc[0]) || !isFinite(cc[1]) || cc[1] < world.hmin - 25) spawnForm(formKind, world.spawn);
 }
+let visT = 0, fpsAvg = 16, slowFrames = 0, warm = 0;
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; gT += dt;
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; visT += dt;
+  const paused = isPaused(); if (!paused) gT += dt;
   if (formCd > 0) formCd -= dt;
-  acc += dt * (slow ? 0.25 : 1);
+  acc += paused ? 0 : dt * (slow ? 0.25 : 1);
   let steps = 0; while (acc >= FIXED && steps < 4) { fixedStep(); acc -= FIXED; steps++; } if (steps === 4) acc = 0;
-  absorbFlowers(dt); updateItems(dt); updateShake(dt); updateHut(dt); updateHearts(dt); updateWings(dt);
+  if (ui.screen === 'title') azT += dt * 0.12;
+  if (settings.dayCycle) { clockT = (clockT + dt / 30) % 24; clockAcc += dt; if (clockAcc > 0.25) { clockAcc = 0; applyTime(clockT); $('time').value = clockT.toFixed(1); } }
+  absorbFlowers(dt); updateItems(dt); updateShake(dt); updateHut(dt); updateHearts(dt); updateWings(dt); updateClouds(visT); updateHints(dt); updateDust(dt); updateChargeRing();
   if (ringT < 0.6) { ringT += dt; const k = ringT / 0.6; ring.scale.setScalar(0.5 + k * 4.5); ring.material.opacity = 0.7 * (1 - k); } else ring.visible = false;
   updateWeather(dt);
   if (wisp) writeWisp(); else writeBodyMesh();
   updatePieces(dt, gT); updateGhost(); fadeT -= dt; if (fadeT <= 0) { fadeT = 0.4; refreshCraft(); }
-  updateFace(dt); updateCosmetics(dt, gT); updateCore(dt, gT); updateCamera(dt); updateWindDebug(); updateHud(lastSample || Env.sample(env, 0, 0, 0));
+  updateFace(dt); updateCosmetics(dt, gT); updateCore(dt, gT); updateCamera(dt); updateWindDebug(); updateHud(lastSample || Env.sample(env, 0, 0, 0)); syncAbilities();
   renderer.render(scene, cam);
+  // Auto quality: if frames stay slow, lower the resolution a little. It never goes back up during a session.
+  if (settings.quality === 'auto' && ui.screen === 'play' && !ui.blocking && ++warm > 90) { fpsAvg += (dt * 1000 - fpsAvg) * 0.05; if (fpsAvg > 30) { if (++slowFrames > 120 && govScale > 0.6) { govScale = Math.max(0.6, govScale * 0.85); slowFrames = 0; applyQuality(false); } } else slowFrames = Math.max(0, slowFrames - 2); }
 }
 
 /* ================= init ================= */
@@ -2705,8 +3009,8 @@ const tsel = $('terrain');
 Terrain.list.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; tsel.appendChild(o); });
 tsel.value = 'aetheria';
 tsel.addEventListener('change', () => { flushSave(); loadTerrain(tsel.value); spawnForm(formKind, world.spawn); lastLabel = ''; tsel.blur(); });
-resize(); syncLookColors(); applyTime(14); buildCustomizeUI();
-loadTerrain('aetheria'); initBuildState(); spawnForm(formKind, world.spawn); syncLookColors();
+resize(); syncLookColors(); applyTime(clockT); buildCustomizeUI();
+loadTerrain('aetheria'); initBuildState(); spawnForm(formKind, world.spawn); syncLookColors(); bindShell();
 if (window.__SLIMELAB_DEBUG) window.__lab = { spawnAt: (x, z) => spawnForm(formKind, [x, Phys.groundHeight(world, x, z) + 1.5, z]), inv: inv, com: () => com(), world: () => world };   // test hook, only when the flag is set
 requestAnimationFrame(t => { last = t; frame(t); });
 })();
