@@ -21,6 +21,8 @@ import { createBuildPanel } from '../ui/build-panel.js';
 import { createCustomizePanel } from '../ui/customize.js';
 import { createInput } from './input.js';
 import { createTouchControls } from '../ui/touch.js';
+import { startLoop } from './loop.js';
+import { createGovernor } from './quality.js';
 
 const customizePanel = createCustomizePanel({
   $, profile, scene, syncLookColors, buildCore, spawnForm, emoManual,
@@ -47,6 +49,10 @@ const touchControls = createTouchControls({
   touchRide: inp.touchRide, setTouchRide: (v) => { inp.touchRide = v; }
 });
 
+const governor = createGovernor(coarse ? 'light' : 'full');
+let quality = governor.quality === 'full' ? 3 : 2;
+const slowToggle = { setSlow: null };
+
 // Optional GLTF loader: the prototype used an optional CDN GLTFLoader and every
 // cosmetic keeps a procedural-primitive fallback (see tryGLB guard below).
 // We intentionally do NOT import it here; R1 wires manifest ids per ASSETS.md.
@@ -63,7 +69,6 @@ let profile = Profile.load();
 let saveTimer = 0;
 function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => Profile.save(profile), 400); }
 let formKind = profile.form;
-let quality = coarse ? 2 : 3;
 const P = Object.assign({ gscale: 1, jboost: 1, gripMul: 1, speedMul: 1, spring: false }, profile.body);
 const PRESETS = {
   blob:  { label: 'Blob',       shape: 'sphere', stiff: 0.22, pressure: 1.0, skin: 0.9,  grip: 0.55, sticky: 0.5 },
@@ -110,8 +115,19 @@ function choosePreset(id) {
   syncSliders(); [...bodiesEl.children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
   if (formKind === 'slime') spawnForm('slime', null, true); saveSoon();
 }
-$('quality').value = String(quality);
-$('quality').addEventListener('change', e => { quality = parseInt(e.target.value, 10); spawnForm(formKind, null, true); e.target.blur(); });
+$('quality').value = governor.quality;
+$('quality').addEventListener('change', e => {
+  const newQuality = e.target.value;
+  if (newQuality === 'light') {
+    governor.quality = 'light';
+    quality = 2;
+  } else {
+    governor.quality = 'full';
+    quality = 3;
+  }
+  spawnForm(formKind, null, true);
+  e.target.blur();
+});
 
 
 /* ================= three.js ================= */
@@ -620,8 +636,7 @@ window.addEventListener('keydown', e => {
 window.addEventListener('blur', () => { keys.clear(); inp.touchJump = false; });
 window.addEventListener('wheel', e => zoom(e.deltaY > 0 ? 1.1 : 0.9), { passive: true });
 function zoom(f) { view = Math.max(3.5, Math.min(26, view * f)); resize(); }
-let slow = false;
-function toggleSlow() { slow = !slow; $('slow').setAttribute('aria-pressed', slow); }
+function toggleSlow() { slowToggle.setSlow(!slowToggle._slow); $('slow').setAttribute('aria-pressed', slowToggle._slow); }
 $('slow').addEventListener('click', e => { toggleSlow(); e.currentTarget.blur(); });
 $('reset').addEventListener('click', e => { spawnForm(formKind, world.spawn); e.currentTarget.blur(); });
 $('rotL').addEventListener('click', e => { azT += Math.PI / 2; e.currentTarget.blur(); });
@@ -947,24 +962,25 @@ $('c').addEventListener('pointerdown', () => { if (buildPanel.buildMode && !coar
 craftReady = true; renderInv();
 
 /* ================= main loop ================= */
-let acc = 0, last = performance.now(), lastSample = null, prevVy = 0, idleT = 0, gT = 0;
+let lastSample = null, prevVy = 0, idleT = 0, gT = 0;
 const activeP = (function () {
   const PA = {};
-  return function () { return Phys.formParams(formKind, P, PA); };   // per-form overrides live in physics.js so the tests use the same numbers
+  return function () { return Phys.formParams(formKind, P, PA); };
 })();
-function fixedStep() {
-  readInput(); Env.update(env, FIXED);
+
+function fixedStep(dt) {
+  readInput(); Env.update(env, dt);
   const c = com(), s = Env.sample(env, c[0], c[1], c[2]);
   lastSample = s; curWx.type = s.weather.type; curWx.amt = s.weather.amt; inp.wind[0] = winp.wind[0] = s.wind[0]; inp.wind[1] = winp.wind[1] = s.wind[1]; inp.wind[2] = winp.wind[2] = s.wind[2];
-  checkImpacts(FIXED);
+  checkImpacts(dt);
   if (wisp) {
     winp.wetAmt = s.weather.type === 'rain' ? s.weather.amt : 0; winp.time = env.t;
     winp.bw = world.biomeAt ? world.biomeAt(c[0], c[2]) : [1, 0, 0, 0];
-    Wisp.step(wisp, world, { speedMul: sizeSpeed() }, winp, FIXED);
+    Wisp.step(wisp, world, { speedMul: sizeSpeed() }, winp, dt);
   } else {
     P.gripMul = s.mat.mu; P.speedMul = s.mat.speed * sizeSpeed(); P.gscale = s.mat.gravity; P.jboost = s.mat.jump * sizeJump();
-    if (tramCd > 0) tramCd -= FIXED;
-    Phys.stepBody(body, world, activeP(), inp, FIXED);
+    if (tramCd > 0) tramCd -= dt;
+    Phys.stepBody(body, world, activeP(), inp, dt);
     const v = body.vcom;
     if (body.groundTimer > 0 && prevVy < -10 && !body.pounding) { emoTrigger('surprised', 0.9); shakeAmp = Math.max(shakeAmp, 0.12); }
     prevVy = v[1];
@@ -974,17 +990,15 @@ function fixedStep() {
     if (body.melt > 0.5 && s.weather.type === 'rain' && s.weather.amt > 0.5) emoTrigger('sad', 0.3);
   }
   const mv = Math.hypot(vcom()[0], vcom()[2]);
-  if (moveMag > 0.05 || keyJump || mv > 0.6) idleT = 0; else idleT += FIXED;
+  if (moveMag > 0.05 || inp.jumpHeld || mv > 0.6) idleT = 0; else idleT += dt;
   if (idleT > 20) emoTrigger('sleepy', 0.3);
   handleEvents();
   const cc = com(); if (!isFinite(cc[0]) || !isFinite(cc[1]) || cc[1] < world.hmin - 25) spawnForm(formKind, world.spawn);
 }
-function frame(now) {
-  requestAnimationFrame(frame);
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; gT += dt;
+
+function render(dt) {
+  gT += dt;
   if (formCd > 0) formCd -= dt;
-  acc += dt * (slow ? 0.25 : 1);
-  let steps = 0; while (acc >= FIXED && steps < 4) { fixedStep(); acc -= FIXED; steps++; } if (steps === 4) acc = 0;
   absorbFlowers(dt); updateItems(dt); updateShake(dt); updateHut(dt); updateHearts(dt); updateWings(dt);
   if (ringT < 0.6) { ringT += dt; const k = ringT / 0.6; ring.scale.setScalar(0.5 + k * 4.5); ring.material.opacity = 0.7 * (1 - k); } else ring.visible = false;
   updateWeather(dt);
@@ -994,6 +1008,14 @@ function frame(now) {
   if (groundCulling) groundCulling(cam);
   renderer.render(scene, cam);
 }
+
+startLoop({
+  fixedStepFn: fixedStep,
+  renderFn: render,
+  governor,
+  slowToggle
+});
+
 
 /* ================= init ================= */
 const tsel = $('terrain');
