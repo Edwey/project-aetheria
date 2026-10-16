@@ -17,34 +17,14 @@ const FLORA_MODELS = {
 
 /**
  * Create InstancedMesh for a flora type with GLB or procedural fallback.
+ * NOTE (R1-004): GLB overrides land in R1-018 (manifest wiring). Until then this
+ * always returns null so callers use the procedural primitives below.
+ * (three r128 module build has no THREE.GLTFLoader; the prototype used an
+ * optional CDN loader, so eager references break the bundler.)
  */
 async function createFloraMesh(kind, count, getMatrixFn, getColorFn, baseMaterial) {
-  const modelId = FLORA_MODELS[kind];
-  const url = modelId ? getModelUrl(modelId) : null;
-
-  if (url) {
-    try {
-      const loader = new THREE.GLTFLoader();
-      const gltf = await loader.loadAsync(url);
-      const mesh = gltf.scene.clone(true);
-      mesh.traverse((node) => {
-        if (node.isMesh) {
-          node.castShadow = true;
-          node.receiveShadow = true;
-          node.frustumCulled = false;
-        }
-      });
-      const instancedMesh = new THREE.InstancedMesh(mesh.geometry, mesh.material, count);
-      instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      instancedMesh.instanceColor = null;
-      instancedMesh.frustumCulled = false;
-      return { instancedMesh, dispose: () => { mesh.geometry.dispose(); mesh.material.dispose(); } };
-    } catch (e) {
-      console.warn(`Failed to load GLB for ${kind}:`, e);
-    }
-  }
-
-  // Procedural fallback - will be handled by caller
+  void kind; void count; void getMatrixFn; void getColorFn; void baseMaterial;
+  // Procedural fallback - handled by caller
   return null;
 }
 

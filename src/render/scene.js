@@ -94,7 +94,7 @@ export function createScene(coarse, canvas) {
     sun.intensity = lerp(0.4, 1.15, day);
     sun.color.copy(MOON_C_C).lerp(SUN_C_C, day);
     hemi.intensity = lerp(0.35, 0.95, day);
-    sunOff.set(-Math.cos(ang) * 20, 8 + 22 * Math.abs(sh), 9);
+    sunOffVec.set(-Math.cos(ang) * 20, 8 + 22 * Math.abs(sh), 9);
     const c = scene.background;
     if (sh > 0) c.copy(SKY_DUSK_C).lerp(SKY_DAY_C, sm(0.0, 0.45, sh));
     else c.copy(SKY_DUSK_C).lerp(SKY_NIGHT_C, sm(0.0, -0.3, sh));

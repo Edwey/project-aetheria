@@ -352,6 +352,14 @@ attribution (quaternius.com/faq.html); KayKit UNVERIFIED — confirm CC0 on the
 itch.io page at download time. Poly Pizza excluded (licenses vary).
 **Change me if**: any pack page shows a different license at download time.
 
+### R1-012/013 wiring reverted to keep the game green
+**Decision**: the first attempt at wiring `ui/panel.js` + `ui/craft-panel.js` into
+`game.js` broke boot (dangling refs: `choosePreset`, TDZ `nearBench`). Reverted
+`game.js` to the verbatim Stage C panel/craft blocks; the extracted modules stay
+staged but UNWIRED. Rule: every R1 wiring task must pass `scripts/shot.mjs`
+(zero console errors + screenshot) before commit, not just build+tests.
+**Change me if**: you want the re-attempt to happen differently.
+
 ## Notes on Decisions
 
 ### Decision Process

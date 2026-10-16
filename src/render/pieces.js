@@ -4,7 +4,7 @@
  */
 
 import * as THREE from 'three';
-import { Build } from '../gameplay/build.js';
+import Build from '../gameplay/build.js';
 
 const WOOD = 0xb98a5a, LOG = 0xd9b98a, THATCH = 0xc9a24a;
 
@@ -112,5 +112,3 @@ export function initBuildState(world, scene, pieceGroup, pieceObjs, saveData) {
   // Note: actual loading happens in game.js with Build
   return Build.create(world);
 }
-
-export { Build };
