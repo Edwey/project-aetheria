@@ -50,13 +50,33 @@ let profile = Profile.load();
 let saveTimer = 0;
 function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => Profile.save(profile), 400); }
 let formKind = profile.form;
-const P = Object.assign({ gscale: 1, jboost: 1, gripMul: 1, speedMul: 1, spring: false }, profile.body);
 const PRESETS = {
+  // Slime presets
   blob:  { label: 'Blob',       shape: 'sphere', stiff: 0.22, pressure: 1.0, skin: 0.9,  grip: 0.55, sticky: 0.5 },
   goo:   { label: 'Goo',        shape: 'sphere', stiff: 0.10, pressure: 1.0, skin: 0.45, grip: 0.8,  sticky: 0.8 },
   ball:  { label: 'Jelly ball', shape: 'sphere', stiff: 0.40, pressure: 1.0, skin: 0.9,  grip: 0.5,  sticky: 0.3 },
-  cube:  { label: 'Jelly cube', shape: 'cube',   stiff: 0.45, pressure: 1.0, skin: 0.9,  grip: 0.5,  sticky: 0.5 }
+  cube:  { label: 'Jelly cube', shape: 'cube',   stiff: 0.45, pressure: 1.0, skin: 0.9,  grip: 0.5,  sticky: 0.5 },
+  // Stone presets
+  crystal: { label: 'Crystal cluster', shape: 'sphere', stiff: 1.0, pressure: 1.0, skin: 1.0, grip: 0.35, sticky: 0 },
+  boulder: { label: 'Round boulder', shape: 'sphere', stiff: 1.0, pressure: 1.0, skin: 1.0, grip: 0.35, sticky: 0 },
+  pillar:  { label: 'Tall pillar',    shape: 'sphere', stiff: 1.0, pressure: 1.0, skin: 1.0, grip: 0.35, sticky: 0 },
+  shard:   { label: 'Sharp shard',    shape: 'sphere', stiff: 1.0, pressure: 1.0, skin: 1.0, grip: 0.35, sticky: 0 },
+  // Wisp presets (affects particle count and distribution)
+  dense:  { label: 'Dense cloud',   nMod: 1.0 },
+  sparse: { label: 'Sparse motes',  nMod: 0.6 },
+  ring:   { label: 'Ring pattern',  nMod: 0.8 },
+  spiral: { label: 'Spiral swirl',  nMod: 0.9 }
 };
+PRESETS.cube.sticky = 0.3;
+const P = Object.assign({ gscale: 1, jboost: 1, gripMul: 1, speedMul: 1, spring: false }, profile.body);
+// Apply preset properties based on form
+if (formKind === 'stone' && PRESETS[profile.body.preset]) {
+  const stonePreset = PRESETS[profile.body.preset];
+  P.stiff = stonePreset.stiff;
+  P.skin = stonePreset.skin;
+  P.grip = stonePreset.grip;
+  P.sticky = stonePreset.sticky;
+}
 PRESETS.cube.sticky = 0.3;
 const sizeJump = () => Math.pow(1 / profile.look.size, 0.3), sizeSpeed = () => Math.pow(profile.look.size, -0.2);
 
@@ -274,7 +294,10 @@ function spawnForm(kind, pos, keepPos) {
   disposeCreature(); formKind = kind; profile.form = kind; syncFormButtons();
   const size = profile.look.size;
   if (kind === 'wisp') {
-    wisp = Wisp.make(at[0], at[1], at[2], quality >= 3 ? 96 : 48, size);
+    const wispPreset = PRESETS[profile.body.preset] || PRESETS.dense;
+    const nMod = wispPreset.nMod || 1.0;
+    const baseCount = quality >= 3 ? 96 : 48;
+    wisp = Wisp.make(at[0], at[1], at[2], Math.floor(baseCount * nMod), size);
     wispGeo = new THREE.BufferGeometry(); wispPos = new Float32Array(wisp.n * 3); wispCol = new Float32Array(wisp.n * 3);
     wispGeo.setAttribute('position', new THREE.BufferAttribute(wispPos, 3)); wispGeo.setAttribute('color', new THREE.BufferAttribute(wispCol, 3));
     wispPts = new THREE.Points(wispGeo, wispMat); wispPts.frustumCulled = false; scene.add(wispPts); wispLight.visible = true;

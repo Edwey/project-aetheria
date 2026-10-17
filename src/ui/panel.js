@@ -62,9 +62,15 @@ export function createPanel(deps) {
     }
   }
 
-  // Body presets
+  // Body presets - filter by current form
   const bodiesEl = $('bodies');
-  Object.keys(deps.PRESETS).forEach(id => {
+  const presetKeys = Object.keys(deps.PRESETS).filter(id => {
+    if (deps.formKind === 'slime') return ['blob', 'goo', 'ball', 'cube'].includes(id);
+    if (deps.formKind === 'stone') return ['crystal', 'boulder', 'pillar', 'shard'].includes(id);
+    if (deps.formKind === 'wisp') return ['dense', 'sparse', 'ring', 'spiral'].includes(id);
+    return false;
+  });
+  presetKeys.forEach(id => {
     const b = document.createElement('button');
     b.textContent = deps.PRESETS[id].label;
     b.dataset.id = id;
@@ -72,10 +78,6 @@ export function createPanel(deps) {
     b.addEventListener('click', () => { choosePresetFn(id); b.blur(); });
     bodiesEl.appendChild(b);
   });
-
-  function syncFormButtonsFn() {
-    [...$('forms').children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === deps.formKind));
-  }
 
   function syncSlidersFn() {
     for (const k in deps.sliderEls) {
@@ -87,10 +89,22 @@ export function createPanel(deps) {
   function choosePresetFn(id) {
     const p = deps.PRESETS[id];
     deps.profile.body.preset = id;
-    ['stiff', 'pressure', 'skin', 'grip', 'sticky'].forEach(k => { deps.P[k] = p[k]; deps.profile.body[k] = p[k]; });
+    // Apply preset properties based on form
+    if (deps.formKind === 'wisp') {
+      // Wisp presets only affect particle count (nMod), handled in spawnForm
+    } else {
+      // Slime and stone presets apply physics properties
+      ['stiff', 'pressure', 'skin', 'grip', 'sticky'].forEach(k => {
+        if (p[k] !== undefined) {
+          deps.P[k] = p[k];
+          deps.profile.body[k] = p[k];
+        }
+      });
+    }
     syncSlidersFn();
     [...$('bodies').children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
-    if (deps.formKind === 'slime') deps.spawnForm('slime', null, true);
+    // Respawn form to apply preset changes
+    deps.spawnForm(deps.formKind, null, true);
     deps.saveSoon();
   }
 
@@ -123,15 +137,45 @@ export function createPanel(deps) {
   $('time').addEventListener('pointerup', e => e.target.blur());
 
   return {
-    syncFormButtons: () => [...$('forms').children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === deps.formKind)),
+    syncFormButtons: () => {
+      [...$('forms').children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === deps.formKind));
+      // Refresh preset buttons for new form
+      bodiesEl.innerHTML = '';
+      const presetKeys = Object.keys(deps.PRESETS).filter(id => {
+        if (deps.formKind === 'slime') return ['blob', 'goo', 'ball', 'cube'].includes(id);
+        if (deps.formKind === 'stone') return ['crystal', 'boulder', 'pillar', 'shard'].includes(id);
+        if (deps.formKind === 'wisp') return ['dense', 'sparse', 'ring', 'spiral'].includes(id);
+        return false;
+      });
+      presetKeys.forEach(id => {
+        const b = document.createElement('button');
+        b.textContent = deps.PRESETS[id].label;
+        b.dataset.id = id;
+        b.setAttribute('aria-pressed', id === deps.profile.body.preset);
+        b.addEventListener('click', () => { choosePresetFn(id); b.blur(); });
+        bodiesEl.appendChild(b);
+      });
+    },
     syncSliders: syncSlidersFn,
     choosePreset: (id) => {
       const p = deps.PRESETS[id];
       deps.profile.body.preset = id;
-      ['stiff', 'pressure', 'skin', 'grip', 'sticky'].forEach(k => { deps.P[k] = p[k]; deps.profile.body[k] = p[k]; });
+      // Apply preset properties based on form
+      if (deps.formKind === 'wisp') {
+        // Wisp presets only affect particle count (nMod), handled in spawnForm
+      } else {
+        // Slime and stone presets apply physics properties
+        ['stiff', 'pressure', 'skin', 'grip', 'sticky'].forEach(k => {
+          if (p[k] !== undefined) {
+            deps.P[k] = p[k];
+            deps.profile.body[k] = p[k];
+          }
+        });
+      }
       syncSlidersFn();
       [...$('bodies').children].forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
-      if (deps.formKind === 'slime') deps.spawnForm('slime', null, true);
+      // Respawn form to apply preset changes
+      deps.spawnForm(deps.formKind, null, true);
       deps.saveSoon();
     },
     sliderEls,

@@ -14,6 +14,9 @@ const DEFAULT = {
   body: { preset: 'blob', stiff: 0.22, pressure: 1, skin: 0.9, grip: 0.55, sticky: 0.5, jmax: 15 },
   cosmetics: { head: 'none', face: 'none', back: 'none', aura: 'none', trail: 'none' }
 };
+const SLIME_PRESETS = [['blob', 'Blob'], ['goo', 'Goo'], ['ball', 'Jelly ball'], ['cube', 'Jelly cube']];
+const STONE_PRESETS = [['crystal', 'Crystal cluster'], ['boulder', 'Round boulder'], ['pillar', 'Tall pillar'], ['shard', 'Sharp shard']];
+const WISP_PRESETS = [['dense', 'Dense cloud'], ['sparse', 'Sparse motes'], ['ring', 'Ring pattern'], ['spiral', 'Spiral swirl']];
 const CATALOG = {
   head:  [['none', 'None'], ['ahoge', 'Droplet ahoge'], ['wizard', 'Wizard hat'], ['sprout', 'Sprout leaf'], ['halo', 'Starlight halo'], ['crown', 'Royal crown'], ['ears', 'Cat ears'], ['blossom', 'Wildflower']],
   face:  [['none', 'None'], ['glasses', 'Round glasses'], ['blush', 'Blush cheeks']],
@@ -51,7 +54,17 @@ function validate(o) {
   d.look.size = num(L.size, 0.7, 1.4, 1); d.look.eyeStyle = pick(L.eyeStyle, EYES, d.look.eyeStyle);
   d.look.eyeColor = isHex(L.eyeColor) ? L.eyeColor : d.look.eyeColor; d.look.mouth = pick(L.mouth, MOUTHS, d.look.mouth); d.look.core = pick(L.core, CORES, 'crystal');
   ['stiff', 'pressure', 'skin', 'grip', 'sticky'].forEach(k => { d.body[k] = num(B[k], k === 'pressure' ? 0.6 : 0, k === 'pressure' ? 1.5 : 1, d.body[k]); });
-  d.body.jmax = num(B.jmax, 8, 20, 15); d.body.preset = ['blob', 'goo', 'ball', 'cube'].indexOf(B.preset) >= 0 ? B.preset : 'blob';
+  d.body.jmax = num(B.jmax, 8, 20, 15);
+  // Validate preset based on form
+  if (d.form === 'slime') {
+    d.body.preset = SLIME_PRESETS.some(x => x[0] === B.preset) ? B.preset : 'blob';
+  } else if (d.form === 'stone') {
+    d.body.preset = STONE_PRESETS.some(x => x[0] === B.preset) ? B.preset : 'crystal';
+  } else if (d.form === 'wisp') {
+    d.body.preset = WISP_PRESETS.some(x => x[0] === B.preset) ? B.preset : 'dense';
+  } else {
+    d.body.preset = 'blob';
+  }
   Object.keys(CATALOG).forEach(slot => { d.cosmetics[slot] = pick(C[slot], CATALOG[slot], 'none'); });
   return d;
 }
@@ -61,5 +74,5 @@ return { DEFAULT, CATALOG, CORES, EYES, MOUTHS, EMOTIONS, MANUAL, validate, load
 })();
 
 // ESM named exports (parity with the prototype return table; default keeps the namespace).
-export const { DEFAULT, CATALOG, CORES, EYES, MOUTHS, EMOTIONS, MANUAL, validate, load, save } = Profile;
+export const { DEFAULT, CATALOG, CORES, EYES, MOUTHS, EMOTIONS, MANUAL, validate, load, save, SLIME_PRESETS, STONE_PRESETS, WISP_PRESETS } = Profile;
 export default Profile;
