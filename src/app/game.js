@@ -17,6 +17,7 @@ import Wisp from '../gameplay/wisp.js';
 import Profile from '../gameplay/profile.js';
 import Craft from '../gameplay/craft.js';
 import Build from '../gameplay/build.js';
+import * as World from '../gameplay/world.js';
 import createCraftPanel from '../ui/craft-panel.js';
 import { createBuildPanel } from '../ui/build-panel.js';
 import { createCustomizePanel } from '../ui/customize.js';
@@ -118,27 +119,9 @@ function setI(mesh, i, x, y, z, sx, sy, sz, color, ry) {
 }
 function flush(mesh) { mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true; }
 
-function buildGround() {
-  const A = world.A, cs = world.cs, N = world.N, W = N + 1, hg = world.hg;
-  const pos = new Float32Array(W * W * 3), uv = new Float32Array(W * W * 2), col = new Float32Array(W * W * 3);
-  for (let j = 0; j < W; j++) for (let i = 0; i < W; i++) { const k = j * W + i, x = -A + i * cs, z = -A + j * cs; pos[3*k] = x; pos[3*k+1] = hg[k]; pos[3*k+2] = z; uv[2*k] = x / 2; uv[2*k+1] = z / 2; }
-  const idx = new Uint32Array(N * N * 6); let q = 0;
-  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const a = j * W + i, b = a + 1, c = a + W, d = c + 1; idx[q++] = a; idx[q++] = c; idx[q++] = b; idx[q++] = b; idx[q++] = c; idx[q++] = d; }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(new THREE.BufferAttribute(idx, 1)); g.computeVertexNormals();
-  const nrm = g.attributes.normal;
-  for (let k = 0; k < W * W; k++) {
-    const ny = nrm.getY(k), x = pos[3*k], z = pos[3*k+2], h = pos[3*k+1];
-    if (world.colorAt) { const c = world.colorAt(x, z, h, ny); col[3*k] = c[0]; col[3*k+1] = c[1]; col[3*k+2] = c[2]; }
-    else { const t = Math.min(1, Math.max(0, (0.94 - ny) / 0.2)), lift = 0.04 * h; for (let m = 0; m < 3; m++) col[3*k + m] = Math.min(1, world.ground[m] * (1 - t) + world.dirt[m] * t + lift); }
-  }
-  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }); if (world.checker) mat.map = checker;
-  const mesh = new THREE.Mesh(g, mat); mesh.receiveShadow = true; worldGroup.add(mesh);
-}
 function buildProps() {
   const m4 = new THREE.Matrix4();
-  world.boxes.forEach(b => {
+  world.bodies[0].boxes.forEach(b => {
     const o = { color: b.color, roughness: 0.8 };
     if (b.tag === 'wall' || b.tag === 'roof') o.transparent = true;
     if (b.tag === 'fireplace') { o.emissive = 0xff6a20; o.emissiveIntensity = 0.6; }
@@ -150,11 +133,11 @@ function buildProps() {
     if (b.tag === 'roof') hutParts.push({ mat, kind: 'roof', n: [0, 0] });
     if (b.tag === 'fireplace') { hutLight = new THREE.PointLight(0xffa24a, 1, 11, 1.6); hutLight.position.set(b.c[0] - 0.9, b.c[1] + 0.5, b.c[2]); worldGroup.add(hutLight); }
   });
-  (world.visualOnly || []).forEach(b => {
+  (world.bodies[0].visualOnly || []).forEach(b => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(b.h[0]*2, b.h[1]*2, b.h[2]*2), new THREE.MeshStandardMaterial({ color: b.color, roughness: 1 }));
     mesh.position.set(b.c[0], b.c[1], b.c[2]); mesh.receiveShadow = true; worldGroup.add(mesh);
   });
-  world.spheres.forEach(s => {
+  world.bodies[0].spheres.forEach(s => {
     if (s.tag === 'geode' || s.tag === 'clay' || s.tag === 'rock' || s.tag === 'cap') return;
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(s.r, 32, 20), new THREE.MeshStandardMaterial({ color: s.color, roughness: 0.9 }));
     mesh.position.set(s.c[0], s.c[1], s.c[2]); mesh.castShadow = true; mesh.receiveShadow = true; worldGroup.add(mesh);
@@ -175,11 +158,13 @@ async function loadTerrain(id) {
     groundCulling = null;
   }
   clearItems(); shaking = []; hutParts = []; hutLight = null;
-  world = Terrain.build(id); worldGroup = new THREE.Group();
+  const terrain = Terrain.build(id);
+  world = World.wrapTerrain(terrain);
+  worldGroup = new THREE.Group();
   
   // Chunked ground
-  const groundMat = createGroundMaterial(world, checker);
-  const groundResult = buildGroundChunks(scene, world, groundMat);
+  const groundMat = createGroundMaterial(world.bodies[0], checker);
+  const groundResult = buildGroundChunks(scene, world.bodies[0], groundMat);
   groundChunks = groundResult.chunks;
   groundCulling = groundResult.updateCulling;
   groundMat.isShared = true; // prevent disposal per-chunk
@@ -229,7 +214,7 @@ function updateItems(dt) {
     const it = items[i]; it.age += dt;
     if (!it.fly) {
       it.vy -= 14 * dt; it.x += it.vx * dt; it.y += it.vy * dt; it.z += it.vz * dt;
-      const gh = Phys.groundHeight(world, it.x, it.z) + 0.25;
+      const gh = Phys.groundHeight(world.bodies[0], it.x, it.z) + 0.25;
       if (it.y < gh) { it.y = gh; it.vy = -it.vy * 0.35; it.vx *= 0.7; it.vz *= 0.7; if (Math.abs(it.vy) < 1) it.vy = 0; }
     }
     const dx = c[0] - it.x, dy = c[1] - it.y, dz = c[2] - it.z, d = Math.sqrt(dx*dx + dy*dy + dz*dz);
@@ -253,7 +238,7 @@ function popHearts(x, y, z) { hearts.forEach((h, i) => { h.t = -i * 0.06; h.x = 
 function updateHearts(dt) { hearts.forEach(h => { h.t += dt; if (h.t < 0 || h.t > 1.4) { h.s.visible = false; return; } h.s.visible = true; h.s.position.set(h.x, h.y + h.t * 1.8, h.z); const k = 0.55 + 0.45 * Math.min(1, h.t * 4); h.s.scale.set(k, k, k); h.s.material.opacity = 1 - sm(0.6, 1.4, h.t); }); }
 const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
 ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring); let ringT = 9;
-function ringAt(x, z) { ringT = 0; ring.position.set(x, Phys.groundHeight(world, x, z) + 0.1, z); ring.visible = true; }
+function ringAt(x, z) { ringT = 0; ring.position.set(x, Phys.groundHeight(world.bodies[0], x, z) + 0.1, z); ring.visible = true; }
 
 /* ================= creature: slime / stone body or wisp cloud ================= */
 const topC = new THREE.Color(), botC = new THREE.Color(), eyeC = new THREE.Color(), avgC = new THREE.Color();
@@ -285,7 +270,7 @@ function disposeCreature() {
 function noise3(x, y, z) { const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return s - Math.floor(s); }
 function spawnForm(kind, pos, keepPos) {
   let at = pos;
-  if (!at) { at = (keepPos && (body || wisp)) ? [com()[0], com()[1] + 0.3, com()[2]] : world.spawn; }
+  if (!at) { at = (keepPos && (body || wisp)) ? [com()[0], com()[1] + 0.3, com()[2]] : world.bodies[0].spawn; }
   disposeCreature(); formKind = kind; profile.form = kind; syncFormButtons();
   const size = profile.look.size;
   if (kind === 'wisp') {
@@ -564,7 +549,7 @@ window.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (e.repeat) return;
   if (k === 'q') azT += Math.PI / 2; else if (k === 'e') azT -= Math.PI / 2;
-  else if (k === 'r') spawnForm(formKind, world.spawn); else if (k === 't') toggleSlow();
+  else if (k === 'r') spawnForm(formKind, world.lastSafeGround || world.bodies[0].spawn); else if (k === 't') toggleSlow();
   else if (k === 'm') toggleMelt(); else if (k === 'c') toggleSpring();
   else if (k === 'h') inp.pendingHeart = true; else if (k === 'f') inp.pendingPound = true; else if (k === 'b') windDebug = !windDebug;
   else if (k === 'tab') { const order = ['slime', 'wisp', 'stone']; switchForm(order[(order.indexOf(formKind) + 1) % 3]); }
@@ -581,7 +566,7 @@ window.addEventListener('wheel', e => zoom(e.deltaY > 0 ? 1.1 : 0.9), { passive:
 function zoom(f) { view = Math.max(3.5, Math.min(26, view * f)); resize(); }
 function toggleSlow() { slowToggle.setSlow(!slowToggle._slow); $('slow').setAttribute('aria-pressed', slowToggle._slow); }
 $('slow').addEventListener('click', e => { toggleSlow(); e.currentTarget.blur(); });
-$('reset').addEventListener('click', e => { spawnForm(formKind, world.spawn); e.currentTarget.blur(); });
+$('reset').addEventListener('click', e => { spawnForm(formKind, world.lastSafeGround || world.bodies[0].spawn); e.currentTarget.blur(); });
 $('rotL').addEventListener('click', e => { azT += Math.PI / 2; e.currentTarget.blur(); });
 $('rotR').addEventListener('click', e => { azT -= Math.PI / 2; e.currentTarget.blur(); });
 $('zoomIn').addEventListener('click', e => { zoom(0.82); e.currentTarget.blur(); });
@@ -621,7 +606,7 @@ let tramCd = 0;
 const HIT_SPEED = { slime: 3.2, wisp: 3.0, stone: 2.6 };      // impact speed needed (m/s) to shake a trunk
 function emitImpact(t) { bumpTree(t); }
 function checkImpacts(dt) {
-  const F = world.flora; if (!F) return;
+  const F = world.bodies[0].flora; if (!F) return;
   const c = com(), v = vcom(), need = HIT_SPEED[formKind], reach = wisp ? 0.5 + wisp.radius : 0.95, cd = formKind === 'stone' ? 3 : 7;
   for (const t of F.trees) {
     if (t.cd > 0) t.cd -= dt;
@@ -665,7 +650,7 @@ function updateShake(dt) {
 }
 function onPound(e) {
   shakeAmp = 0.5; ringAt(e.x, e.z); chime([196, 147], 0.08);
-  const F = world.flora; if (!F) return; const R = 3.8;
+  const F = world.bodies[0].flora; if (!F) return; const R = 3.8;
   F.geodes.forEach(g => { if (g.on && Math.hypot(g.c[0] - e.x, g.c[2] - e.z) < R && Math.abs(g.c[1] - e.y) < 2.5) { breakBreakable(g, 'starstone', 2 + ((Math.random() * 2) | 0)); chime([784, 988, 1175], 0.06); } });
   F.clays.forEach(g => { if (g.on && Math.hypot(g.c[0] - e.x, g.c[2] - e.z) < R && Math.abs(g.c[1] - e.y) < 2.5) { breakBreakable(g, 'clay', 2); chime([392, 494], 0.05); } });
   F.trees.forEach(t => { if (t.cd <= 0 && Math.hypot(t.x - e.x, t.z - e.z) < 2.6) bumpTree(t); });
@@ -680,7 +665,7 @@ function handleEvents() {
   }
 }
 function absorbFlowers(dt) {
-  const F = world.flora; if (!F) return;
+  const F = world.bodies[0].flora; if (!F) return;
   const c = com(), rad = wisp ? 2.75 : 1.1; let near = false;   // wisp perk: pulls motes in from further away
   for (const f of F.flowers) {
     if (!f.alive) { f.timer -= dt; if (f.timer <= 0) { f.alive = true; setI(f.mesh, f.idx, f.x, f.y + (f.type === 'spore' ? 0.3 : 0.16), f.z, f.size, f.size, f.size); f.mesh.instanceMatrix.needsUpdate = true; } continue; }
@@ -692,7 +677,7 @@ function absorbFlowers(dt) {
   if (near) emoTrigger('curious', 0.3);
 }
 function updateHut(dt) {
-  const h = world.hut; if (!h || !hutParts.length) return; const c = com();
+  const h = world.bodies[0].hut; if (!h || !hutParts.length) return; const c = com();
   const inside = Math.abs(c[0] - h.cx) < h.half && Math.abs(c[2] - h.cz) < h.half && c[1] < h.hy + 3.6;
   const cvx = Math.sin(az), cvz = Math.cos(az);
   hutParts.forEach(p => { let target = 1; if (inside) { if (p.kind === 'roof') target = 0.08; else if (p.n[0] * cvx + p.n[1] * cvz > 0.2) target = 0.1; } p.mat.opacity += (target - p.mat.opacity) * Math.min(1, dt * 8); p.mat.depthWrite = p.mat.opacity > 0.5; });
@@ -756,7 +741,7 @@ function updateWindDebug() {
   if (!windArrows.length) for (let i = 0; i < 49; i++) { const a = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 2, 0x2fbf62, 0.5, 0.35); windArrowGroup.add(a); windArrows.push(a); }
   const c = com(), gx = Math.round(c[0] / 6) * 6, gz = Math.round(c[2] / 6) * 6; let n = 0;
   for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) {
-    const x = gx + i * 6, z = gz + j * 6, y = Phys.groundHeight(world, x, z) + 1.5, s = Env.sample(env, x, y, z), w = s.wind, len = Math.hypot(w[0], w[1], w[2]);
+    const x = gx + i * 6, z = gz + j * 6, y = Phys.groundHeight(world.bodies[0], x, z) + 1.5, s = Env.sample(env, x, y, z), w = s.wind, len = Math.hypot(w[0], w[1], w[2]);
     const a = windArrows[n++]; a.position.set(x, y, z); if (len > 0.05) a.setDirection(_d.set(w[0], w[1], w[2]).normalize()); a.setLength(Math.max(0.4, len * 0.9), 0.5, 0.35); a.setColor(Math.abs(w[1]) > 0.5 ? 0xff9a3c : 0x2fbf62);
   }
 }
@@ -778,7 +763,7 @@ function updateHud(s) {
   else if (body.melt > 0.5) { jfill.style.width = '0%'; jtxt.textContent = 'Puddle form: press M to re-form'; }
   else if (body.jumpActive) { jfill.style.width = '0%'; jtxt.textContent = 'Rise ' + body.peak.toFixed(1) + ' m' + '. Hold Space to glide'; }
   else { jfill.style.width = '0%'; jtxt.textContent = (body.lastPeak > 0 ? 'Last jump ' + body.lastPeak.toFixed(1) + ' m. ' : '') + 'Taps hop ' + Phys.jumpHeight(P, 0).height.toFixed(1) + ' m, full hold ' + Phys.jumpHeight(P, 1).height.toFixed(1) + ' m'; }
-  let name = world.label; if (world.biomeAt) name = BIOMES[s.biome];
+  let name = world.bodies[0].label; if (world.bodies[0].biomeAt) name = BIOMES[s.biome];
   const wlabel = curWx.type === 'none' || curWx.amt < 0.1 ? 'Clear' : WXD[curWx.type].name + ' ' + Math.round(curWx.amt * 100) + '%';
   const label = profile.name + ' (' + formKind + ') in ' + name;
   if (label !== lastLabel) { lastLabel = label; $('biomeLbl').textContent = label; }
@@ -806,13 +791,13 @@ function loadSave() {
 
 function saveSave() {
   saveData.inv = inv;
-  if (bs && world) saveData.pieces[world.name] = Build.serialize(bs);
+  if (bs && world.bodies[0]) saveData.pieces[world.bodies[0].name] = Build.serialize(bs);
   saveGame(saveData);
 }
 
 function flushSave() {
   saveData.inv = inv;
-  if (bs && world) saveData.pieces[world.name] = Build.serialize(bs);
+  if (bs && world.bodies[0]) saveData.pieces[world.bodies[0].name] = Build.serialize(bs);
   Profile.save(profile);
   flushGame(saveData);
 }
@@ -820,7 +805,7 @@ function flushSave() {
 // Register auto-flush handlers
 registerAutoFlush(() => {
   saveData.inv = inv;
-  if (bs && world) saveData.pieces[world.name] = Build.serialize(bs);
+  if (bs && world.bodies[0]) saveData.pieces[world.bodies[0].name] = Build.serialize(bs);
   return saveData;
 });
 
@@ -872,7 +857,7 @@ function addPieceObj(rec) {
 function clearPieceObjs() { pieceObjs.forEach(i => pieceGroup.remove(i.obj)); pieceObjs.clear(); }
 function initBuildState() {
   clearPieceObjs(); bs = Build.create(world);
-  Build.load(bs, saveData.pieces[world.name]); bs.list.forEach(addPieceObj);
+  Build.load(bs, saveData.pieces[world.bodies[0].name]); bs.list.forEach(addPieceObj);
   setBs(bs);
 }
 
@@ -938,7 +923,7 @@ function fixedStep(dt) {
   checkImpacts(dt);
   if (wisp) {
     winp.wetAmt = s.weather.type === 'rain' ? s.weather.amt : 0; winp.time = env.t;
-    winp.bw = world.biomeAt ? world.biomeAt(c[0], c[2]) : [1, 0, 0, 0];
+    winp.bw = world.bodies[0].biomeAt ? world.bodies[0].biomeAt(c[0], c[2]) : [1, 0, 0, 0];
     Wisp.step(wisp, world, { speedMul: sizeSpeed() }, winp, dt);
   } else {
     P.gripMul = s.mat.mu; P.speedMul = s.mat.speed * sizeSpeed(); P.gscale = s.mat.gravity; P.jboost = s.mat.jump * sizeJump();
@@ -956,7 +941,7 @@ function fixedStep(dt) {
   if (moveMag > 0.05 || inp.jumpHeld || mv > 0.6) idleT = 0; else idleT += dt;
   if (idleT > 20) emoTrigger('sleepy', 0.3);
   handleEvents();
-  const cc = com(); if (!isFinite(cc[0]) || !isFinite(cc[1]) || cc[1] < world.hmin - 25) spawnForm(formKind, world.spawn);
+  const cc = com(); if (!isFinite(cc[0]) || !isFinite(cc[1]) || cc[1] < world.bodies[0].hmin - 25) spawnForm(formKind, world.lastSafeGround || world.bodies[0].spawn);
 }
 
 function render(dt) {
@@ -1014,10 +999,10 @@ startLoop({
 const tsel = $('terrain');
 Terrain.list.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; tsel.appendChild(o); });
 tsel.value = 'aetheria';
-tsel.addEventListener('change', () => { flushSave(); loadTerrain(tsel.value).then(() => { spawnForm(formKind, world.spawn); lastLabel = ''; tsel.blur(); }); });
+tsel.addEventListener('change', () => { flushSave(); loadTerrain(tsel.value).then(() => { spawnForm(formKind, world.lastSafeGround || world.bodies[0].spawn); lastLabel = ''; tsel.blur(); }); });
 resize(); syncLookColors(); applyTime(14); buildCustomizeUI();
-await loadTerrain('aetheria'); initBuildState(); spawnForm(formKind, world.spawn); syncLookColors();
-if (window.__SLIMELAB_DEBUG) window.__lab = { spawnAt: (x, z) => spawnForm(formKind, [x, Phys.groundHeight(world, x, z) + 1.5, z]), inv: inv, com: () => com(), world: () => world };   // test hook, only when the flag is set
+await loadTerrain('aetheria'); initBuildState(); spawnForm(formKind, world.lastSafeGround || world.bodies[0].spawn); syncLookColors();
+if (window.__SLIMELAB_DEBUG) window.__lab = { spawnAt: (x, z) => spawnForm(formKind, [x, Phys.groundHeight(world.bodies[0], x, z) + 1.5, z]), inv: inv, com: () => com(), world: () => world };   // test hook, only when the flag is set
 // NOTE: the rAF loop lives in startLoop() (app/loop.js, R1-016); no second loop here.
 
 }
