@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@aetheria/core": "workspace:*"
+    "@aetheria/core": "workspace:*",
+    "@dimforge/rapier3d-compat": "^0.12.0"
   }
 }

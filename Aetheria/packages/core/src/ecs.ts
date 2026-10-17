@@ -56,7 +56,7 @@ export function addComponent<T extends Component>(
   componentId: symbol,
   component: T
 ): void {
-  const entityComponents = world.entities.get(entity);
+  let entityComponents = world.entities.get(entity);
   if (!entityComponents) {
     entityComponents = new Set();
     world.entities.set(entity, entityComponents);

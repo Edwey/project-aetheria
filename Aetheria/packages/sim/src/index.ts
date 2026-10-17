@@ -1,6 +1,7 @@
 /**
  * Sim package - Physics, forms, world, environment
- * Placeholder - Phase 2 will implement physics integration
  */
 
-export {};
+export * from './physics-components.js';
+export * from './rapier-wrapper.js';
+export * from './physics-system.js';
