@@ -1,37 +1,15 @@
 {
-  "name": "project-aetheria",
+  "name": "openworld",
   "version": "0.0.1",
-  "description": "A cozy, peaceful 3D browser game",
-  "type": "module",
+  "private": true,
+  "description": "OpenWorld monorepo containing Aetheria (3D) and Explore-2D",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "node tests/run-all.js",
-    "test:smoke": "node tests/smoke/run-smoke.js",
-    "assets:fetch": "node scripts/fetch-assets.mjs",
-    "assets:optimize": "node scripts/optimize-assets.mjs",
-    "assets:check": "node scripts/check-assets.mjs",
-    "lint": "echo 'Lint not configured yet'",
-    "generate-credits": "node scripts/generate-credits.mjs"
+    "dev:aetheria": "cd Aetheria && pnpm dev",
+    "build:aetheria": "cd Aetheria && pnpm build",
+    "test:aetheria": "cd Aetheria && pnpm test"
   },
-  "keywords": [
-    "game",
-    "threejs",
-    "3d",
-    "browser"
-  ],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "@gltf-transform/cli": "^3.0.0",
-    "@gltf-transform/core": "^3.0.0",
-    "@gltf-transform/extensions": "^3.0.0",
-    "@gltf-transform/functions": "^3.0.0",
-    "@playwright/test": "^1.64.1",
-    "vite": "^5.0.0"
-  },
-  "dependencies": {
-    "three": "0.128.0"
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
   }
 }

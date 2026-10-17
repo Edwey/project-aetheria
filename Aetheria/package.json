@@ -1,0 +1,30 @@
+{
+  "name": "aetheria",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A cozy 3D browser game with TypeScript, Three.js, and Rapier WASM",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/three": "^0.160.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0"
+  },
+  "dependencies": {
+    "three": "^0.160.0",
+    "@dimforge/rapier3d": "^0.12.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
