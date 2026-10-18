@@ -75,30 +75,30 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 **Goal**: Implement the Slime creature with its 3 base form variants, physics behaviors, controls, and character controller.
 
 **Deliverables:**
-- [ ] Slime component definitions (`SlimeComponent`, `SlimeFormVariant`, `SlimeState`)
-- [ ] 3 Slime base form presets:
+- [x] Slime component definitions (`SlimeComponent`, `SlimeFormVariant`, `SlimeState`)
+- [x] 3 Slime base form presets:
   - **Goo**: ultra-soft, low stiffness (0.10), high grip (0.8), high stickiness (0.8), fast wall climbing
   - **Jelly Ball**: balanced, moderate stiffness (0.40), balanced grip (0.5), bouncy (restitution 0.6)
   - **Jelly Cube**: firm, high stiffness (0.45), stable footing, strong spring leap, high shape retention
-- [ ] Movement system (ground drive force 16, air control 0.9, max speed 6 m/s, idle brake 25/s)
-- [ ] Charge jump system (tap ~0.5m, 0.3s hold ~1.6m, 0.85s hold ~5.3m, power 4.5 to 15)
-- [ ] Melting / squeezing system (M key: compresses height < 0.6m, scale 0.65, recovers above 0.85m)
-- [ ] Sticky climbing system (wall climb at 3 m/s on steep surfaces, 1.5s overhang cling budget)
-- [ ] Gliding & peak hover (fall cap -2.2 m/s, 1.3x speed boost while gliding, 0.8s hover at apex)
-- [ ] Ground pound (F key) and Spring leap (C key: 1.35x jump boost)
-- [ ] Procedural deformable slime mesh in `@render` (squash & stretch, melt pancake, bounce)
-- [ ] Input handling (WASD, Space, Shift, M, C, F) & Character Controller
-- [ ] Comprehensive unit tests for all Slime mechanics
+- [x] Movement system (ground drive force 16, air control 0.9, max speed 6 m/s, idle brake 25/s)
+- [x] Charge jump system (tap ~0.5m, 0.3s hold ~1.6m, 0.85s hold ~5.3m, power 4.5 to 15)
+- [x] Melting / squeezing system (M key: compresses height < 0.6m, scale 0.65, recovers above 0.85m)
+- [x] Sticky climbing system (wall climb at 3 m/s on steep surfaces, 1.5s overhang cling budget)
+- [x] Gliding & peak hover (fall cap -2.2 m/s, 1.3x speed boost while gliding, 0.8s hover at apex)
+- [x] Ground pound (F key) and Spring leap (C key: 1.35x jump boost)
+- [x] Procedural deformable slime mesh in `@render` (squash & stretch, melt pancake, bounce)
+- [x] Input handling (WASD, Space, Shift, M, C, F) & Character Controller
+- [x] Comprehensive unit tests for all Slime mechanics
 
 **Acceptance Tests:**
-- [ ] Slime entity spawns at designated position
-- [ ] All 3 form variants (Goo, Jelly Ball, Jelly Cube) apply distinct physics attributes
-- [ ] Horizontal movement accelerates up to 6 m/s and brakes smoothly on idle
-- [ ] Jump heights verified: tap ~0.5m, 0.3s hold ~1.6m, 0.85s hold ~5.3m
-- [ ] Melting reduces vertical height below 0.6m and recovers when released
-- [ ] Goo climbs steep walls at 3 m/s; plain/cube requires more footing
-- [ ] Gliding caps downward velocity at -2.2 m/s
-- [ ] All Slime unit tests pass
+- [x] Slime entity spawns at designated position
+- [x] All 3 form variants (Goo, Jelly Ball, Jelly Cube) apply distinct physics attributes
+- [x] Horizontal movement accelerates up to 6 m/s and brakes smoothly on idle
+- [x] Jump heights verified: tap ~0.5m, 0.3s hold ~1.6m, 0.85s hold ~5.3m
+- [x] Melting reduces vertical height below 0.6m and recovers when released
+- [x] Goo climbs steep walls at 3 m/s; plain/cube requires more footing
+- [x] Gliding caps downward velocity at -2.2 m/s
+- [x] All Slime unit tests pass
 
 **Estimated Time**: 5-7 days
 
@@ -108,26 +108,26 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 **Goal**: Implement the Wisp creature with its 3 base form variants, mote particle dynamics, and aerial traversal.
 
 **Deliverables:**
-- [ ] Wisp component definitions (`WispComponent`, `WispFormVariant`, `BreathComponent`)
-- [ ] 3 Wisp base form presets:
+- [x] Wisp component definitions (`WispComponent`, `WispFormVariant`, `BreathComponent`)
+- [x] 3 Wisp base form presets:
   - **Cloud**: dense protective cloud, higher particle count, steady drift
   - **Motes**: sparse scattered motes, agile, wider reach, fast skimming
   - **Ring**: orbiting mote pattern, rhythmic resonance, focused harvesting
-- [ ] Mote cluster simulation & 2.2m tether constraint
-- [ ] Free hop (tap Space: +6 m/s) and gentle sinking (2.5 m/s)
-- [ ] Rising (hold Space, 20 breath/s) and Floating (V key, 3 breath/s)
-- [ ] Breath management (100 max, 5s rise budget, auto-refill near ground/water)
-- [ ] Condense (C key, 1.4x speed), Diffuse (M key, 0.6x speed), Down-gust (F key)
-- [ ] Wall-hug drift climbing (3 m/s)
-- [ ] Procedural mote particle rendering in `@render`
-- [ ] Unit tests for all Wisp mechanics
+- [x] Mote cluster simulation & 2.2m tether constraint
+- [x] Free hop (tap Space: +6 m/s) and gentle sinking (2.5 m/s)
+- [x] Rising (hold Space, 20 breath/s) and Floating (V key, 3 breath/s)
+- [x] Breath management (100 max, 5s rise budget, auto-refill near ground/water)
+- [x] Condense (C key, 1.4x speed), Diffuse (M key, 0.6x speed), Down-gust (F key)
+- [x] Wall-hug drift climbing (3 m/s)
+- [x] Procedural mote particle rendering in `@render`
+- [x] Unit tests for all Wisp mechanics
 
 **Acceptance Tests:**
-- [ ] Motes remain bounded within 2.2m tether from core
-- [ ] All 3 variants (Cloud, Motes, Ring) function with distinct dynamics
-- [ ] Breath depletes during rise (20/s) and float (3/s), refilling near ground
-- [ ] Down-gust dive produces downward velocity (-22 m/s) with safe timeout
-- [ ] All Wisp unit tests pass
+- [x] Motes remain bounded within 2.2m tether from core
+- [x] All 3 variants (Cloud, Motes, Ring) function with distinct dynamics
+- [x] Breath depletes during rise (20/s) and float (3/s), refilling near ground
+- [x] Down-gust dive produces downward velocity (-22 m/s) with safe timeout
+- [x] All Wisp unit tests pass
 
 **Estimated Time**: 5-7 days
 
@@ -137,27 +137,27 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 **Goal**: Implement the Stone creature with its 3 base form variants, rigid physics, and high-impact abilities.
 
 **Deliverables:**
-- [ ] Stone component definitions (`StoneComponent`, `StoneFormVariant`)
-- [ ] 3 Stone base form presets:
+- [x] Stone component definitions (`StoneComponent`, `StoneFormVariant`)
+- [x] 3 Stone base form presets:
   - **Round Boulder**: high momentum rolling, geode cracking (>5 m/s), high durability
   - **Tall Pillar**: sturdy, high reach, stable footing against wind
   - **Sharp Shard**: crystalline facets, sharp edges, efficient piton wedging
-- [ ] Heavy rigid physics (mass, low grip 0.35, high wind resistance 0.5)
-- [ ] Piton wall climbing (2 m/s, clings without slipping when idle)
-- [ ] Heavy charge jump (max power 12.75, 0.5s apex hover)
-- [ ] Crystal sail glide (-3.0 m/s fall cap, free shockwave on landing)
-- [ ] Pebble shrinking (M key: scale 0.65 to fit through narrow passages)
-- [ ] Ground pound shockwave (F key) and Rolling impacts
-- [ ] Procedural low-poly faceted stone mesh in `@render`
-- [ ] Unit tests for all Stone mechanics
+- [x] Heavy rigid physics (mass, low grip 0.35, high wind resistance 0.5)
+- [x] Piton wall climbing (2 m/s, clings without slipping when idle)
+- [x] Heavy charge jump (max power 12.75, 0.5s apex hover)
+- [x] Crystal sail glide (-3.0 m/s fall cap, free shockwave on landing)
+- [x] Pebble shrinking (M key: scale 0.65 to fit through narrow passages)
+- [x] Ground pound shockwave (F key) and Rolling impacts
+- [x] Procedural low-poly faceted stone mesh in `@render`
+- [x] Unit tests for all Stone mechanics
 
 **Acceptance Tests:**
-- [ ] All 3 variants (Boulder, Pillar, Shard) apply distinct rigid attributes
-- [ ] Piton climb allows clinging to walls without slipping
-- [ ] High-speed rolling (>5 m/s) detected for obstacle cracking
-- [ ] Crystal sail caps fall speed at -3.0 m/s and triggers landing shockwave
-- [ ] Pebble shrink reduces scale to 0.65 and recovers
-- [ ] All Stone unit tests pass
+- [x] All 3 variants (Boulder, Pillar, Shard) apply distinct rigid attributes
+- [x] Piton climb allows clinging to walls without slipping
+- [x] High-speed rolling (>5 m/s) detected for obstacle cracking
+- [x] Crystal sail caps fall speed at -3.0 m/s and triggers landing shockwave
+- [x] Pebble shrink reduces scale to 0.65 and recovers
+- [x] All Stone unit tests pass
 
 **Estimated Time**: 5-7 days
 
@@ -376,8 +376,17 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ## Current Status
 
-**Phase**: Ready to begin Phase 3 (Creature 1 — Slime)
-**Progress**: Phase 1 (Core Architecture) & Phase 2 (Physics Integration) complete.
+**Phase**: Ready to begin Phase 6 (Form Switching & Metamorphosis)
+**Progress**: Phases 1–5 complete. All three creatures (Slime, Wisp, Stone) implemented with 3 base forms each.
+
+| Phase | Status | Tests |
+|-------|--------|-------|
+| 1 – Core Architecture | ✅ Complete | 26 passing |
+| 2 – Physics Integration | ✅ Complete | 8 passing |
+| 3 – Slime (3 forms) | ✅ Complete | 14 passing |
+| 4 – Wisp (3 forms) | ✅ Complete | 24 passing |
+| 5 – Stone (3 forms) | ✅ Complete | 22 passing |
+| **Total** | | **94 passing** |
 
 ---
 

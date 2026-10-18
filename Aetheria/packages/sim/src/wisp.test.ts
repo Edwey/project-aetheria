@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createWorld as createECSWorld, getComponent } from '@core';
+import { createWorld as createECSWorld, getComponent, type EntityId } from '@core';
 import {
   initPhysics,
   initPhysicsSystem,
@@ -514,7 +514,7 @@ describe('Wisp Creature Mechanics (Phase 4)', () => {
       const e2 = createWispEntity(world, { variant: 'motes' });
       const dt = 1 / 60;
 
-      const inputs = new Map<number, WispInput>([
+      const inputs = new Map<EntityId, WispInput>([
         [e1, { ...noInput(), riseHold: true }],
         [e2, { ...noInput(), moveZ: 1 }],
       ]);

@@ -178,6 +178,7 @@ function updateMotes(wisp: WispComponent, dt: number): void {
   for (let i = 0; i < wisp.moteOffsets.length; i++) {
     const off = wisp.moteOffsets[i];
     const vel = wisp.moteVelocities[i];
+    if (!off || !vel) continue;
 
     // Random gentle drift (Brownian motion)
     vel.x += (Math.random() - 0.5) * 0.8 * dt;

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createWorld as createECSWorld, getComponent } from '@core';
+import { createWorld as createECSWorld, getComponent, type EntityId } from '@core';
 import {
   initPhysics,
   initPhysicsSystem,
@@ -29,6 +29,7 @@ import {
   STONE_PRESETS,
   STONE_CONSTANTS,
   type StoneComponent,
+  type StoneVariant,
 } from './stone-components.js';
 
 // ---- Helpers ----
@@ -45,7 +46,7 @@ function noInput(): StoneInput {
 
 function spawnGroundAndStone(
   world: Parameters<typeof createStoneEntity>[0],
-  variant: Parameters<typeof createStoneEntity>[1]['variant'] = 'boulder',
+  variant: StoneVariant = 'boulder',
   stoneY = 0.6
 ) {
   createPhysicsEntity(world, {
@@ -289,7 +290,7 @@ describe('Stone Creature Mechanics (Phase 5)', () => {
       if (!wasGrounded && stone.isGrounded) {
         if (stone.isSailGliding || stone.isGroundPounding) {
           events.shockwave.push({
-            entity: 0,
+            entity: 0 as EntityId,
             radius: stone.preset.shockwaveRadius,
             origin: { x: 0, y: 0, z: 0 },
           });
@@ -298,7 +299,7 @@ describe('Stone Creature Mechanics (Phase 5)', () => {
       }
 
       expect(events.shockwave.length).toBe(1);
-      expect(events.shockwave[0].radius).toBe(STONE_PRESETS.boulder.shockwaveRadius);
+      expect(events.shockwave[0]!.radius).toBe(STONE_PRESETS.boulder.shockwaveRadius);
       expect(stone.isSailGliding).toBe(false);
     });
   });
@@ -451,7 +452,7 @@ describe('Stone Creature Mechanics (Phase 5)', () => {
       }
 
       expect(events.crackImpact.length).toBeGreaterThan(0);
-      expect(events.crackImpact[0].speed).toBeGreaterThan(STONE_PRESETS.boulder.crackSpeedThreshold);
+      expect(events.crackImpact[0]!.speed).toBeGreaterThan(STONE_PRESETS.boulder.crackSpeedThreshold);
 
       // Also verify the threshold is correctly set in presets
       expect(STONE_PRESETS.boulder.crackSpeedThreshold).toBe(5.0);
@@ -508,7 +509,7 @@ describe('Stone Creature Mechanics (Phase 5)', () => {
       s1.isGrounded = true;
       s2.isGrounded = true;
 
-      const inputs = new Map<number, StoneInput>([
+      const inputs = new Map<EntityId, StoneInput>([
         [e1, { ...noInput(), moveZ: 1 }],
         [e2, { ...noInput(), moveX: -1 }],
       ]);
