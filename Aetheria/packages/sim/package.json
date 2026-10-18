@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "@aetheria/core": "workspace:*",
-    "@dimforge/rapier3d-compat": "^0.12.0"
+    "@dimforge/rapier3d-compat": "0.12.0"
   }
 }

@@ -28,7 +28,7 @@ export class EventBus<TEventMap extends Record<string, unknown>> {
       this.listeners.set(event, listeners);
     }
 
-    const subscription: EventSubscription<TEventMap[K]> = {
+    const subscription: EventSubscription<unknown> = {
       listener: listener as Listener<unknown>,
       once: false,
     };
@@ -57,7 +57,7 @@ export class EventBus<TEventMap extends Record<string, unknown>> {
       this.listeners.set(event, listeners);
     }
 
-    const subscription: EventSubscription<TEventMap[K]> = {
+    const subscription: EventSubscription<unknown> = {
       listener: listener as Listener<unknown>,
       once: true,
     };

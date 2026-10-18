@@ -3,3 +3,4 @@
  */
 
 export * from './scene.js';
+export * from './slime-mesh.js';

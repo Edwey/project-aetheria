@@ -79,9 +79,9 @@ This document records assumptions made during development. Each entry includes a
 **Change me if**: User feedback requests more variety, or gameplay needs expand.
 
 ### Form Variants per Creature
-**Decision**: Each creature has 4 form variants (slime: blob/goo/ball/cube, wisp: dense/sparse/ring/spiral, stone: crystal/boulder/pillar/shard).
-**Rationale**: Variety within each form, visual and gameplay differences, customization depth.
-**Change me if**: Variants prove too similar, or complexity becomes unmanageable.
+**Decision**: Each creature has 3 distinct base form variants (slime: goo/jelly ball/jelly cube; wisp: cloud/motes/ring; stone: boulder/pillar/shard) developed phase-by-phase.
+**Rationale**: 3 base forms per creature provides distinct, memorable physics properties and gameplay feel without redundant overlap.
+**Change me if**: Playtesting requests further sub-variants.
 
 ### Physics Constants from Prototype
 **Decision**: Keep all physics constants from Aetheria.html (gravity -20, particle radius 0.07, etc.).

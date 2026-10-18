@@ -23,7 +23,20 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@core": ["packages/core/src/index.ts"],
+      "@core/*": ["packages/core/src/*"],
+      "@sim": ["packages/sim/src/index.ts"],
+      "@sim/*": ["packages/sim/src/*"],
+      "@render": ["packages/render/src/index.ts"],
+      "@render/*": ["packages/render/src/*"],
+      "@ui": ["packages/ui/src/index.ts"],
+      "@ui/*": ["packages/ui/src/*"],
+      "@assets": ["packages/assets/src/index.ts"],
+      "@assets/*": ["packages/assets/src/*"]
+    }
   },
   "include": ["packages/*/src/**/*", "app/**/*"],
   "exclude": ["node_modules", "dist"]

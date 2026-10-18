@@ -6,23 +6,41 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import type { Resource } from '@core';
 
 export interface PhysicsWorld extends Resource {
-  world: unknown; // Rapier world
+  world: RAPIER.World;
   gravity: { x: number; y: number; z: number };
 }
 
 export interface PhysicsBody {
-  handle: unknown; // Rapier rigid body handle
+  handle: RAPIER.RigidBody;
 }
 
 export interface PhysicsCollider {
-  handle: unknown; // Rapier collider handle
+  handle: RAPIER.Collider;
 }
+
+export interface RayHit {
+  toi: number;
+  point: { x: number; y: number; z: number };
+  normal?: { x: number; y: number; z: number };
+}
+
+let rapierInitialized = false;
 
 /**
  * Initialize Rapier physics
  */
 export async function initPhysics(): Promise<void> {
-  await RAPIER.init();
+  if (!rapierInitialized) {
+    await RAPIER.init();
+    rapierInitialized = true;
+  }
+}
+
+/**
+ * Check if Rapier is initialized
+ */
+export function isPhysicsInitialized(): boolean {
+  return rapierInitialized;
 }
 
 /**
@@ -40,52 +58,113 @@ export function createWorld(gravity: { x: number; y: number; z: number } = { x: 
  * Step the physics simulation
  */
 export function stepWorld(physicsWorld: PhysicsWorld, dt: number): void {
-  physicsWorld.world.step(dt);
+  physicsWorld.world.timestep = dt;
+  physicsWorld.world.step();
 }
 
 /**
- * Create a rigid body
+ * Create a dynamic rigid body description
  */
-export function createRigidBody(
-  desc: {
-    translation: { x: number; y: number; z: number };
-    rotation: { x: number; y: number; z: number; w: number };
-    enabled: boolean;
-  }
-): PhysicsBody {
-  const body = RAPIER.RigidBodyCreateInfo(desc);
-  const handle = new RAPIER.RigidBody(body);
-  return { handle };
+export function createDynamicBodyDesc(
+  position: { x: number; y: number; z: number },
+  rotation: { x: number; y: number; z: number; w: number } = { x: 0, y: 0, z: 0, w: 1 }
+): RAPIER.RigidBodyDesc {
+  return RAPIER.RigidBodyDesc.dynamic()
+    .setTranslation(position.x, position.y, position.z)
+    .setRotation({ x: rotation.x, y: rotation.y, z: rotation.z, w: rotation.w });
 }
 
 /**
- * Create a sphere collider
+ * Create a static rigid body description
  */
-export function createSphereCollider(radius: number): PhysicsCollider {
-  const shape = new RAPIER.Ball(radius);
-  const handle = new RAPIER.Collider(shape);
-  return { handle };
+export function createStaticBodyDesc(
+  position: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
+  rotation: { x: number; y: number; z: number; w: number } = { x: 0, y: 0, z: 0, w: 1 }
+): RAPIER.RigidBodyDesc {
+  return RAPIER.RigidBodyDesc.fixed()
+    .setTranslation(position.x, position.y, position.z)
+    .setRotation({ x: rotation.x, y: rotation.y, z: rotation.z, w: rotation.w });
 }
 
 /**
- * Create a box collider
+ * Backward compatibility alias for createDynamicBodyDesc
  */
-export function createBoxCollider(halfExtents: { x: number; y: number; z: number }): PhysicsCollider {
-  const shape = new RAPIER.Cuboid(halfExtents);
-  const handle = new RAPIER.Collider(shape);
-  return { handle };
+export const createDynamicBody = createDynamicBodyDesc;
+
+/**
+ * Backward compatibility alias for createStaticBodyDesc
+ */
+export const createStaticBody = createStaticBodyDesc;
+
+/**
+ * Create a sphere collider description
+ */
+export function createSphereColliderDesc(radius: number): RAPIER.ColliderDesc {
+  return RAPIER.ColliderDesc.ball(radius);
 }
 
 /**
- * Create a heightfield collider
+ * Create a box collider description
  */
-export function createHeightfieldCollider(
+export function createBoxColliderDesc(halfExtents: { x: number; y: number; z: number }): RAPIER.ColliderDesc {
+  return RAPIER.ColliderDesc.cuboid(halfExtents.x, halfExtents.y, halfExtents.z);
+}
+
+/**
+ * Create a heightfield collider description
+ * In Rapier 3D:
+ * - nrows: number of subdivision cells along X/Z
+ * - ncols: number of subdivision cells along Z/X
+ * - heights: Float32Array containing (nrows + 1) * (ncols + 1) height values
+ * - scale: { x, y, z } bounding dimension
+ */
+export function createHeightfieldColliderDesc(
+  nrows: number,
+  ncols: number,
   heights: Float32Array,
   scale: { x: number; y: number; z: number }
-): PhysicsCollider {
-  const shape = new RAPIER.Heightfield(scale, heights);
-  const handle = new RAPIER.Collider(shape);
+): RAPIER.ColliderDesc {
+  const expectedLen = (nrows + 1) * (ncols + 1);
+  if (heights.length !== expectedLen) {
+    throw new Error(
+      `Heightfield heights length (${heights.length}) does not match expected (nrows + 1) * (ncols + 1) = ${expectedLen}`
+    );
+  }
+  return RAPIER.ColliderDesc.heightfield(nrows, ncols, heights, scale);
+}
+
+/**
+ * Create rigid body in world
+ */
+export function createBodyInWorld(physicsWorld: PhysicsWorld, bodyDesc: RAPIER.RigidBodyDesc): PhysicsBody {
+  const handle = physicsWorld.world.createRigidBody(bodyDesc);
   return { handle };
+}
+
+/**
+ * Create collider in world
+ */
+export function createColliderInWorld(
+  physicsWorld: PhysicsWorld,
+  colliderDesc: RAPIER.ColliderDesc,
+  parentBody?: PhysicsBody
+): PhysicsCollider {
+  const handle = physicsWorld.world.createCollider(colliderDesc, parentBody?.handle);
+  return { handle };
+}
+
+/**
+ * Remove body from world
+ */
+export function removeBodyFromWorld(physicsWorld: PhysicsWorld, body: PhysicsBody): void {
+  physicsWorld.world.removeRigidBody(body.handle);
+}
+
+/**
+ * Remove collider from world
+ */
+export function removeColliderFromWorld(physicsWorld: PhysicsWorld, collider: PhysicsCollider, wakeUp = true): void {
+  physicsWorld.world.removeCollider(collider.handle, wakeUp);
 }
 
 /**
@@ -100,7 +179,7 @@ export function getBodyPosition(body: PhysicsBody): { x: number; y: number; z: n
  * Set body position
  */
 export function setBodyPosition(body: PhysicsBody, pos: { x: number; y: number; z: number }): void {
-  body.handle.setTranslation(pos);
+  body.handle.setTranslation({ x: pos.x, y: pos.y, z: pos.z }, true);
 }
 
 /**
@@ -115,7 +194,7 @@ export function getBodyRotation(body: PhysicsBody): { x: number; y: number; z: n
  * Set body rotation
  */
 export function setBodyRotation(body: PhysicsBody, rot: { x: number; y: number; z: number; w: number }): void {
-  body.handle.setRotation(rot);
+  body.handle.setRotation({ x: rot.x, y: rot.y, z: rot.z, w: rot.w }, true);
 }
 
 /**
@@ -130,26 +209,64 @@ export function getBodyLinearVelocity(body: PhysicsBody): { x: number; y: number
  * Set body linear velocity
  */
 export function setBodyLinearVelocity(body: PhysicsBody, vel: { x: number; y: number; z: number }): void {
-  body.handle.setLinvel(vel);
+  body.handle.setLinvel({ x: vel.x, y: vel.y, z: vel.z }, true);
 }
 
 /**
- * Add collider to body
+ * Apply impulse to body
  */
-export function addColliderToBody(body: PhysicsBody, collider: PhysicsCollider): void {
-  body.handle.addCollider(collider.handle, 1);
+export function applyImpulse(body: PhysicsBody, impulse: { x: number; y: number; z: number }): void {
+  body.handle.applyImpulse({ x: impulse.x, y: impulse.y, z: impulse.z }, true);
 }
 
 /**
- * Add body to world
+ * Cast a ray into the physics world
  */
-export function addBodyToWorld(physicsWorld: PhysicsWorld, body: PhysicsBody): void {
-  physicsWorld.world.createRigidBody(body.handle);
+export function castRay(
+  physicsWorld: PhysicsWorld,
+  origin: { x: number; y: number; z: number },
+  direction: { x: number; y: number; z: number },
+  maxToi = 1000,
+  solid = true,
+  excludeRigidBody?: PhysicsBody
+): RayHit | null {
+  physicsWorld.world.updateSceneQueries();
+  const ray = new RAPIER.Ray(origin, direction);
+  const hit = physicsWorld.world.castRayAndGetNormal(
+    ray,
+    maxToi,
+    solid,
+    undefined,
+    undefined,
+    undefined,
+    excludeRigidBody?.handle
+  );
+  if (!hit) return null;
+
+  const point = ray.pointAt(hit.toi);
+  return {
+    toi: hit.toi,
+    point: { x: point.x, y: point.y, z: point.z },
+    normal: hit.normal ? { x: hit.normal.x, y: hit.normal.y, z: hit.normal.z } : undefined,
+  };
 }
 
 /**
- * Remove body from world
+ * Query ground height at a given (x, z) coordinate
  */
-export function removeBodyFromWorld(physicsWorld: PhysicsWorld, body: PhysicsBody): void {
-  physicsWorld.world.removeRigidBody(body.handle);
+export function queryGroundHeight(
+  physicsWorld: PhysicsWorld,
+  x: number,
+  z: number,
+  startY = 1000,
+  maxDist = 2000
+): number | null {
+  const hit = castRay(
+    physicsWorld,
+    { x, y: startY, z },
+    { x: 0, y: -1, z: 0 },
+    maxDist,
+    true
+  );
+  return hit ? hit.point.y : null;
 }

@@ -15,7 +15,6 @@ import {
   addResource,
   getResource,
   isEntityValid,
-  createEntityId,
   NULL_ENTITY,
   Vec3,
   Quat,
@@ -54,7 +53,6 @@ describe('ECS', () => {
 
   describe('Components', () => {
     const Position = Symbol('Position');
-    const Velocity = Symbol('Velocity');
 
     it('should add a component', () => {
       const world = createWorld();

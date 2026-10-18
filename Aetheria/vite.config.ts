@@ -1,9 +1,7 @@
 import { defineConfig } from 'vite';
-import wasm from 'vite-plugin-wasm';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [wasm()],
   resolve: {
     alias: {
       '@core': path.resolve(__dirname, 'packages/core/src'),
@@ -29,6 +27,6 @@ export default defineConfig({
         },
       },
     },
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 2500,
   },
 });

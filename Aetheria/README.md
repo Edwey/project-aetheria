@@ -24,7 +24,7 @@ Aetheria is a single-player exploration game featuring three unique creatures—
 
 ## Development Status
 
-**Current Phase**: Planning complete, ready to begin Phase 1 (Core Architecture)
+**Current Phase**: Phase 2 Complete (Core Architecture & Physics Integration). Ready for Phase 3 (Creature Forms: Slime).
 
 See [docs/PLAN.md](docs/PLAN.md) for the full development roadmap.
 

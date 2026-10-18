@@ -25,23 +25,23 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 **Goal**: Establish ECS foundation, basic rendering, and project structure.
 
 **Deliverables:**
-- [ ] Monorepo setup with pnpm workspaces
-- [ ] TypeScript configuration (strict mode)
-- [ ] Vite build configuration
-- [ ] Core ECS package (entities, components, queries, systems)
-- [ ] Math utilities package (Vec3, Quat, Mat4)
-- [ ] Event bus package
-- [ ] Basic Three.js renderer package
-- [ ] Camera controller
-- [ ] Empty scene with ground plane
-- [ ] Unit tests for core packages
+- [x] Monorepo setup with pnpm workspaces
+- [x] TypeScript configuration (strict mode)
+- [x] Vite build configuration
+- [x] Core ECS package (entities, components, queries, systems)
+- [x] Math utilities package (Vec3, Quat, Mat4)
+- [x] Event bus package
+- [x] Basic Three.js renderer package
+- [x] Camera controller
+- [x] Empty scene with ground plane
+- [x] Unit tests for core packages
 
 **Acceptance Tests:**
-- [ ] TypeScript compiles without errors
-- [ ] Core ECS tests pass (entity lifecycle, queries)
-- [ ] Math tests pass (vector operations)
-- [ ] Dev server starts and shows a blank scene
-- [ ] No circular dependencies in package graph
+- [x] TypeScript compiles without errors
+- [x] Core ECS tests pass (entity lifecycle, queries)
+- [x] Math tests pass (vector operations)
+- [x] Dev server starts and shows a blank scene
+- [x] No circular dependencies in package graph
 
 **Estimated Time**: 3-5 days
 
@@ -51,84 +51,138 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 **Goal**: Integrate Rapier WASM physics and connect to ECS.
 
 **Deliverables:**
-- [ ] Rapier WASM package wrapper
-- [ ] Physics components (RigidBody, Collider, Transform)
-- [ ] Physics system integration
-- [ ] Heightfield terrain in Rapier
-- [ ] Basic collision detection
-- [ ] Ground height query function
-- [ ] Physics debug visualization (optional)
-- [ ] Unit tests for physics
+- [x] Rapier WASM package wrapper
+- [x] Physics components (RigidBody, Collider, Transform)
+- [x] Physics system integration
+- [x] Heightfield terrain in Rapier
+- [x] Basic collision detection
+- [x] Ground height query function
+- [x] Physics debug visualization (optional)
+- [x] Unit tests for physics
 
 **Acceptance Tests:**
-- [ ] Rapier WASM loads successfully
-- [ ] Simple physics scene with falling spheres
-- [ ] Heightfield terrain collision works
-- [ ] Ground height queries return correct values
-- [ ] Physics tests pass (deterministic simulation)
+- [x] Rapier WASM loads successfully
+- [x] Simple physics scene with falling spheres
+- [x] Heightfield terrain collision works
+- [x] Ground height queries return correct values
+- [x] Physics tests pass (deterministic simulation)
 
 **Estimated Time**: 3-4 days
 
 ---
 
-### Phase 3: Creature Forms (One Creature)
-**Goal**: Implement slime form with all its variants as a proof of concept.
+### Phase 3: Creature 1 — Slime (Liquid Form)
+**Goal**: Implement the Slime creature with its 3 base form variants, physics behaviors, controls, and character controller.
 
 **Deliverables:**
-- [ ] Slime physics components (from Aetheria.html constants)
-- [ ] Slime form variants (blob, goo, jelly ball, jelly cube)
-- [ ] Slime movement system
-- [ ] Slime jumping system (tap, hold heights)
-- [ ] Slime melting/squeezing system
-- [ ] Slime climbing system (sticky vs plain)
-- [ ] Basic slime mesh (procedural for now)
-- [ ] Input mapping (WASD, Space, Shift)
-- [ ] Character controller
-- [ ] Unit tests for slime mechanics
+- [ ] Slime component definitions (`SlimeComponent`, `SlimeFormVariant`, `SlimeState`)
+- [ ] 3 Slime base form presets:
+  - **Goo**: ultra-soft, low stiffness (0.10), high grip (0.8), high stickiness (0.8), fast wall climbing
+  - **Jelly Ball**: balanced, moderate stiffness (0.40), balanced grip (0.5), bouncy (restitution 0.6)
+  - **Jelly Cube**: firm, high stiffness (0.45), stable footing, strong spring leap, high shape retention
+- [ ] Movement system (ground drive force 16, air control 0.9, max speed 6 m/s, idle brake 25/s)
+- [ ] Charge jump system (tap ~0.5m, 0.3s hold ~1.6m, 0.85s hold ~5.3m, power 4.5 to 15)
+- [ ] Melting / squeezing system (M key: compresses height < 0.6m, scale 0.65, recovers above 0.85m)
+- [ ] Sticky climbing system (wall climb at 3 m/s on steep surfaces, 1.5s overhang cling budget)
+- [ ] Gliding & peak hover (fall cap -2.2 m/s, 1.3x speed boost while gliding, 0.8s hover at apex)
+- [ ] Ground pound (F key) and Spring leap (C key: 1.35x jump boost)
+- [ ] Procedural deformable slime mesh in `@render` (squash & stretch, melt pancake, bounce)
+- [ ] Input handling (WASD, Space, Shift, M, C, F) & Character Controller
+- [ ] Comprehensive unit tests for all Slime mechanics
 
 **Acceptance Tests:**
-- [ ] Slime spawns at correct position
-- [ ] Movement matches prototype (velocity, friction)
-- [ ] Jump heights: tap ~0.5m, 0.3s hold ~1.6m, 0.85s hold ~5m
-- [ ] Melt goes below 0.65m and recovers above 0.85m
-- [ ] Sticky slime climbs 5m wall, plain does not
-- [ ] All slime mechanics tests pass
+- [ ] Slime entity spawns at designated position
+- [ ] All 3 form variants (Goo, Jelly Ball, Jelly Cube) apply distinct physics attributes
+- [ ] Horizontal movement accelerates up to 6 m/s and brakes smoothly on idle
+- [ ] Jump heights verified: tap ~0.5m, 0.3s hold ~1.6m, 0.85s hold ~5.3m
+- [ ] Melting reduces vertical height below 0.6m and recovers when released
+- [ ] Goo climbs steep walls at 3 m/s; plain/cube requires more footing
+- [ ] Gliding caps downward velocity at -2.2 m/s
+- [ ] All Slime unit tests pass
 
 **Estimated Time**: 5-7 days
 
 ---
 
-### Phase 4: All Creature Forms
-**Goal**: Implement wisp and stone with their variants.
+### Phase 4: Creature 2 — Wisp (Gas Form)
+**Goal**: Implement the Wisp creature with its 3 base form variants, mote particle dynamics, and aerial traversal.
 
 **Deliverables:**
-- [ ] Wisp physics components
-- [ ] Wisp form variants (dense cloud, sparse motes, ring pattern, spiral swirl)
-- [ ] Wisp movement (hover, wind riding)
-- [ ] Wisp breath system (rise, float costs)
-- [ ] Wisp tether constraint (2.2m)
-- [ ] Stone physics components
-- [ ] Stone form variants (crystal cluster, round boulder, tall pillar, sharp shard)
-- [ ] Stone movement (walk, pitons)
-- [ ] Stone hover (0.5s) vs slime hover (0.8s)
-- [ ] Stone shrinking (pebble form)
-- [ ] Form switching system
-- [ ] Unit tests for all forms
+- [ ] Wisp component definitions (`WispComponent`, `WispFormVariant`, `BreathComponent`)
+- [ ] 3 Wisp base form presets:
+  - **Cloud**: dense protective cloud, higher particle count, steady drift
+  - **Motes**: sparse scattered motes, agile, wider reach, fast skimming
+  - **Ring**: orbiting mote pattern, rhythmic resonance, focused harvesting
+- [ ] Mote cluster simulation & 2.2m tether constraint
+- [ ] Free hop (tap Space: +6 m/s) and gentle sinking (2.5 m/s)
+- [ ] Rising (hold Space, 20 breath/s) and Floating (V key, 3 breath/s)
+- [ ] Breath management (100 max, 5s rise budget, auto-refill near ground/water)
+- [ ] Condense (C key, 1.4x speed), Diffuse (M key, 0.6x speed), Down-gust (F key)
+- [ ] Wall-hug drift climbing (3 m/s)
+- [ ] Procedural mote particle rendering in `@render`
+- [ ] Unit tests for all Wisp mechanics
 
 **Acceptance Tests:**
-- [ ] All three forms spawn correctly
-- [ ] Form switching preserves position
-- [ ] Wisp tether stays at 2.2m in violent gusts
-- [ ] Wisp rise costs ~20/s, float ~3/s
-- [ ] Stone hover 0.5s, slime 0.8s
-- [ ] Stone shrinks to 0.65, grows back
-- [ ] All form mechanics tests pass
+- [ ] Motes remain bounded within 2.2m tether from core
+- [ ] All 3 variants (Cloud, Motes, Ring) function with distinct dynamics
+- [ ] Breath depletes during rise (20/s) and float (3/s), refilling near ground
+- [ ] Down-gust dive produces downward velocity (-22 m/s) with safe timeout
+- [ ] All Wisp unit tests pass
 
-**Estimated Time**: 7-10 days
+**Estimated Time**: 5-7 days
 
 ---
 
-### Phase 5: World Generation
+### Phase 5: Creature 3 — Stone (Solid Form)
+**Goal**: Implement the Stone creature with its 3 base form variants, rigid physics, and high-impact abilities.
+
+**Deliverables:**
+- [ ] Stone component definitions (`StoneComponent`, `StoneFormVariant`)
+- [ ] 3 Stone base form presets:
+  - **Round Boulder**: high momentum rolling, geode cracking (>5 m/s), high durability
+  - **Tall Pillar**: sturdy, high reach, stable footing against wind
+  - **Sharp Shard**: crystalline facets, sharp edges, efficient piton wedging
+- [ ] Heavy rigid physics (mass, low grip 0.35, high wind resistance 0.5)
+- [ ] Piton wall climbing (2 m/s, clings without slipping when idle)
+- [ ] Heavy charge jump (max power 12.75, 0.5s apex hover)
+- [ ] Crystal sail glide (-3.0 m/s fall cap, free shockwave on landing)
+- [ ] Pebble shrinking (M key: scale 0.65 to fit through narrow passages)
+- [ ] Ground pound shockwave (F key) and Rolling impacts
+- [ ] Procedural low-poly faceted stone mesh in `@render`
+- [ ] Unit tests for all Stone mechanics
+
+**Acceptance Tests:**
+- [ ] All 3 variants (Boulder, Pillar, Shard) apply distinct rigid attributes
+- [ ] Piton climb allows clinging to walls without slipping
+- [ ] High-speed rolling (>5 m/s) detected for obstacle cracking
+- [ ] Crystal sail caps fall speed at -3.0 m/s and triggers landing shockwave
+- [ ] Pebble shrink reduces scale to 0.65 and recovers
+- [ ] All Stone unit tests pass
+
+**Estimated Time**: 5-7 days
+
+---
+
+### Phase 6: Form Switching & Metamorphosis
+**Goal**: Enable instantaneous seamless switching between Slime, Wisp, and Stone while preserving core state and momentum.
+
+**Deliverables:**
+- [ ] Form switching system in `@sim` (hotkeys 1, 2, 3)
+- [ ] Core & inventory preservation across transitions
+- [ ] Momentum conversion and safe volume transition
+- [ ] Morph visual transition effects and animations
+- [ ] Unit tests for form switching
+
+**Acceptance Tests:**
+- [ ] Switching between all 3 creatures preserves position, core items, and momentum
+- [ ] Rapid form switching does not glitch physics or duplicate entities
+- [ ] All form switching tests pass
+
+**Estimated Time**: 3-4 days
+
+---
+
+### Phase 7: World Generation
 **Goal**: Procedural terrain generation with flora and props.
 
 **Deliverables:**
@@ -154,12 +208,12 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ---
 
-### Phase 6: UI and HUD
+### Phase 8: UI and HUD
 **Goal**: DOM-based UI overlay with cozy aesthetic.
 
 **Deliverables:**
 - [ ] HUD overlay (biome label, wind, inventory)
-- [ ] Control panel (form selection, preset selection)
+- [ ] Control panel (creature selection, 3-variant preset selection per creature)
 - [ ] Sliders for form parameters
 - [ ] Quality selector (Full/Light)
 - [ ] Weather selector
@@ -169,18 +223,16 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 - [ ] Responsive design
 
 **Acceptance Tests:**
-- [ ] HUD displays correctly on desktop
-- [ ] HUD displays correctly on mobile
-- [ ] Form switching works from UI
-- [ ] Preset selection works per form
-- [ ] Sliders update form parameters
+- [ ] HUD displays correctly on desktop and mobile
+- [ ] Creature selection and variant selection update in real time
+- [ ] Sliders update parameters dynamically
 - [ ] Playwright UI tests pass
 
 **Estimated Time**: 4-5 days
 
 ---
 
-### Phase 7: Asset Pipeline
+### Phase 9: Asset Pipeline
 **Goal**: GLB asset loading from 3dassets.dev with manifest system.
 
 **Deliverables:**
@@ -189,7 +241,7 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 - [ ] Asset preloading system
 - [ ] Fallback to procedural generation
 - [ ] Progress indicator
-- [ ] Asset optimization (optional)
+- [ ] Asset optimization
 - [ ] Asset catalog (3dassets.dev models)
 - [ ] Unit tests for asset loading
 
@@ -203,7 +255,7 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ---
 
-### Phase 8: Environment Effects
+### Phase 10: Environment Effects
 **Goal**: Weather, wind, and atmospheric effects.
 
 **Deliverables:**
@@ -218,7 +270,7 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 **Acceptance Tests:**
 - [ ] Weather transitions smoothly
-- [ ] Wind affects creatures correctly (Rule 4)
+- [ ] Wind affects creatures correctly (Rule 4: steady wind, hold Shift to Ride)
 - [ ] Weather particles render
 - [ ] Time cycle works
 - [ ] Environment tests pass
@@ -227,7 +279,7 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ---
 
-### Phase 9: Save/Load System
+### Phase 11: Save/Load System
 **Goal**: Persist game state to localStorage.
 
 **Deliverables:**
@@ -249,7 +301,7 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ---
 
-### Phase 10: Visual Polish
+### Phase 12: Visual Polish
 **Goal**: Cozy low-poly aesthetic with NPR shaders.
 
 **Deliverables:**
@@ -271,7 +323,7 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ---
 
-### Phase 11: Testing and QA
+### Phase 13: Testing and QA
 **Goal**: Comprehensive test coverage and bug fixes.
 
 **Deliverables:**
@@ -294,7 +346,7 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ---
 
-### Phase 12: Release Preparation
+### Phase 14: Release Preparation
 **Goal**: Production build, deployment, and documentation.
 
 **Deliverables:**
@@ -312,35 +364,36 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 - [ ] Deploys successfully
 - [ ] Documentation complete
 
-**Estimated Time**: 2-3 days
-
 ---
 
 ## Total Estimated Time
 
-**Minimum**: 45-60 days
-**Realistic**: 60-80 days
-**With buffer**: 80-100 days
+**Minimum**: 50-65 days
+**Realistic**: 65-85 days
+**With buffer**: 85-110 days
 
 ---
 
 ## Current Status
 
-**Phase**: Not started
-**Progress**: Planning complete, ready to begin Phase 1
+**Phase**: Ready to begin Phase 3 (Creature 1 — Slime)
+**Progress**: Phase 1 (Core Architecture) & Phase 2 (Physics Integration) complete.
 
 ---
 
 ## Dependencies Between Phases
 
 - Phase 2 depends on Phase 1 (ECS foundation)
-- Phase 3 depends on Phase 2 (physics)
-- Phase 4 depends on Phase 3 (one creature complete)
-- Phase 5 can parallel with Phase 4 (world gen independent)
-- Phase 6 depends on Phase 4 (needs creatures)
-- Phase 7 can parallel with Phase 5 (assets independent)
-- Phase 8 depends on Phase 5 (needs world)
-- Phase 9 depends on Phase 4 (needs ECS state)
-- Phase 10 depends on Phase 7 (needs assets)
-- Phase 11 depends on all previous phases
-- Phase 12 depends on Phase 11
+- Phase 3 depends on Phase 2 (Rapier physics)
+- Phase 4 depends on Phase 2 & 3 (creature patterns)
+- Phase 5 depends on Phase 2 & 3 (creature patterns)
+- Phase 6 depends on Phase 3, 4, 5 (needs all three creatures)
+- Phase 7 can parallel with Phases 4-6 (world gen independent)
+- Phase 8 depends on Phase 6 (needs creatures and variants)
+- Phase 9 can parallel with Phase 7 (assets independent)
+- Phase 10 depends on Phase 7 (needs world)
+- Phase 11 depends on Phase 6 & 7 (needs creature state and world)
+- Phase 12 depends on Phase 9 & 10 (needs assets and world)
+- Phase 13 depends on all previous phases
+- Phase 14 depends on Phase 13
+
