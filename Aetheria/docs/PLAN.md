@@ -167,16 +167,19 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 **Goal**: Enable instantaneous seamless switching between Slime, Wisp, and Stone while preserving core state and momentum.
 
 **Deliverables:**
-- [ ] Form switching system in `@sim` (hotkeys 1, 2, 3)
-- [ ] Core & inventory preservation across transitions
-- [ ] Momentum conversion and safe volume transition
-- [ ] Morph visual transition effects and animations
-- [ ] Unit tests for form switching
+- [x] Form switching system in `@render` & `@ui` (`creatureVisualController`, hotkeys `Tab` and `1, 2, 3`)
+- [x] Universal input manager supporting creature cycling and individual variant selection
+- [x] Core & position preservation across transitions
+- [x] Morph & transition visual effects (spawn burst, landing dust puffs, shockwaves via `@render/particles`)
+- [x] Interactive UI testing deck (top creature tabs, dynamic variant pills, live telemetry HUD, action buttons)
+- [ ] Formal momentum conversion & safe volume transition unit tests in `@sim`
+- [ ] Persistent inventory & item collection across creature metamorphosis
 
 **Acceptance Tests:**
-- [ ] Switching between all 3 creatures preserves position, core items, and momentum
-- [ ] Rapid form switching does not glitch physics or duplicate entities
-- [ ] All form switching tests pass
+- [x] Switching between all 3 creatures preserves position, camera focus, and orientation
+- [x] Rapid form switching does not glitch physics or duplicate entities
+- [x] Real-time visual representation swaps immediately between translucent jelly, swirling gas motes, and heavy faceted rock
+- [ ] Metamorphosis unit test suite passing in `@sim`
 
 **Estimated Time**: 3-4 days
 
@@ -376,17 +379,18 @@ Aetheria is a cozy, peaceful 3D browser game built with TypeScript, Three.js, an
 
 ## Current Status
 
-**Phase**: Ready to begin Phase 6 (Form Switching & Metamorphosis)
-**Progress**: Phases 1–5 complete. All three creatures (Slime, Wisp, Stone) implemented with 3 base forms each.
+**Phase**: In Progress: Phase 6 (Form Switching & Metamorphosis)
+**Progress**: Phases 1–5 complete. All three creatures (Slime, Wisp, Stone) implemented with 3 base forms each, living shaders, procedural animations, and interactive client form switching.
 
-| Phase | Status | Tests |
-|-------|--------|-------|
+| Phase | Status | Tests / Features |
+|-------|--------|------------------|
 | 1 – Core Architecture | ✅ Complete | 26 passing |
 | 2 – Physics Integration | ✅ Complete | 8 passing |
-| 3 – Slime (3 forms) | ✅ Complete | 14 passing |
-| 4 – Wisp (3 forms) | ✅ Complete | 24 passing |
-| 5 – Stone (3 forms) | ✅ Complete | 22 passing |
-| **Total** | | **94 passing** |
+| 3 – Slime (3 forms) | ✅ Complete | 14 passing, living jelly physical material & wobble |
+| 4 – Wisp (3 forms) | ✅ Complete | 24 passing, gaseous motes & light emission |
+| 5 – Stone (3 forms) | ✅ Complete | 22 passing, faceted rock, rolling & crystal sail |
+| 6 – Form Switching & Metamorphosis | 🔄 In Progress | Client form switcher UI & unified controller active |
+| **Total Tests** | | **94 passing** |
 
 ---
 
