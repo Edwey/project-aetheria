@@ -42,57 +42,51 @@
 
 ---
 
-## Per-Form Water Perks
+## Universal Water Movement (v4.1)
 
-### Slime
-- **Floats and swims at surface**: Default state is surface floating
-- **Dive**: Hold F to dive below surface
-- **Skip-dash**: Charged jump released at speed bounces off surface up to 3 times
-  - Charge while in water
-  - Release near surface
-  - Bounces up to 3 times with preserved speed
-- **Surface mechanics**: Normal movement on surface
-- **No breath cost**: Being in water costs nothing
+All nine forms obey the same hydrodynamic physical rules:
 
-### Wisp
-- **Skimming**: Skimming over water counts as "low"
-  - Breath refills at 60/s (same as ground)
-  - Free to move on surface
-- **Dive as mist**: Can dive into water as mist at normal speed
-  - No breath cost for diving
-  - Normal movement underwater
-- **Breath refill**: Refills breath when over water (low state)
-- **No slowdown**: Normal speed in water
-
-### Stone
-- **Sinks to bed**: Sinks to seabed and walks it
-  - Walks at full ground speed on seabed
-  - No need to surface
-- **Gathers fastest**: Seabed resources gathered in one hit
-- **Ignores currents**: Unaffected by water currents
-- **No breath cost**: Being in water costs nothing
+1. **No Underwater Glide**: Gliding, hovering-glide, and crystal sails are strictly disabled whenever the submerged fraction exceeds $8\%$.
+2. **Universal Swimming**:
+   - `WASD`: Paddles through water with $\sim 9\text{ m/s}^2$ drive force ($7\text{ m/s}^2$ for Lantern and Geode, $5\text{ m/s}^2$ for Obsidian).
+   - `Space`: Strokes upward up to $3.0\text{ m/s}$.
+   - Terminal swimming speed is governed naturally by quadratic water drag ($\vec{F}_{\text{drag}} = \frac{1}{2} \rho_w v_{\text{rel}}^2 C_d A$, where $\rho_w = 1000\text{ kg/m}^3$).
+3. **Lakebed & Seabed Walking**: Dense forms (Geode, Obsidian) sink to the floor, walk along the bed at full speed, and can jump upward from it. Obsidian does not stroke upward.
+4. **Planing Hydrodynamic Lift**: When moving horizontally above $3.5\text{ m/s}$ in the surface layer ($f_{\text{submerged}} \in [0.1, 0.7]$), planing lift allows dense skimming forms (Oobleck, Aerolite) to run across water without sinking.
+5. **No Bounce While Submerged**: Surface impact bounce is disabled while immersed in water.
 
 ---
 
-## Water Inputs
+## Per-Form Water Interactions (Nine Forms)
 
-### Shared Controls
-- **Space**: Swim up or jump out of water
-- **F**: Dive while submerged (replaces ground pound)
-- **Ride (Shift)**: Ride currents (only affects while Riding)
+### Slimes
+- **Oobleck**: Relative density 1.12. Sinks slowly when stationary, but above $3.5\text{ m/s}$ planing lift engages; runs fully on top of water above $5\text{ m/s}$.
+- **Dewdrop**: Relative density $0.8 + 0.19 B$ ($B \in [0, 1]$). Soaks water as ballast exclusively while submerged ($+0.50\text{ /s}$). Hold `K` for rocket water jet propulsion that exhausts ballast in ~2.5 s. Splats flat without bounce when ballast is full.
+- **Aether Bubble**: Relative density 0.25. Highly buoyant; floats naturally on surface with slow vertical bobbing; tap `J` for buoyant lift hop.
 
-### Per-Form Specific
-- **Slime**:
-  - Hold F underwater: Stay submerged
-  - Release F near surface: Surface
-  - Charge jump at surface: Skip-dash
-- **Wisp**:
-  - Hold Space: Rise (costs breath, but refills over water)
-  - V: Float (hold altitude)
-  - Default: Sink gently
-- **Stone**:
-  - Normal movement on seabed
-  - No special controls needed
+### Wisps
+- **Mist**: Relative density 0.08. Gaseous dispersion hovers effortlessly over water surfaces; skimming over water counts as ground proximity, regenerating breath tank at $+25\text{ /s}$.
+- **Zephyr**: Relative density 0.12. Agile surface skimmer; hold `K` for gust dash to push floating crates across lakes.
+- **Lantern**: Density condenses from 0.05 up to 2.40 by holding `K`. Condensing into hard-light causes the Lantern to sink deep into lakebeds; releasing `K` or running out of breath causes it to float back to the surface.
+
+### Stone
+- **Aerolite**: Relative density 0.55 (density < 1.0 floats naturally). Pumice-light stone; skims water efficiently at speed. Couples to thermals and currents like an air creature.
+- **Geode**: Relative density 2.60. Sinks to lakebed; rolls with near-zero friction; paddles at $7\text{ m/s}^2$ and jumps from lakebed.
+- **Obsidian**: Relative density 5.00. Plunges rapidly to lakebed; anchor (`J`) locks immovably to bed floor against strong river currents.
+
+---
+
+## Water Inputs & Controls
+
+| Action | Control | Behavior |
+| :--- | :--- | :--- |
+| **Swim / Paddle** | `WASD` / Arrows | Directional paddle drive ($9\text{ m/s}^2$; $7\text{ m/s}^2$ Geode/Lantern; $5\text{ m/s}^2$ Obsidian) |
+| **Upward Stroke** | `Space` | Upward swim stroke up to $3\text{ m/s}$ (disabled for Obsidian) |
+| **Jump from Bed** | `Space` | Jump impulse when grounded on lakebed/seabed |
+| **Water Jet** | `K` (hold) | Dewdrop rocket propulsion (expels ballast, rises in acceleration) |
+| **Condense Sink** | `K` (hold) | Lantern hard-light condensation (increases density to 2.4, sinking to floor) |
+| **Anchor** | `J` (hold) | Obsidian immovable bed anchor |
+| **Ride Current** | `Shift` | Harness river currents for directional boost |
 
 ---
 

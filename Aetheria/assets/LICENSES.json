@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-10-19T10:15:12.610Z",
+  "pipeline": "Aetheria CC0 Asset Ingestion",
+  "packs": [
+    {
+      "name": "Kenney Game Assets (Nature, Survival, Prototype, Platformer, Fantasy Town, Modular Dungeon, Pirate)",
+      "author": "Kenney (Asset Jesus)",
+      "website": "https://kenney.nl",
+      "license": "CC0 1.0 Universal (Public Domain Dedication)",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "attributionRequired": false,
+      "modelsIncluded": [
+        "tree_oak",
+        "tree_pine",
+        "tree_small",
+        "tree_tall",
+        "cactus",
+        "mushroom_red",
+        "mushroom_tan",
+        "flower_red",
+        "flower_yellow",
+        "flower_purple",
+        "campfire",
+        "boulder_large",
+        "rock_large",
+        "rock_small",
+        "rock_tall",
+        "crystal_geode",
+        "crate_wood",
+        "crate_large",
+        "barrel_wood",
+        "chest",
+        "lantern",
+        "canoe",
+        "boat_row",
+        "bed",
+        "pressure_plate_square",
+        "pressure_plate_round",
+        "gate_sliding",
+        "grate_metal",
+        "stairs_stone",
+        "ladder",
+        "hat_cap",
+        "hat_hard",
+        "charm_star",
+        "coin_gold"
+      ]
+    }
+  ]
+}

@@ -88,16 +88,19 @@ Per biome base strength (before modifiers):
   - Creates curl-like wind patterns
   - Strength: 2.4 m/s
 
-### Wind Interaction (Rule 4)
-- **Steady by default**: Wind never moves, slows, or lifts a creature
-- **Ride (Shift)**: Holding Ride lets wind carry and boost you
+### Wind Interaction & Physics Rules (v4)
+- **Universal Moor Rule**: With no player input and while grounded, an automatic moor force cancels ambient wind force up to a safety threshold cap. No form is ever pushed around or drifted helplessly while idle. Light forms gain from thermals and gliding, never from accidental drift.
+- **Atmospheric Currents Acceleration**: $\vec{a}_{\text{current}} = (\vec{u}_{\text{air}} - \vec{v}) \cdot \frac{A_{\text{coeff}} \cdot k}{m}$. Drives bodies toward ambient air velocity; force is inversely scaled by mass.
+- **Aerolite Lift Magic**: Aerolite possesses a stone body ($1.5\text{ kg}$ mass, stone drag, rigid collisions), but its aerodynamic current coupling uses an air-creature coefficient rather than $1 / m$. Updrafts, thermals, and gales carry it effortlessly, and it sparkles in thermals.
+- **Steady by Default (Rule 4)**: Wind never moves, slows, or lifts a grounded moving creature unless Riding or in an updraft/thermal.
+- **Ride (Shift)**: Holding Ride lets wind carry and boost you:
   - Tailwinds: Up to +40% speed boost
-  - Headwinds: Projected component cancelled (never slow you)
-  - Updrafts: Lift you (only while Riding)
-- **Per-form wind sensitivity**:
+  - Headwinds: Projected component cancelled (never slow you down)
+  - Updrafts: Lift you upward smoothly
+- **Per-Form Wind Sensitivity**:
   - Slime: 1.0x (base)
-  - Stone: 0.5x (less affected)
-  - Wisp: 2.0x (more affected, but 5x in general physics)
+  - Stone: 0.5x (heavy inertia resists drift; Aerolite is air-boosted)
+  - Wisp: 2.0x (light atmospheric coupling)
 
 ---
 

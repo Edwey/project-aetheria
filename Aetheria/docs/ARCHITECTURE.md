@@ -5,17 +5,20 @@
 - **Build Tool**: Vite 5.x
 - **Language**: TypeScript (strict mode)
 - **Renderer**: Three.js (r128+)
-- **Physics**: Rapier WebAssembly (@dimforge/rapier3d)
-- **Architecture**: ECS (Entity Component System)
-- **Assets**: GLB/GLTF 2.0 from 3dassets.dev, Grab3D
+- **Physics**: Single-engine architecture via `PhysicsWorld` interface (Jolt Physics WASM single-thread build with Phase 6 engine spike evaluating Jolt soft bodies vs custom 162-particle PBD slime solver)
+- **Architecture**: ECS (Entity Component System) with data-driven nine forms (Phase 5b)
+- **Assets**: CC0 GLB/GLTF 2.0 with manifest-driven fetcher (`pnpm assets:fetch`) and procedural Three.js fallbacks
+- **Units**: Relative density (water = 1); real water density (1000 kg/m³) is used only inside the quadratic water drag formula.
 
 ## Core Principles
 
-1. **Separation of Concerns**
-   - Simulation owns game state, physics, and saveable data
-   - Rendering owns scene composition, camera, and visuals
-   - UI owns DOM overlays, HUD, and menus
-   - No mixing between layers
+1. **Physics-First and Consistent**
+   - All nine forms obey the exact same physical laws; form differences emerge strictly from data (mass, relative density, drag coefficients, tanks), never special-case hacks.
+   - Simulation owns game state, physics, and saveable data via ECS.
+   - Rendering owns scene composition, camera, and visuals.
+   - UI owns DOM overlays, HUD, and menus.
+   - Universal Moor Rule: when grounded and idle, a moor force cancels wind drift up to a cap.
+
 
 2. **Data-Oriented Design**
    - ECS with Structure-of-Arrays (SoA) component storage
@@ -107,17 +110,19 @@ Aetheria/
 
 ## Physics Integration
 
-### Rapier Setup
-- WASM module loaded via @dimforge/rapier3d
-- Fixed timestep (1/60 s)
-- Deterministic simulation
-- Heightfield terrain
+### Single-Engine Architecture (`PhysicsWorld` Interface)
+- Single-engine physics interface abstracts the underlying engine (Jolt Physics WASM single-thread build)
+- Phase 6 engine spike: compares Jolt soft body vs custom 162-particle PBD solver behind the exact same `PhysicsWorld` interface
+- Fixed timestep simulation (1/60 s) with accumulator clamping (`maxSubSteps = 3`)
+- Single world handles rigid bodies, heightfield terrain, soft bodies (with pressure/volume constraints), character controller, and buoyancy
+- Lazy WASM loading after title screen (~0.74 MB gzip WASM + 0.14 MB glue cached by service worker)
+- Mobile slime tier: ~162 simulation particles driving render mesh via GPU Phong-tessellation skinning
 
 ### Simulation-Rendering Boundary
-- Rapier owns collision and dynamics
-- ECS owns game-specific state (forms, abilities)
-- Three.js mirrors Rapier transforms each frame
-- No direct Three.js objects in simulation
+- `PhysicsWorld` owns collision detection and spatial dynamics
+- ECS owns game-specific state, nine-form data tables, abilities, and resource tanks
+- Three.js mirrors physics transforms each visual frame
+- Zero direct Three.js objects inside simulation state
 
 ## Asset Pipeline
 
@@ -239,28 +244,30 @@ Aetheria/
 - Asset optimization
 
 ## Migration Path from Aetheria.html
+`Aetheria.html` is a throwaway tester build published only to test feel. It constrains nothing in the production codebase.
 
-### Keep (Physics & Rules)
-- Gravity: -20
-- Particle radius: 0.07
-- Form physics constants
-- Movement/jumping/gliding mechanics
-- All gameplay rules from CHARACTERS.md
+### Keep (Feel & Physics Truth)
+- Gravity: -20 m/s²
+- Particle radius: 0.07 m
+- Jump feel, squash, soft-slime behaviour, performance tiers
+- Proven feel numbers reproduced cleanly in production
 
-### Change (Architecture)
-- Monolithic → Modular ECS
-- Custom JS physics → Rapier WASM
-- Inline code → TypeScript packages
-- Mixed concerns → Layered architecture
+### Change (Architecture & v4 Roadmap)
+- Monolithic prototype → Modular ECS packages
+- Custom JS prototype physics → Jolt Physics WASM behind `PhysicsWorld` interface
+- Legacy per-creature presets → Nine forms as pure data (Phase 5b)
+- Universal movement verbs: walk, jump, climb, glide, hop for all forms
+- Build order: Loop Slice (Phase 6b: 3 slice forms explore, harvest, craft, build) before expanding remaining forms
+- CI performance gates as Phase 6 exit criterion
 
-### Change (Visuals)
-- Basic toon shading → Cozy low-poly + NPR shaders
-- Simple geometry → GLB models from 3dassets.dev
-- Basic UI → DOM overlays with cozy aesthetic
-- Single color → Soft pastel palette
+### Change (Visuals & Assets)
+- Procedural-first Three.js geometry + CC0 GLB pipeline (`pnpm assets:fetch` with SHA-256 manifest)
+- Procedural Three.js fallback guarantee (game runs with empty asset cache)
+- Procedural Web Audio synthesizer (zero audio file dependencies)
+- Painted pastel palette, soft shadows, edge vignette, and bloom
 
 ## Reference
 
-- Original prototype: `Aetheria.html` (physics rules only)
-- Asset sources: 3dassets.dev, Grab3D.com
-- Visual reference: A Short Hike, Susurrus (cozy low-poly)
+- Tester prototype: `Aetheria.html` (reference for feel only)
+- Asset sources: Kenney CC0, Poly Haven API
+- Visual reference: A Short Hike, Susurrus (cozy low-poly miniature)

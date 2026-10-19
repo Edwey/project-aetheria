@@ -64,23 +64,26 @@ Every change must fill in this table. A cell that reads "worse" blocks the chang
 ### Dependencies
 
 - **Verify Before Adding** - Before adding a dependency, check that this codebase already uses it (look at package.json).
-- **When Adding**: Prefer running `npm add` instead of editing package.json directly.
+- **When Adding**: Prefer running `pnpm add` instead of editing package.json directly.
 - **Version Policy**: Strongly prefer versions published at least 7 days ago. Avoid floating ranges (`latest`, `*`, unbounded `>=`).
 - **Three.js Version**: Pin r128+ in package.json. Upgrading is its own later task.
-- **Rapier**: Use @dimforge/rapier3d with pinned version.
+- **Physics**: Single-engine architecture via `PhysicsWorld` interface (Phase 6 spike: Jolt Physics WASM single-thread build vs custom 162-particle PBD slime solver).
 
 ### Architecture Rules
 
-- **Layer Dependency** - Never import from higher layers. Core has no dependencies. Sim depends only on core. Render depends on core and sim (read-only). UI depends on core and sim (read-only).
+- **Layer Dependency** - Never import from higher layers. Core has no dependencies. Sim depends only on core. Render depends on core and sim (read-only). UI depends on core and sim (read-only). Assets depends on core.
 - **ECS Data Flow** - Simulation owns component data. Rendering reads component data to update Three.js objects. Never store Three.js objects in components.
+- **Forms as Pure Data (Phase 5b)** - All nine forms are data rows in Table A1. Adding a form never adds a system.
+- **Universal Movement Verbs** - All forms support walk, jump, climb, glide, and hop.
 - **Type Safety** - Use branded types for entity IDs. Use discriminated unions for variant data.
 - **No Circular Dependencies** - Package graph must be a DAG.
 
-### Testing
+### Testing & CI Performance Gates
 
 - **Unit Tests** - Test pure functions in isolation. Core and sim packages must have no Three.js dependencies in tests.
 - **Integration Tests** - Test package interactions in test fixtures.
 - **ECS Tests** - Test entity lifecycle, component queries, system execution.
+- **CI Performance Gates (Phase 6 Exit Criterion)** - Gated via `perf-budget.json`: physics benchmark ms/step (<2ms mobile, <3.5ms desktop), bundle size checks (<400KB initial JS, <800KB WASM gzip), and 6x CPU-throttled browser frame test (frame time <16.6ms, draw calls 25-35, triangles <60k).
 - **Playwright Tests** - End-to-end gameplay scenarios and UI interaction.
 
 ### Performance
@@ -88,15 +91,14 @@ Every change must fill in this table. A cell that reads "worse" blocks the chang
 - **Budgets** - See PERFORMANCE.md for budgets (400KB initial JS, 2.5MB first load, 4MB models gzipped).
 - **Zero Allocations in Hot Loops** - Reuse objects, use object pools, avoid GC pressure.
 - **InstancedMesh** - Use InstancedMesh for repeated geometry (flora, particles).
-- **Rapier WASM** - Use Rapier WASM for physics, not custom JS implementation.
+- **Mobile Slime Skinning** - 162 simulation particles driving render mesh via GPU Phong-tessellation skinning.
 - **FPS Governor** - When frames stay slow, lower quality mid-session. Never raise it mid-session.
 
 ### Prototype Reference
 
-- **Reference Only** - `Aetheria.html` is reference for physics rules and constants only. Do not copy code structure.
-- **Physics Constants** - Gravity -20, particle radius 0.07, form-specific parameters from CHARACTERS.md.
-- **Keep Rules** - All core game rules (Rule 2, Rule 4, peaceful game) must be preserved.
-- **Change Implementation** - Use ECS, Rapier, TypeScript instead of custom JS physics and monolithic structure.
+- **Tester Only** - `Aetheria.html` is a throwaway tester build for feel only; its code is not copied.
+- **Physics Constants** - Numbers in CHARACTERS.md, ENVIRONMENT.md, and PLAN.md are the source of truth.
+- **Keep Rules** - All core game pillars and rules (Rule 2 advantages only, Rule 4 steady wind, Universal Moor rule, peaceful game) must be preserved.
 
 ### Documentation
 

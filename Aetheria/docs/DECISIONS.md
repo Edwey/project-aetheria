@@ -21,15 +21,15 @@ This document records assumptions made during development. Each entry includes a
 **Rationale**: Type safety catches bugs early, better IDE support, self-documenting code.
 **Change me if**: Development speed is too slow, or TypeScript compilation becomes a bottleneck.
 
-### Rapier WASM Physics
-**Decision**: Use @dimforge/rapier3d instead of custom JS physics.
-**Rationale**: 2-3x faster, cross-platform deterministic, actively maintained, less custom code.
-**Change me if**: WASM loading fails on target browsers, or bundle size is too large.
+### Physics Engine & Single-Engine Architecture
+**Decision**: Standardize on a single-engine physics abstraction via `PhysicsWorld` interface, using Jolt Physics (WASM, single-thread build). Run an engine spike in the first 2 days of Phase 6 comparing Jolt soft bodies vs a custom 162-particle PBD slime solver behind the same interface.
+**Rationale**: Combining rigid bodies, soft bodies (with volume/pressure constraints), character controller, heightfields, and buoyancy in one engine eliminates cross-engine coupling and synchronization issues. Jolt WASM is ~0.74 MB gzip wasm + 0.14 MB glue, lazy-loaded after title screen.
+**Change me if**: The Phase 6 engine spike proves custom PBD solver has significantly better mobile performance or feel.
 
-### GLB Asset Format
-**Decision**: Standardize on GLB (binary glTF with embedded textures) for all 3D assets.
-**Rationale**: Three.js native support, single file per model, CDN-ready from 3dassets.dev.
-**Change me if**: Need advanced features only available in other formats, or compression is insufficient.
+### GLB Asset Format & CC0 Pipeline
+**Decision**: Manifest-driven CC0 asset fetcher (`pnpm assets:fetch`) saving to ignored cache directories, with procedural Three.js fallbacks for every asset.
+**Rationale**: Guarantees zero licensing risk, keeps git repository lean (no binary bloat), and ensures the game runs cleanly even with an empty assets folder.
+**Change me if**: Asset requirements exceed procedural/CC0 availability.
 
 ---
 
@@ -55,67 +55,57 @@ This document records assumptions made during development. Each entry includes a
 ## Visual Style Decisions
 
 ### Cozy Low-Poly Aesthetic
-**Decision**: Use cozy low-poly style with soft pastel palette, NPR shaders.
-**Rationale**: Matches "peaceful/cozy" game goal, different from slime lab, inspired by A Short Hike/Susurrus.
+**Decision**: Use cozy low-poly style with soft pastel palette, NPR shaders, flat-shaded terrain and props, smooth soft creatures.
+**Rationale**: Matches "peaceful/cozy" game goal, miniature sandbox aesthetic.
 **Change me if**: Playtesting shows aesthetic doesn't resonate, or performance issues with shaders.
 
 ### Kuwahara Post-Processing
-**Decision**: Use Kuwahara filter for painterly/watercolor effect.
-**Rationale**: Unique visual identity, cozy feel, technical showcase.
-**Change me if**: Performance impact is too high on mobile, or effect looks unnatural.
-
-### Asset Sources
-**Decision**: Use 3dassets.dev and Grab3D.com for CC0 GLB models.
-**Rationale**: High quality, web-optimized, CC0 license, CDN-ready.
-**Change me if**: Need specific assets not available, or licensing requirements change.
+**Decision**: Use Kuwahara filter for painterly/watercolor effect in Full quality; disable on mobile/Light quality.
+**Rationale**: Unique visual identity, cozy feel, adaptive performance scaling.
+**Change me if**: Performance impact is too high, or effect looks unnatural.
 
 ---
 
-## Gameplay Decisions
+## Gameplay & Physics Decisions (v4)
 
-### Three Creatures Only
-**Decision**: Keep only slime, wisp, stone as playable forms. No additional creatures.
-**Rationale**: Focus on quality over quantity, each form has depth with variants.
-**Change me if**: User feedback requests more variety, or gameplay needs expand.
+### Nine Forms as Pure Data (Phase 5b)
+**Decision**: Replace legacy prototype forms (Goo, Jelly Ball, Cube, Cloud, Motes, Ring, Boulder, Pillar, Shard) with nine data-driven forms in a single unified table (Slime: Oobleck, Dewdrop, Aether Bubble; Wisp: Mist, Zephyr, Lantern; Stone: Aerolite, Geode, Obsidian).
+**Rationale**: Adding a form never adds a system; differences come strictly from mass, relative density, drag, and tanks. Eliminates modal confusion.
+**Change me if**: Specific forms require fundamentally new physical simulation solvers.
 
-### Form Variants per Creature
-**Decision**: Each creature has 3 distinct base form variants (slime: goo/jelly ball/jelly cube; wisp: cloud/motes/ring; stone: boulder/pillar/shard) developed phase-by-phase.
-**Rationale**: 3 base forms per creature provides distinct, memorable physics properties and gameplay feel without redundant overlap.
-**Change me if**: Playtesting requests further sub-variants.
+### Loop Slice (Phase 6b)
+**Decision**: Prove the complete game loop (explore, harvest, craft, build, biomes) on a bounded island with three forms (one per family: Oobleck, Zephyr, Geode) before expanding to the remaining six forms.
+**Rationale**: Ensures core gameplay loop is fun, stable, and performant before scaling content.
+**Change me if**: Playtesting requires all nine forms simultaneously to evaluate loop balance.
 
-### Physics Constants from Prototype
-**Decision**: Keep all physics constants from Aetheria.html (gravity -20, particle radius 0.07, etc.).
-**Rationale**: Preserves proven gameplay feel, no need to rebalance from scratch.
-**Change me if**: Playtesting shows issues, or new architecture requires different approach.
+### Units: Relative Density
+**Decision**: All densities are specified relative to water ($\text{water} = 1.0$).
+**Rationale**: Intuitive physical reasoning (forms with density < 1 float, > 1 sink). Real water density ($1000\text{ kg/m}^3$) appears only inside the quadratic water drag formula.
+**Change me if**: Simulation calculations require SI units across all internal equations.
 
-### Peaceful Game Only
-**Decision**: No combat, damage, enemies, hunger, drowning, or punitive mechanics.
-**Rationale**: Matches "cozy/peaceful" goal, different from typical games.
-**Change me if**: Game becomes boring without challenge, or user feedback requests conflict.
+### Form Identity: Bounce, Water and Air (v4.1)
+**Decision**:
+1. **Airy Bubble**: Keep Aether Bubble airy rather than springy (restitution 0.5, low momentum, $0.35g$ gravity, long hang times, slow falls).
+2. **Dewdrop Ballast Splat**: Bouncy when dry (0.6), dropping to 0 (flat splat with splash particles) as ballast fills with water.
+3. **Universal Water Movement**: No glide while submerged (>8% submerged). Universal swimming replaces glide (`WASD` paddles at 9 m/s², `Space` upward stroke at 3 m/s). Dense forms walk the lakebed and jump from it.
+4. **Aerolite Lift Magic**: Stone body (mass 1.5, stone drag, rigid collisions), but air-creature current coupling (updrafts/thermals carry it detached from mass).
+5. **Universal Moor Rule**: Grounded idle forms cancel wind drift up to a safety threshold.
+**Rationale**: Provides sharp, distinct identity for all forms while eliminating frustrating physics traps (such as getting blown away while idle or gliding underwater).
+**Change me if**: Specific traversal puzzles require underwater gliding or idle wind drift.
 
 ---
 
-## Performance Decisions
+## Performance & CI Decisions
 
-### Fixed Timestep (1/60s)
-**Decision**: Use fixed timestep of 1/60s for physics simulation.
-**Rationale**: Deterministic, consistent across devices, prevents tunneling.
-**Change me if**: Target devices can't sustain 60 FPS, or need different timestep.
+### CI Performance Gates (Phase 6 Exit Criterion)
+**Decision**: Implement strict CI performance gates driven by `perf-budget.json`: physics ms/step benchmark, bundle-size check (initial, wasm, total gzip), and 6x CPU-throttled browser frame test gating frame time, draw calls (<35), and triangles (<60k).
+**Rationale**: Enforces performance budgets continuously rather than deferring optimization to the end of development.
+**Change me if**: CI infrastructure cannot reliably execute headless GPU/WASM frame tests.
 
-### Quality Levels (Full/Light)
-**Decision**: Two quality levels: Full (desktop) and Light (mobile).
-**Rationale**: Simple choice, covers most devices, easy to implement.
-**Change me if**: Need more granular control, or devices have wider performance range.
-
-### Draw Call Budget (25-35)
-**Decision**: Target 25-35 draw calls per frame.
-**Rationale**: Good balance of visual quality and performance, achievable with instancing.
-**Change me if**: Visuals need more complexity, or hardware improves significantly.
-
-### Bundle Size Budget (400KB gzipped)
-**Decision**: Target <400KB gzipped for initial JS load.
-**Rationale**: Fast load on mobile, reasonable for 3D game with Three.js.
-**Change me if**: Game complexity requires more code, or compression improves.
+### Simulation Consistency over Cross-Device Determinism
+**Decision**: Run fixed timestep (1/60s) with decoupled accumulator clamping, but do not mandate bit-identical floating point across devices (single player sandbox).
+**Rationale**: Cross-device WASM bit-determinism adds massive complexity for zero gameplay gain in a single-player cozy game with local saves.
+**Change me if**: Multiplayer synchronization is introduced.
 
 ---
 

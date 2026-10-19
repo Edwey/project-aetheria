@@ -16,11 +16,12 @@
 
 ## Bundle Budgets
 
-### JavaScript
+### JavaScript & WASM
 - **Initial JS (gzipped)**: < 400 KB
 - **First load**: < 2.5 MB
-- **Includes**: Three.js, Rapier WASM, game code, asset manifests
-- **Note**: Rapier WASM is loaded separately, not counted in JS budget
+- **Includes**: Three.js, game code, asset manifests
+- **Physics Engine WASM**: Jolt Physics WASM single-thread build (~0.74 MB gzip WASM + 0.14 MB glue), loaded lazily after the title screen and cached by service worker
+
 
 ### Models
 - **Total models (gzipped)**: < 4 MB
@@ -74,26 +75,26 @@
 ## Quality Settings
 
 ### Full Quality (Desktop)
-- **Slime particles**: 642
+- **Slime particles**: 642 (or desktop Jolt soft-body budget)
 - **Wisp motes**: 96
-- **Stone particles**: 642
+- **Stone mesh**: High-detail procedural low-poly
 - **Weather particles**: 650
 - **Pixel ratio**: Up to 2
 - **Shadow map**: 2048
 - **Kuwahara shader**: Enabled
 - **Anti-aliasing**: Enabled (FXAA or MSAA)
-- **Physics**: Rapier WASM with full precision
+- **Physics**: Full precision Jolt WASM stepping
 
 ### Light Quality (Mobile Default)
-- **Slime particles**: 162
+- **Slime particles**: ~162 simulation particles driving render mesh via GPU Phong-tessellation skinning
 - **Wisp motes**: 48
-- **Stone particles**: 162
+- **Stone mesh**: Lightweight low-poly
 - **Weather particles**: 350
 - **Pixel ratio**: At most 1.25
 - **Shadow map**: 1024
 - **Kuwahara shader**: Disabled
 - **Anti-aliasing**: Disabled or reduced
-- **Physics**: Rapier WASM with reduced substeps if needed
+- **Physics**: Jolt WASM optimized mobile solver iterations
 
 ### Auto Selection
 - **Detect**: Touch device → Light quality
@@ -102,17 +103,37 @@
 
 ---
 
+## CI Performance Gates (Phase 6 Exit Criterion)
+
+All builds and pull requests are verified against `perf-budget.json` in automated CI:
+
+1. **Physics Benchmark**:
+   - Per-tier step time: $\le 2.0\text{ ms}$ on mobile tier (162 particles), $\le 3.5\text{ ms}$ on desktop tier.
+2. **Bundle-Size Check**:
+   - Initial JS (gzipped): $\le 400\text{ KB}$.
+   - Physics WASM bundle (gzipped): $\le 800\text{ KB}$.
+   - Total first-load asset payload: $\le 2.5\text{ MB}$.
+3. **CPU-Throttled (6x) Browser Frame Test**:
+   - Headless browser test executing under 6x CPU throttling.
+   - JS frame time budget: $\le 16.6\text{ ms}$ (steady 60 FPS target) / floor $\le 33.3\text{ ms}$ (30 FPS minimum).
+   - Draw calls per frame: $25\text{–}35$ max.
+   - Visible triangles per frame: $\le 60,000$.
+
+*A phase is not marked complete while any CI performance gate fails.*
+
+---
+
 ## Physics Performance
 
-### Rapier WASM Configuration
-- **Fixed timestep**: 1/60 s
-- **Substeps**: 4 (Full), 2 (Light)
-- **Solver iterations**: 8 (Full), 4 (Light)
-- **Broadphase**: Dynamic AABB tree
-- **Narrowphase**: Default Rapier solver
+### PhysicsWorld Configuration (Jolt Physics WASM)
+- **Fixed timestep**: 1/60 s decoupled from render loop
+- **Max substeps**: 3 (accumulator clamping to prevent spiral of death)
+- **Single-world architecture**: Rigid bodies, soft bodies, heightfields, character controller, and buoyancy all simulated in one unified physics world
+- **Spike Decision**: Evaluates Jolt soft body vs custom 162-particle PBD slime solver behind the same interface
+- **Moor Rule**: Zero CPU overhead moor force applied to idle grounded bodies to prevent ambient wind drift
 
 ### Performance Targets
-- **Physics time**: < 3 ms per frame (60 FPS target)
+- **Physics time**: < 3.0 ms per frame on desktop, < 2.0 ms on mobile
 - **WASM overhead**: < 0.5 ms per frame
 - **Memory**: < 32 MB for physics world
 

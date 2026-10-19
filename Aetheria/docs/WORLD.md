@@ -136,10 +136,10 @@ flora.flowers // Array of flower objects
 - **Forms**: Slime and stone (wisp flies over)
 - **Cooldown**: 0.3 s
 
-### Gliding
-- **Slime**: Hold Space in air, fall cap -2.2 m/s
-- **Stone**: Crystal sail, fall cap -3 m/s
-- **Wisp**: Float mode (V) holds altitude, rise (Space) costs breath
+### Gliding & Aerial Movement
+- **Slime (Oobleck / Dewdrop / Bubble)**: Hold `Space` in air for aerated pancake parachute; fall velocity capped at -2.2 m/s (-1.2 m/s for Bubble).
+- **Stone (Aerolite / Geode / Obsidian)**: Hold `Space` in air; Aerolite leverages high lift coefficient ($A_{\text{coeff}} \cdot k / m$) to ride thermals; Geode/Obsidian deploy crystal sail, fall velocity capped at -3.0 m/s.
+- **Wisp (Mist / Zephyr / Lantern)**: Hold `Space` to ascend/rise (costs breath tank at 20/s); low aerodynamic density yields natural buoyant drift without descent penalty.
 
 ### Bridges
 - **Connect**: Sky islands to each other and to landmass
@@ -147,16 +147,16 @@ flora.flowers // Array of flower objects
 - **Walking**: Normal physics on bridges
 
 ### Reachability Test
-- **Requirement**: Every island reachable by every form
+- **Requirement**: Every island reachable by all nine forms across all 3 creature families.
 - **Test path**:
   1. Start at island spawn
   2. Use thermals, trampolines, gliding, bridges
   3. Reach every other island
   4. Return to landmass
 - **Per-form verification**:
-  - Slime: Sticky climb + glide
-  - Wisp: Wall-hug + float + rise
-  - Stone: Piton climb + crystal sail
+  - Slime: Elastic bounce / trampoline chain + sticky wall climb + parachute glide
+  - Wisp: Space-rise ascent + wind draft glide + phase through barriers
+  - Stone: Updraft thermal ride (Aerolite) / piton climb + crystal sail glide (Geode)
 
 ---
 
