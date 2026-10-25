@@ -17,6 +17,9 @@ import * as THREE from 'three';
 import {
   FlatHeightfieldWithTrench,
   RigidProxySimulator,
+  collideStaticBodies,
+  createStaticAABB,
+  type StaticAABB,
 } from '../packages/sim/src/physics-spike.js';
 import { createCutawayStandardMaterial } from '../packages/render/src/cutaway-shader.js';
 
@@ -364,6 +367,102 @@ basinFloor.position.set(0, -1.5, 0);
 waterBasinGroup.add(basinFloor);
 scene.add(waterBasinGroup);
 
+// ---------------------------------------------------------------------------
+// 3b. Static Collision Bodies (AABB colliders for all course obstacles)
+// ---------------------------------------------------------------------------
+
+
+// Course 2: Grate obstacle colliders (pillars + ceiling)
+// Positions are RELATIVE TO grateGroup.position (10, 0, 0)
+const grateColliders: StaticAABB[] = [
+  // Left pillar: center (10 + -1.2, 0.25, 0), size (0.4, 0.5, 3.0)
+  createStaticAABB(10 - 1.2, 0.25, 0, 0.4, 0.5, 3.0, 0.15, 0.4),
+  // Right pillar: center (10 + 1.2, 0.25, 0), size (0.4, 0.5, 3.0)
+  createStaticAABB(10 + 1.2, 0.25, 0, 0.4, 0.5, 3.0, 0.15, 0.4),
+  // Overhead grate: center (10, 0.54, 0), size (2.4, 0.08, 2.4)
+  createStaticAABB(10, 0.54, 0, 2.4, 0.08, 2.4, 0.05, 0.2),
+];
+
+// Course 3: Trench wall colliders
+// Positions are RELATIVE TO trenchGroup.position (-10, 0, 0)
+const trenchColliders: StaticAABB[] = [
+  // Left wall: center (-10 + -0.2, -0.15, 0), size (0.04, 0.3, 8)
+  createStaticAABB(-10 - 0.2, -0.15, 0, 0.04, 0.3, 8, 0.1, 0.5),
+  // Right wall: center (-10 + 0.2, -0.15, 0), size (0.04, 0.3, 8)
+  createStaticAABB(-10 + 0.2, -0.15, 0, 0.04, 0.3, 8, 0.1, 0.5),
+];
+
+// Course 4: Water basin floor and edge walls
+const basinColliders: StaticAABB[] = [
+  // Basin floor: center (0, -1.5, -10), size (8.2, 0.2, 8.2)
+  createStaticAABB(0, -1.5, -10, 8.2, 0.2, 8.2, 0.05, 0.4),
+  // Basin edge walls (4 sides)
+  createStaticAABB(-4.1, -0.75, -10, 0.2, 1.5, 8.2, 0.1, 0.3),
+  createStaticAABB(4.1, -0.75, -10, 0.2, 1.5, 8.2, 0.1, 0.3),
+  createStaticAABB(0, -0.75, -14.1, 8.2, 1.5, 0.2, 0.1, 0.3),
+  createStaticAABB(0, -0.75, -5.9, 8.2, 1.5, 0.2, 0.1, 0.3),
+];
+
+// Cutaway wall collider (always present but only active when visible)
+const cutawayWallCollider = createStaticAABB(0, 2.0, 3.5, 3.5, 4.0, 0.6, 0.2, 0.5);
+
+// Some extra scattered test obstacles to make Phase 0 showcase more interesting
+// Crate near bounce zone
+const crateGeo = new THREE.BoxGeometry(1.0, 1.0, 1.0);
+const crateMat = new THREE.MeshStandardMaterial({ color: 0xb07d4f, roughness: 0.85 });
+const crate1 = new THREE.Mesh(crateGeo, crateMat);
+crate1.position.set(3, 0.5, 2);
+crate1.castShadow = true;
+crate1.receiveShadow = true;
+scene.add(crate1);
+
+const crate2 = new THREE.Mesh(crateGeo, crateMat);
+crate2.position.set(-2, 0.5, -3);
+crate2.castShadow = true;
+crate2.receiveShadow = true;
+scene.add(crate2);
+
+// Tall pillar as obstacle
+const obstPillarGeo = new THREE.BoxGeometry(0.8, 2.5, 0.8);
+const obstPillarMat = new THREE.MeshStandardMaterial({ color: 0x6b8fa3, roughness: 0.7, metalness: 0.3 });
+const obstPillar = new THREE.Mesh(obstPillarGeo, obstPillarMat);
+obstPillar.position.set(5, 1.25, -4);
+obstPillar.castShadow = true;
+obstPillar.receiveShadow = true;
+scene.add(obstPillar);
+
+// Colliders for test obstacles (always active)
+const alwaysColliders: StaticAABB[] = [
+  createStaticAABB(3, 0.5, 2, 1.0, 1.0, 1.0, 0.2, 0.4),    // Crate 1
+  createStaticAABB(-2, 0.5, -3, 1.0, 1.0, 1.0, 0.2, 0.4),   // Crate 2
+  createStaticAABB(5, 1.25, -4, 0.8, 2.5, 0.8, 0.15, 0.3),  // Pillar
+];
+
+/**
+ * Returns the active collider list based on current course + visibility state.
+ */
+function getActiveColliders(): StaticAABB[] {
+  const colliders: StaticAABB[] = [...alwaysColliders];
+
+  // Course-specific colliders
+  if (activeCourse === 2) {
+    colliders.push(...grateColliders);
+  }
+  if (activeCourse === 3) {
+    colliders.push(...trenchColliders);
+  }
+  if (activeCourse === 4) {
+    colliders.push(...basinColliders);
+  }
+
+  // Cutaway wall only when visible
+  if (cutawayWallMesh.visible) {
+    colliders.push(cutawayWallCollider);
+  }
+
+  return colliders;
+}
+
 // Cutaway Occlusion Wall (Toggled with T)
 const wallGeo = new THREE.BoxGeometry(3.5, 4.0, 0.6);
 const { material: cutawayMat, uniforms: cutawayUniforms } = createCutawayStandardMaterial(
@@ -698,6 +797,7 @@ let lastTime = performance.now();
 const FIXED_DT = 1 / 60;
 let accumulator = 0;
 let stepDurationMs = 0;
+let obstacleContacts = 0;
 
 // Hide loading screen
 loadingEl.style.opacity = '0';
@@ -728,22 +828,33 @@ function animate(now: number) {
     coyoteTime = 0;
   }
 
-  // Read movement inputs relative to camera yaw
-  let inputX = 0;
-  let inputZ = 0;
-  if (keysDown.has('KeyW') || keysDown.has('ArrowUp')) inputZ -= 1;
-  if (keysDown.has('KeyS') || keysDown.has('ArrowDown')) inputZ += 1;
-  if (keysDown.has('KeyA') || keysDown.has('ArrowLeft')) inputX -= 1;
-  if (keysDown.has('KeyD') || keysDown.has('ArrowRight')) inputX += 1;
+  // Read movement inputs:
+  // Forward/backward: W / ArrowUp = forward into screen (+1), S / ArrowDown = backward towards camera (-1)
+  // Left/right: D / ArrowRight = right (+1), A / ArrowLeft = left (-1)
+  let inputForward = 0;
+  let inputStrafe = 0;
+  if (keysDown.has('KeyW') || keysDown.has('ArrowUp')) inputForward += 1;
+  if (keysDown.has('KeyS') || keysDown.has('ArrowDown')) inputForward -= 1;
+  if (keysDown.has('KeyD') || keysDown.has('ArrowRight')) inputStrafe += 1;
+  if (keysDown.has('KeyA') || keysDown.has('ArrowLeft')) inputStrafe -= 1;
 
-  // Camera-relative input transformation
-  const forwardX = Math.sin(camYaw);
-  const forwardZ = Math.cos(camYaw);
+  // Camera horizontal vectors:
+  // Forward points from camera to target (into the screen): (-sin, -cos)
+  // Right points to the right of the screen: (cos, -sin)
+  const forwardX = -Math.sin(camYaw);
+  const forwardZ = -Math.cos(camYaw);
   const rightX = Math.cos(camYaw);
   const rightZ = -Math.sin(camYaw);
 
-  const moveDirX = inputX * rightX - inputZ * forwardX;
-  const moveDirZ = inputX * rightZ - inputZ * forwardZ;
+  let moveDirX = inputForward * forwardX + inputStrafe * rightX;
+  let moveDirZ = inputForward * forwardZ + inputStrafe * rightZ;
+
+  // Normalize diagonal movement
+  const moveLen = Math.hypot(moveDirX, moveDirZ);
+  if (moveLen > 0.001) {
+    moveDirX /= moveLen;
+    moveDirZ /= moveLen;
+  }
 
   // Fixed physics time-stepping
   while (accumulator >= FIXED_DT) {
@@ -769,6 +880,9 @@ function animate(now: number) {
       simulator.vel.x = moveDirX * currentForm.moveSpeed;
       simulator.vel.z = moveDirZ * currentForm.moveSpeed;
     }
+
+    // Resolve sphere-vs-AABB collisions with all active obstacles
+    obstacleContacts = collideStaticBodies(simulator, getActiveColliders());
 
     stepDurationMs = performance.now() - t0;
     accumulator -= FIXED_DT;
@@ -824,7 +938,8 @@ function animate(now: number) {
   elStepTime.textContent = `${stepDurationMs.toFixed(3)} ms`;
   elVy.textContent = `${vy.toFixed(2)} m/s`;
   elBounces.textContent = simulator.bounceCount.toString();
-  elContacts.textContent = simulator.isGrounded ? '1 (Grounded)' : '0 (Air)';
+  const groundLabel = simulator.isGrounded ? 'Ground' : 'Air';
+  elContacts.textContent = `${groundLabel}${obstacleContacts > 0 ? ` + ${obstacleContacts} obj` : ''}`;
 }
 
 requestAnimationFrame(animate);

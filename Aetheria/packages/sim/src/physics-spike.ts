@@ -224,6 +224,128 @@ export class RigidProxySimulator {
 }
 
 // ---------------------------------------------------------------------------
+// 2b. Static AABB Collider (for obstacles, walls, pillars)
+// ---------------------------------------------------------------------------
+
+export interface StaticAABB {
+  /** Centre of the box in world space */
+  cx: number;
+  cy: number;
+  cz: number;
+  /** Half-extents along each axis */
+  hx: number;
+  hy: number;
+  hz: number;
+  /** Restitution coefficient for bouncing off this obstacle (0 = no bounce) */
+  restitution?: number;
+  /** Friction coefficient for sliding along this obstacle */
+  friction?: number;
+}
+
+/**
+ * Creates a StaticAABB from a position and full size (width, height, depth).
+ */
+export function createStaticAABB(
+  cx: number,
+  cy: number,
+  cz: number,
+  width: number,
+  height: number,
+  depth: number,
+  restitution = 0.1,
+  friction = 0.3
+): StaticAABB {
+  return { cx, cy, cz, hx: width / 2, hy: height / 2, hz: depth / 2, restitution, friction };
+}
+
+/**
+ * Resolves sphere-vs-AABB collision for the RigidProxySimulator.
+ * Returns the number of collisions resolved.
+ */
+export function collideStaticBodies(
+  sim: RigidProxySimulator,
+  bodies: readonly StaticAABB[]
+): number {
+  let contacts = 0;
+  const r = sim.config.radius;
+
+  for (const box of bodies) {
+    // Find the closest point on the AABB to the sphere centre
+    const closestX = Math.max(box.cx - box.hx, Math.min(sim.pos.x, box.cx + box.hx));
+    const closestY = Math.max(box.cy - box.hy, Math.min(sim.pos.y, box.cy + box.hy));
+    const closestZ = Math.max(box.cz - box.hz, Math.min(sim.pos.z, box.cz + box.hz));
+
+    const dx = sim.pos.x - closestX;
+    const dy = sim.pos.y - closestY;
+    const dz = sim.pos.z - closestZ;
+
+    const distSq = dx * dx + dy * dy + dz * dz;
+
+    if (distSq < r * r && distSq > 1e-12) {
+      const dist = Math.sqrt(distSq);
+      // Penetration normal (from box surface to sphere centre)
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const nz = dz / dist;
+      const penetration = r - dist;
+
+      // Push sphere out of the box
+      sim.pos.x += nx * penetration;
+      sim.pos.y += ny * penetration;
+      sim.pos.z += nz * penetration;
+
+      // Velocity projection along the normal
+      const velDotN = sim.vel.x * nx + sim.vel.y * ny + sim.vel.z * nz;
+
+      // Only resolve if moving into the box
+      if (velDotN < 0) {
+        const rest = box.restitution ?? 0.1;
+        // Remove normal component and apply restitution
+        sim.vel.x -= (1 + rest) * velDotN * nx;
+        sim.vel.y -= (1 + rest) * velDotN * ny;
+        sim.vel.z -= (1 + rest) * velDotN * nz;
+
+        // Tangential friction
+        const fric = box.friction ?? 0.3;
+        const tangX = sim.vel.x - (sim.vel.x * nx + sim.vel.y * ny + sim.vel.z * nz) * nx;
+        const tangY = sim.vel.y - (sim.vel.x * nx + sim.vel.y * ny + sim.vel.z * nz) * ny;
+        const tangZ = sim.vel.z - (sim.vel.x * nx + sim.vel.y * ny + sim.vel.z * nz) * nz;
+        sim.vel.x -= tangX * fric * 0.5;
+        sim.vel.y -= tangY * fric * 0.5;
+        sim.vel.z -= tangZ * fric * 0.5;
+      }
+
+      contacts++;
+    } else if (distSq < 1e-12 && distSq === 0) {
+      // Sphere centre is exactly inside the box — push out along shortest axis
+      const overlapX = box.hx + r - Math.abs(sim.pos.x - box.cx);
+      const overlapY = box.hy + r - Math.abs(sim.pos.y - box.cy);
+      const overlapZ = box.hz + r - Math.abs(sim.pos.z - box.cz);
+
+      if (overlapX > 0 && overlapY > 0 && overlapZ > 0) {
+        // Push out along the axis with the smallest overlap
+        if (overlapX <= overlapY && overlapX <= overlapZ) {
+          const signX = sim.pos.x >= box.cx ? 1 : -1;
+          sim.pos.x = box.cx + signX * (box.hx + r);
+          if (sim.vel.x * signX < 0) sim.vel.x *= -(box.restitution ?? 0.1);
+        } else if (overlapY <= overlapX && overlapY <= overlapZ) {
+          const signY = sim.pos.y >= box.cy ? 1 : -1;
+          sim.pos.y = box.cy + signY * (box.hy + r);
+          if (sim.vel.y * signY < 0) sim.vel.y *= -(box.restitution ?? 0.1);
+        } else {
+          const signZ = sim.pos.z >= box.cz ? 1 : -1;
+          sim.pos.z = box.cz + signZ * (box.hz + r);
+          if (sim.vel.z * signZ < 0) sim.vel.z *= -(box.restitution ?? 0.1);
+        }
+        contacts++;
+      }
+    }
+  }
+
+  return contacts;
+}
+
+// ---------------------------------------------------------------------------
 // 3. Soft Body Solver (XPBD 162-Particle Lattice from Prototype Reference)
 // ---------------------------------------------------------------------------
 

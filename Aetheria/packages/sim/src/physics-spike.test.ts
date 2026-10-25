@@ -4,6 +4,8 @@ import {
   SoftBodySimulator,
   FlatHeightfieldWithTrench,
   runPhase0SpikeComparison,
+  collideStaticBodies,
+  createStaticAABB,
 } from './physics-spike.js';
 
 describe('Phase 0 Physics Spike', () => {
@@ -132,5 +134,77 @@ describe('Phase 0 Physics Spike', () => {
       expect(results.benchmark.rigidProxyMsPerStep).toBeLessThan(0.1);
       expect(results.benchmark.speedupFactor).toBeGreaterThan(1.2);
     });
+  });
+});
+
+describe('Sphere-vs-AABB Collision (collideStaticBodies)', () => {
+  it('pushes sphere out of a static box and reflects velocity', () => {
+    const sim = new RigidProxySimulator(
+      { radius: 0.35 },
+      { x: 0.7, y: 0.5, z: 0 }  // sphere edge at 0.35, box edge at 0.5 → overlap!
+    );
+    // Move sphere toward the box
+    sim.vel.x = -5;
+
+    const box = createStaticAABB(0, 0.5, 0, 1.0, 1.0, 1.0, 0.5, 0.0);
+
+    const contacts = collideStaticBodies(sim, [box]);
+    expect(contacts).toBe(1);
+
+    // Sphere should have been pushed outside the box
+    const distToBoxEdge = sim.pos.x - (box.cx + box.hx);
+    expect(distToBoxEdge).toBeGreaterThanOrEqual(sim.config.radius - 0.01);
+
+    // Velocity should have been reflected (was negative, now positive)
+    expect(sim.vel.x).toBeGreaterThan(0);
+  });
+
+  it('does not trigger collision when sphere is far from box', () => {
+    const sim = new RigidProxySimulator(
+      { radius: 0.35 },
+      { x: 10, y: 0.5, z: 0 }
+    );
+    sim.vel.x = -1;
+
+    const box = createStaticAABB(0, 0.5, 0, 1.0, 1.0, 1.0);
+
+    const contacts = collideStaticBodies(sim, [box]);
+    expect(contacts).toBe(0);
+    // Position unchanged
+    expect(sim.pos.x).toBe(10);
+  });
+
+  it('resolves collisions with multiple boxes independently', () => {
+    // Sphere between two boxes
+    const sim = new RigidProxySimulator(
+      { radius: 0.35 },
+      { x: 0, y: 0.5, z: 0 }
+    );
+    sim.vel.x = 0;
+
+    // Two boxes close together creating a corridor
+    const boxLeft = createStaticAABB(-0.5, 0.5, 0, 0.6, 1.0, 1.0);
+    const boxRight = createStaticAABB(0.5, 0.5, 0, 0.6, 1.0, 1.0);
+
+    const contacts = collideStaticBodies(sim, [boxLeft, boxRight]);
+    // Should resolve against at least one box (sphere may be squeezed)
+    expect(contacts).toBeGreaterThanOrEqual(1);
+  });
+
+  it('applies restitution correctly — high restitution = faster bounce', () => {
+    const sim1 = new RigidProxySimulator({ radius: 0.35 }, { x: 0.7, y: 0.5, z: 0 });
+    sim1.vel.x = -5;
+    const boxBouncy = createStaticAABB(0, 0.5, 0, 1.0, 1.0, 1.0, 0.9, 0.0);
+    collideStaticBodies(sim1, [boxBouncy]);
+    const bouncyVx = sim1.vel.x;
+
+    const sim2 = new RigidProxySimulator({ radius: 0.35 }, { x: 0.7, y: 0.5, z: 0 });
+    sim2.vel.x = -5;
+    const boxDead = createStaticAABB(0, 0.5, 0, 1.0, 1.0, 1.0, 0.0, 0.0);
+    collideStaticBodies(sim2, [boxDead]);
+    const deadVx = sim2.vel.x;
+
+    // Bouncy restitution should produce faster rebound than dead
+    expect(bouncyVx).toBeGreaterThan(deadVx);
   });
 });
