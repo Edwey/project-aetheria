@@ -1,130 +1,158 @@
-# CHARACTERS.md - The Nine Forms, Verbs, Physics Data & Controls (v4)
+# CHARACTERS.md — The Nine Forms, Physics, Controls & Abilities
+
+Aligned with `AETHERIA_MASTER_PLAN.md` v4.
 
 ## Overview
 
-Aetheria features three creature families (Slime, Wisp, Stone), each with three distinct, always-available forms (nine forms total). Every creature possesses a persistent Core that preserves orientation, inventory, and building state across form transitions.
+Three creature families (Slime, Wisp, Stone), each with three forms (nine total). All forms are always available. Switch family with `1, 2, 3`; cycle forms with `Z`. Tab cycles families.
 
-**Pillars & Rules:**
-1. **Forms as Pure Data (Phase 5b)**: All nine forms obey universal physics laws. Differences stem from physical data tables (mass, relative density, drag, restitution, tanks), never special-case hacks.
-2. **Fairness**: Every active ability is bounded by a physical resource tank or condition. An exhausted ability remains locked until the activating key is released.
-3. **Universal Movement Verbs**: Every form can **walk**, **jump**, **climb**, **glide**, and **hop**. Numbers are tuned by mass, relative density, and aerodynamic drag.
-4. **Units**: Every density is relative to water ($\text{water} = 1.0$). Real water density ($1000\text{ kg/m}^3$) is used only inside the quadratic water drag formula.
+Forms are data rows, not code. Adding or tuning a form changes a table, never a system.
 
 ---
 
-## The Nine Forms Matrix
+## The Nine Forms
 
-Switch creature family with `1, 2, 3`; cycle the active family's forms with `Z`.
+| Family | Form | Identity | J | K |
+| --- | --- | --- | --- | --- |
+| Slime | Oobleck | Bounce champion. Planes across water at speed. | Hold: squeeze through 0.5 m grates | — |
+| Slime | Dewdrop | Bouncy when dry, splats flat when full of water. Soaks up water as ballast. | Hold: release ballast | Hold: water jet |
+| Slime | Aether Bubble | Low gravity, slow falls, soft floaty bounces. Rides updrafts. | Tap: inflate for a lift pulse | — |
+| Wisp | Mist | Light aerosol that hovers close to surfaces. | Hold: phase through barred gates | — |
+| Wisp | Zephyr | Streamlined air. | — | Hold: gust dash that pushes movable props |
+| Wisp | Lantern | Floats when loose, condenses into dense hard light to dive. | Hold: condense | Hold: spectral stairs |
+| Stone | Aerolite | Pumice. Floats and skims water. Lift magic lets it ride updrafts and thermals while staying stone. | — | — |
+| Stone | Geode | Rolling stone with near-zero friction. | Hold: roll brake | Hold: boost (refills at low speed) |
+| Stone | Obsidian | Dense, wind-immune, sinks. | Hold: anchor in place | Tap: bounded ground shockwave (moves props, never players or buildings) |
 
-| Creature | Form | Mass (kg) | Relative Density ($\text{water} = 1$) | Restitution | Primary (`J`) | Secondary (`K`) | Physical Trait & Unique Behavior |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Slime** | **Oobleck** | 1.2 | 1.12 | 0.85 (Bounce champion) | Squeeze through grates (`J` hold) | Firm bounce (`K` hold) | Firm, elastic; planes on water (lift starts at 3.5 m/s, fully on top >5 m/s); squeezes narrow slots under pressure. |
-| **Slime** | **Dewdrop** | $1.2 + 0.8 B$ | $0.8 + 0.19 B$ | $0.6 \times (1 - \text{splat})$ | Soften & absorb impacts (`J`) | Rocket water jet (`K` hold) | Soft, impact-absorbing; soaks water as ballast ($B \in [0, 1]$); jet follows rocket equation; splats when full of ballast. |
-| **Slime** | **Aether Bubble** | 0.4 | 0.25 | 0.50 (Airy hang) | Inflate lift pulse (`J` tap) | Float drift (`K` hold) | Airy, not springy: very light, low momentum, low gravity ($0.35g$); long hang time, slow falls; rides thermals. |
-| **Wisp** | **Mist** | 0.15 | 0.08 | 0.10 | Phase through gates (`J` hold) | Drift whisper (`K` hold) | Gaseous dispersion; hovers naturally over water; permeable through solid barred gates. |
-| **Wisp** | **Zephyr** | 0.25 | 0.12 | 0.20 | Whirl lift pulse (`J`) | Sustained gust dash (`K` hold) | Aerodynamic stream; sustained gust pushes and shoves movable physics props (crates/boulders). |
-| **Wisp** | **Lantern** | 0.80 | 0.05 → 2.40 | 0.30 | Luminescence flare (`J`) | Condense hard-light (`K` hold) | Condenses into hard-light (density rises to 2.4); sinks deeper longer held; light solidifies spectral stairs. |
-| **Stone** | **Aerolite** | 1.5 | 0.55 | 0.30 | Pumice hop (`J`) | Skim glide (`K` hold) | Pumice-light rock (density < 1.0 floats); skims water efficiently at speed. **Lift magic:** couples to currents like an air creature. |
-| **Stone** | **Geode** | 3.5 | 2.60 | 0.25 | Roll brake (`J` hold) | Acceleration boost (`K` hold) | Near-zero friction; boost adds pure forward acceleration without speed cap; core glows with boost charge. |
-| **Stone** | **Obsidian** | 9.0 | 5.00 | 0.00 (Zero bounce) | Immovable anchor (`J` hold) | Ground slam & shove (`K`) | Dense gravity anchor; immovable when anchored; shoves boulders/crates; sinks rapidly. |
-
-*$B$ is Dewdrop's current ballast resource level ($0.0$ to $1.0$). Splat formula: $\text{splat} = \text{smoothstep}(0.45, 0.85, B)$.*
+Slots marked — are provisional and tunable. The old melt, spring, condense and diffuse toggles are absorbed into J/K and are not separate keys.
 
 ---
 
-## Form Identity & Physics Rules
+## Physics Data
 
-### 1. Bounce Dynamics
-- **Restitution Ordering**: Oobleck (0.85) > dry Dewdrop (0.60) > Aether Bubble (0.50) > Aerolite (0.30) > Geode (0.25) > Obsidian (0.00).
-- **Dewdrop Ballast Splat**: When dry ($B = 0$), Dewdrop is bouncy (restitution 0.6). As ballast soaks up water, restitution drops to 0; at high ballast it splats flat on impact, cutting impact velocity and emitting splash droplets.
-- **Airy Bubble**: Aether Bubble is airy rather than springy. Low momentum and high air drag create slow falls and long hang times, not explosive rebounds.
-- **Velocity Gating**: Bounce triggers only above threshold impact speeds (slimes bounce from $1.5\text{ m/s}$, other forms from $3.0\text{ m/s}$).
-- **Submersion Rule**: Bounce is completely disabled while submerged.
-
-### 2. Universal Water Movement
-- **No Underwater Glide**: Gliding, hovering-glide, and crystal sails are disabled whenever the submerged fraction exceeds $8\%$.
-- **Universal Swimming**:
-  - `WASD`: Paddles through water with $\sim 9\text{ m/s}^2$ drive force ($7\text{ m/s}^2$ for Lantern and Geode, $5\text{ m/s}^2$ for Obsidian).
-  - `Space`: Strokes upward up to $3.0\text{ m/s}$.
-  - Speed is naturally set by quadratic water drag ($\vec{F}_{\text{drag}} = \frac{1}{2} \rho_w v_{\text{rel}}^2 C_d A$).
-- **Lakebed Walking**: Dense forms (Geode, Obsidian) sink to the floor, walk along the bed, and can jump upward from it. Obsidian does not stroke upward.
-- **Planing Lift**: Above $3.5\text{ m/s}$ horizontal speed in the surface boundary layer, planing hydrodynamic lift allows dense skimming forms (Oobleck, Aerolite) to run across water without sinking.
-- **Gas Hover**: Wisp forms naturally hover over the water surface by their own physical density and breath mechanics.
-
-### 3. Aerolite Lift Magic
-Aerolite maintains a solid stone body (mass $1.5\text{ kg}$, stone drag, rigid collisions), but its aerodynamic coupling is uniquely tuned to behave like an air creature:
-- Updrafts, thermals, downdrafts, and gales carry it using a dedicated air coupling coefficient instead of $1 / \text{mass}$.
-- Sparkles visually with radiant motes inside thermals.
-
-### 4. Universal Moor Rule
-When a creature is grounded and receives no player input, an automatic moor force cancels ambient wind force up to a safety threshold. No creature is ever pushed around or drifted helplessly while idle.
+| Form | Stop Time (s) | Mass (kg) |
+| --- | --- | --- |
+| Oobleck | 0.10 | 1.2 |
+| Dewdrop | 0.25 | 1.2 to 2.0 (with ballast) |
+| Aether Bubble | 0.20 | 0.4 |
+| Mist, Zephyr | 0.20 | 0.3 |
+| Lantern | 0.20 | 0.3 (up to 3.3 condensed) |
+| Aerolite | 0.06 | 1.5 |
+| Geode | 0.05 | 3.5 |
+| Obsidian | 0.04 | 9.0 |
 
 ---
 
-## Universal Movement Verbs
+## Weight, Impact & Pressure Plates
+
+**Impact load formula:**
+
+`impact load = mass × (1 + min(3, v / (g × stop_time)))`
+
+- `v` = downward landing speed (counted above 1.5 m/s for general effects)
+- `g` = form's effective gravity (20 m/s² × gravity scale)
+- `stop_time` = how long the form takes to stop
+- Factor capped at 4× resting weight; load lasts ~0.35 s
+
+**Pressure plate rule:** needs 1.7 kg load, stays pressed 3 s after load ends. Impact only counts toward plate when landing speed ≥ 4 m/s (~0.8 m drop). Stomp (F) gives flat 3× pulse; plate uses whichever is larger.
+
+| Form | Standing | Landing at 4 m/s |
+| --- | --- | --- |
+| Oobleck | 1.2 — no | 3.6 — yes |
+| Dewdrop (dry) | 1.2 — no | 2.2 — yes |
+| Dewdrop (full) | 2.0 — yes | yes |
+| Aether Bubble | 0.4 — no | 1.5 — no (capped at 1.6, can never press) |
+| Mist, Zephyr, Lantern (loose) | 0.3 — no | no (capped at 1.2) |
+| Lantern (>half condensed) | 1.7+ — yes | yes |
+| Aerolite | 1.5 — no | 6.0 — yes |
+| Geode, Obsidian | yes | yes |
+
+Light forms can open a gate by pushing a prop of mass ≥2 onto the plate.
+
+**Acceptance tests:** drop from 0.5 m must NOT press plate for Oobleck, dry Dewdrop, or Aerolite; drop from 1.0 m must; Bubble and uncondensed Mist/Zephyr/Lantern never press by any drop; no load exceeds 4× resting weight.
+
+---
+
+## Controls
+
+| Input | Action |
+| --- | --- |
+| W A S D | Camera-relative movement |
+| Space | Contextual up: jump (hold to charge, release), wisp rise, swim stroke |
+| Left Shift (hold) | Sprint, free of any cost, momentum kept on release |
+| G (hold) | Ride the wind |
+| J / K | Two ability slots of the active form |
+| F | Stomp, pound or down-gust (every family) |
+| E | Interact (opens crafting at workbench) |
+| B | Build mode; Enter places, Backspace removes, X rotates |
+| Ctrl+Z / Ctrl+Y | Undo/redo build step (20 steps) |
+| 1 2 3 | Pick a family, return to last form used in it |
+| Z | Cycle forms of the family. Tab cycles families. |
+| 4–8, H | Emotes and heart |
+| Right mouse drag, Q | Orbit camera, turn 90° (Shift+Q reverses). Wheel zooms. |
+| Esc, R | Menu, return to last safe ground |
+
+All keys remappable with conflict warnings and restore-defaults. Sprint: hold or toggle. HUD form list is a clickable shortcut.
+
+---
+
+## Universal Movement Rules
 
 All nine forms support the same core movement verbs:
-1. **Walk / Roll / Drift**: Omnidirectional horizontal drive with form-specific acceleration, braking, and surface friction.
-2. **Jump / Hop**: Charge jump or impulse hop. Jump ascent is protected by an anti-grab guard: rising bodies are never clamped or snapped to vertical walls or ledges for the first $0.5\text{ s}$ of airtime.
-3. **Climb**: Universal vertical surface navigation:
-   - Slimes use viscoelastic deformation and surface adhesion.
-   - Wisps use ascending updraft drift along wall boundaries.
-   - Stone forms use rigid piton wedging ($2\text{ m/s}$, hangs without slipping when idle).
-4. **Glide**: Air resistance creates steady descent capped at terminal velocity ($v_{\text{term}} = \sqrt{\frac{g \cdot m}{k_d A}}$).
-5. **Swim**: Surface swimming, planing skims, and deep bed exploration.
+
+1. **Walk** — camera-relative omnidirectional movement
+2. **Jump** — hold Space to charge, release to jump. Variable height.
+3. **Climb** — universal wall navigation
+4. **Glide** — air resistance creates steady descent
+5. **Collect** — items fly to you when near
+6. **Craft** — pocket items anywhere, workbench items at bench
+7. **Build** — B toggles build mode
+8. **Swim** — WASD paddles, Space strokes upward
+
+### Form Switching
+- Instant and safe. If new shape doesn't fit, switch refused with outline flash. No teleporting.
+- Speed kept across the switch.
+
+### Moor Rule
+- No input + on ground = not pushed by wind. Light forms gain from thermals/gliding, never from helpless drift. Obsidian is wind-immune.
+
+### Water Rules (submerged 8%+)
+- Gliding off for every form; swimming takes over.
+- WASD paddles, Space strokes upward (capped 3 m/s).
+- Dense forms sink and walk lakebed; can jump from it. Obsidian doesn't stroke upward.
+- Bounce off while submerged.
+- Planing (Oobleck, Aerolite) is a speed effect above 3.5 m/s, not glide.
+- Gas forms hover over the surface by their own ability.
+
+### Aerolite Lift Magic
+- Stone body (mass 1.5 kg, stone drag, rigid collisions) but air-creature current coupling.
+- Updrafts, thermals, downdrafts, and wind carry it via dedicated coefficient instead of 1/mass.
+- Sparkles in thermals.
+
+### Obstructed Spaces & Recovery
+- Never create a soft-lock.
+- Respawn: 0.5 s fade to last safe ground, no inventory loss.
 
 ---
 
-## Resource Tanks & Fairness Specifications
+## Tuning Defaults
 
-Every ability is bounded by physical resource tanks with a strict lockout state machine: when an ability tank empties, it enters `Exhausted` state and will NOT refill until the player releases the activating key.
-
-| Resource Tank | Associated Form | Capacity | Consumption Rate / Cost | Refill Condition & Rate | Fairness Locking Rule |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Ballast Tank** | Slime: Dewdrop | 1.0 ($+0.8\text{ kg}$) | Empties in ~2.5 s of jet ($\dot{m} = 0.40\text{ /s}$) | Refills **only** when submerged in water ($+0.50\text{ /s}$). Zero dry refill. | When empty, thrust cuts off. Locked until `K` is released. |
-| **Air Tank** | Slime: Aether Bubble | 1.0 | Tap `J` costs 0.35 air per lift pulse | Passive ambient recharge ($+0.12\text{ /s}$). 0.6 s cooldown between taps. | If air < 0.35, inflate is locked. Re-arms when air $\ge 0.35$ and cooldown expires. |
-| **Breath Tank** (Shared) | Wisp: Mist | 100.0 | Phase hold (`J`): ~8 s budget ($12.5\text{ /s}$) | Ground/water proximity ($+25.0\text{ /s}$). Refill paused while any key held. | When breath hits 0, phase breaks. Locked until `J` released. |
-| **Breath Tank** (Shared) | Wisp: Zephyr | 100.0 | Gust dash (`K`): ~5 s budget ($20.0\text{ /s}$) | Ground/water proximity ($+25.0\text{ /s}$). Refill paused while any key held. | When breath hits 0, dash halts. Locked until `K` released. |
-| **Breath Tank** (Shared) | Wisp: Lantern | 100.0 | Hard-light (`K`): ~8 s budget ($12.5\text{ /s}$) | Ground/water proximity ($+25.0\text{ /s}$). Refill paused while any key held. | When breath hits 0, hard-light de-condenses. Locked until `K` released. |
-| **Breath Tank** (Shared) | Wisp: Any Form | 100.0 | Space-rise: $20.0\text{ /s}$ | Ground/water proximity ($+25.0\text{ /s}$). Refill paused while any key held. | Space-rise disabled when breath hits 0. Locked until `Space` released. |
-| **Boost Energy** | Stone: Geode | 100.0 | Boost hold (`K`): 5 s budget ($20.0\text{ /s}$) | Refills ($+20.0\text{ /s}$) **only** after speed decays to base speed ($< 6.0\text{ m/s}$). | When empty, boost cuts out. Recharging blocked while moving above base speed. |
-| **Resolve Tank** | Stone: Obsidian | 100.0 | Anchor hold (`J`): ~5 s budget ($20.0\text{ /s}$) | Continuous recharge ($+25.0\text{ /s}$) once `J` key is released. | Anchor forced release at 0 resolve. Cannot re-anchor until `J` is released and resolve $> 20$. |
-
----
-
-## Universal Controls & Key Mapping
-
-| Action | Keyboard / Mouse | Touch Overlay | Description |
-| :--- | :--- | :--- | :--- |
-| **Move** | `WASD` / Arrow keys | Virtual joystick | Omnidirectional horizontal locomotion |
-| **Jump / Rise** | `Space` | Jump button | Tap to hop; hold Space to rise (costs breath for Wisp, weakly scaled with mass for others) |
-| **Primary Action (`J`)** | `J` (hold / tap) | Action J button | Form-specific primary action (e.g., Oobleck squeeze, Bubble inflate, Mist phase, Obsidian anchor) |
-| **Secondary Action (`K`)** | `K` (hold) | Action K button | Form-specific secondary action (e.g., Dewdrop jet, Zephyr dash, Lantern condense, Geode boost, Obsidian slam) |
-| **Cycle Form** | `Z` | Cycle button | Advances to the next form within the current creature family |
-| **Select Family** | `1`, `2`, `3` | Form pills (1-3) | `1`: Slime, `2`: Wisp, `3`: Stone |
-| **Camera Orbit** | Right drag / `Q`, `E` | Touch drag | Orbit camera 360° |
-| **Zoom** | Mouse wheel | Pinch | Adjust camera focal distance |
-
----
-
-## Purely Cosmetic Body Shapes & Attachments
-
-Each creature family offers exactly three interchangeable body shapes that are **purely cosmetic**, sharing identical physical collision volumes, masses, and buoyancy:
-
-1. **Slime Shapes**:
-   - **Blob**: Classic amoebic droplet with surface tension ripples.
-   - **Ball**: Smooth spherical jelly with balanced wobble.
-   - **Cube**: Rounded voxel gelatin block with edge beveling.
-2. **Stone Shapes**:
-   - **Round**: Smooth weathered cobble boulder.
-   - **Crystal**: Sharp faceted geometric geode cluster.
-   - **Block**: Chiseled architectural monolith with clean chamfers.
-3. **Wisp Shapes**:
-   - **Cloud**: Soft billowing aerosol puff of swirling motes.
-   - **Fireflies**: Orbiting luminous constellation of ember nodes.
-   - **Plume**: Elongated trailing spirit flame with head and tail.
-
-**Spring-Physics Accessories**:
-- Attachments (hats, backpacks, charms) utilize 3-DOF damped spring-mass dynamics.
-- Accessories respond to body acceleration, wobble on hard landings, and experience increased hydrodynamic drag when submerged in water.
-- Attachments possess zero collision volume and zero additional mass, maintaining absolute physical gameplay parity.
+| Parameter | Start Value |
+| --- | --- |
+| Oobleck bounce | restitution 0.85, bounce from 1.5 m/s impact |
+| Dewdrop | bounce 0.7 × (1 − splat); splat = smoothstep(0.45, 0.85, ballast); mass 1.2–2.0 kg |
+| Aether Bubble | gravity 0.35g, terminal fall −4.0 m/s, bounce 0.55 |
+| Aerolite | relative density 0.55, updraft coupling at air-creature rate, bounce 0.3 |
+| Geode | rolling friction ≤0.02; boost refills +20/s below 6 m/s; no speed clamp |
+| Obsidian | shockwave radius 3 m, min distance 0.5 m, bounded impulse |
+| Sprint | ~1.45× top speed, no stamina |
+| Water | gate 8% submerged; paddle 9 m/s² (7 Lantern/Geode, 5 Obsidian); stroke cap 3 m/s |
+| Planing | lift from 3.5 m/s, full by 5 m/s |
+| Wisp breath | pool 100; refill +25/s on/near ground/water; Mist 12.5/s, Zephyr dash 20/s, Lantern stairs 12.5/s |
+| Pressure plate | 1.7 kg, impact from 4 m/s, pressed 3 s |
+| Feel | coyote 100 ms, buffer 100 ms, corner nudge 0.1 m |
+| Respawn | 0.5 s fade, last safe ground |
+| Building | grid 0.5/1.0 m, stilts to 3.0 m, undo 20 steps, dismantle 75% |
+| Ditches | depth 0.3 m, 1 m cells |
+| World | day 24 min, crossing ~90 s, offline growth cap 72 h |
+| Particles | cap per emitter by preset (start 150 Low, 400 High) |

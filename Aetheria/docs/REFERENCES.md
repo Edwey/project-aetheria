@@ -1,158 +1,107 @@
-# REFERENCES.md - Reference Games and What We Borrow
+# REFERENCES.md — Reference Games and What We Borrow
 
-## Animal Crossing
-
-**What we copy**:
-- Cozy color palette with soft, warm tones
-- Soft rounded UI with gentle curves
-- Gentle day/night tint transitions
-- Bouncy, satisfying UI sounds
-- Peaceful, non-punitive gameplay
-- Collecting and decorating loop
-
-**What we do NOT copy**:
-- Real-time clock sync (we use game time)
-- NPC villagers (single-player only for now)
-- Debt/loan systems (no economy)
-- Multiplayer (PartyKit later, not in v1)
-- Daily reset mechanics
-
-**Test**: Cozy aesthetic and peaceful gameplay
+Aligned with `AETHERIA_MASTER_PLAN.md` (v4).
 
 ---
 
-## A Short Hike
+## 1. Animal Crossing
 
-**What we copy**:
-- Glide and climb exploration mechanics
-- Readable small world (everything accessible in short play sessions)
-- Short gameplay loops (climb → reach → return)
-- Verticality in exploration
-- Joyful movement feel
+**What we borrow**:
+- Cozy, welcoming aesthetic with soft, warm color tones.
+- Rounded, tactile UI design with responsive micro-animations.
+- Gentle day/night transitions and atmospheric ambient shifts.
+- Satisfying auditory feedback on UI clicks and interactions.
+- Peaceful, non-punitive gameplay loop centered on exploration and collecting.
 
 **What we do NOT copy**:
-- 2D sprite art (we use 3D)
-- Conversation dialogue (no NPCs)
-- Badge/achievement system (simpler progression)
-- Fixed camera angle (we have camera rotation)
-
-**Test**: Glide and climb exploration works, world is readable
+- Real-time 24-hour clock synchronization (we use an in-game day/night cycle).
+- NPC villagers or dialogue trees (single-player solitary sandbox).
+- Debt, loans, or currency systems (no in-game economy).
+- Daily reset chore mechanics.
 
 ---
 
-## Minecraft
+## 2. A Short Hike
 
-**What we copy**:
-- Gather, craft, place loop
-- Clear recipe costs (X of Y resource)
-- Block-based building with snapping
-- Resource gathering from environment
-- Creative building possibilities
+**What we borrow**:
+- Joyful movement feel: climbing, gliding, and ascending peaks.
+- Readable, dense small-scale world where landmarks are always visible.
+- Tight vertical exploration loops (spot a peak $\to$ navigate path $\to$ glide down).
+- Responsive isometric/third-person camera feel with gentle framing.
 
 **What we do NOT copy**:
-- Voxel/block world (we use smooth terrain)
-- Infinite procedural terrain (fixed world size)
-- Survival mechanics (no hunger/damage)
-- Mining depth (we have surface gathering)
-- Redstone/circuitry (no complex automation)
-
-**Test**: Crafting recipes work, building snaps correctly
+- 2D pixelated sprite billboarding (we use clean low-poly 3D meshes).
+- Narrative quests and conversation dialogue.
+- Golden feather stamina locks (we have no stamina limit for basic exploration).
 
 ---
 
-## Valheim
+## 3. Minecraft
 
-**What we copy**:
-- Modular snapping pieces for building
-- Clear green/red ghost placement indicators
-- Structural decay (not in v1, future)
-- Viking-inspired aesthetic elements (not directly, just structure)
-- Building on uneven terrain
+**What we borrow**:
+- Gather, craft, build loop with simple, clear recipes.
+- Modular building system with clean grid and surface snapping.
+- Harvesting raw resources directly from environmental props (timber, stone, clay).
+- Creative freedom to place structures and decorate the landscape.
 
 **What we do NOT copy**:
-- Combat/raids (peaceful game)
-- Stamina system (no stamina)
-- Biome bosses (no enemies)
-- Complex building physics (simpler structural rules)
-- Death/respawn penalties (no punishment)
-
-**Test**: Ghost placement shows valid/invalid clearly, snapping works
+- Voxel block terrain (we use continuous smooth heightmap terrain).
+- Infinite procedural world (fixed, hand-crafted ~280m island).
+- Survival hunger, health, mob attacks, and death mechanics.
+- Complex redstone electrical logic.
 
 ---
 
-## Slime Rancher
+## 4. Valheim
 
-**What we copy**:
-- Squishy creature feel through soft-body physics
-- Readable wobble and squish animations
-- Joyful pickup mechanics (items fly to player)
-- Cute, expressive creature
-- Collection loop with visual feedback
+**What we borrow**:
+- Snapping structural pieces for building (foundations, walls, posts, roofs).
+- Clear placement feedback (green/red holographic placement indicator).
+- Building on organic, uneven terrain without clipping issues.
 
 **What we do NOT copy**:
-- Ranch management (no NPC slimes)
-- Economy/currency (no money)
-- Day/night event schedule (simpler weather)
-- Large open world (smaller, focused world)
-- Slime types with unique diets (all forms can do everything)
-
-**Test**: Slime feels squishy and joyful, pickups fly to player
+- Brutal combat, raids, and boss gating.
+- Punishing stamina constraints during running or jumping.
+- Death penalties or corpse runs.
+- Structural stability stress physics.
 
 ---
 
-## Journey
+## 5. Slime Rancher
 
-**What we copy**:
-- Wind and sand flow visual effects
-- Calm, ambient music mood (audio in R5)
-- Gliding downwind feeling
-- Environmental storytelling (ruins, landmarks)
-- Minimal UI during exploration
+**What we borrow**:
+- Squishy, tactile creature feel driven by physics and procedural squish.
+- Delightful pickup mechanics (nearby items gently magnetize and pop into inventory).
+- Expressive, playful character animations and bouncy responses.
 
 **What we do NOT copy**:
-- Linear narrative (open exploration)
-- Multiplayer companion (single-player)
-- Scarf mechanic (no progression item)
-- Ancient language (no decoding puzzles)
-- Endgame transformation (forms are permanent)
-
-**Test**: Wind feels real, gliding is satisfying
+- Ranch management and corral containment.
+- Economy, plort markets, and currency.
+- Strict feeding schedules and angry tarr monsters.
 
 ---
 
-## Raft
+## 6. Journey
 
-**What we copy**:
-- Building on and over water
-- Floating foundations (raft pieces in R4)
-- Ocean setting (sea in R3)
-- Resource gathering from water
-- Cozy building on the waves
+**What we borrow**:
+- Flowing wind visual ribbons and desert sand atmospherics.
+- Uplifting glide physics down canyons and over dunes.
+- Calm, evocative environmental storytelling through ancient ruins and arches.
+- Minimalist HUD that preserves immersion.
 
 **What we do NOT copy**:
-- Shark threats (no enemies)
-- Hunger/thirst (no survival)
-- Island hopping progression (fixed world)
-- Crafting research tree (simpler recipes)
-- Current-based navigation (currents are Ride-only)
-
-**Test**: Raft pieces float and snap, building on water works
+- Linear progression through strictly separated levels.
+- Scarf length progression locks.
+- Multiplayer matchmaking.
 
 ---
 
-## Unique to Aetheria
+## 7. What is Unique to Aetheria
 
-**Original elements**:
-- Three-form system (Slime, Wisp, Stone) with form-switching
-- Every form can do every verb (advantages only, no disadvantages)
-- Per-form water perks (slime skip-dash, wisp skimming, stone seabed walking)
-- Core system (inventory and form identity survive switches)
-- Hybrid world (landmass + sea + sky islands)
-- Biome-blended terrain with smooth transitions
-- Weather per biome with independent state machines
-- Wind that only affects you while Riding (Rule 4)
-- No punishment mechanics (no damage, no drowning, no hunger)
-- Local saves with profile and build persistence
-- Customization with cosmetics and procedural fallbacks
-
-**Test**: Three-form system works, all verbs available to all forms
+- **Nine Permanent Forms in Three Families**: Slime (Oobleck, Dewdrop, Aether Bubble), Wisp (Mist, Zephyr, Lantern), and Stone (Aerolite, Geode, Obsidian) — all accessible from minute one.
+- **Universal Verbs with Distinct Physics**: Every form can move, jump, glide, squeeze, cling, and swim. Forms differ by weight, friction, bounce, and signature abilities (J/K).
+- **Rule 4 (Steady Wind & Water)**: Wind, currents, and thermals are neutral and harmless by default. They only carry or boost the player when holding **Shift (Ride)**. Headwinds never slow you down.
+- **One Continuous Compact Island**: Sprint across in ~90 seconds; no sky islands, no artificial loading zones. Every region visible from the central ridge.
+- **Four Distinct Ecological Regions**: The Shimmering Coast, Whispering Pines, Sunbaked Crags, and The Bioluminescent Basin.
+- **Complete Peace of Mind**: Single-player, zero combat, zero death, zero health bars, zero inventory loss.
+- **Robust Local Persistence**: IndexedDB multi-save system with three rolling slot backups and staged JSON import validation.

@@ -1,308 +1,147 @@
-# ENVIRONMENT.md - Biomes, Wind, Weather, Resources, Crafting, Building
+# ENVIRONMENT.md — Regions, Weather, Wind, Resources, Crafting, Building
 
-## Biomes
+Aligned with `AETHERIA_MASTER_PLAN.md` v4.
 
-The world has four blended biomes with smooth transitions. The Aetheria terrain blends them together.
+## The Island & Four Regions
 
-### Lush Plains
-- **Colors**: Green grass (0.40-0.72, 0.72-0.78, 0.35-0.40)
-- **Flora**: Oak trees, flowers (petals), rocks
-- **Weather**: Sun shower (rain)
-- **Wind strength**: 1.5 (base)
-- **Resources**: Timber, sap, fibre, petal
-- **Features**: Gentle rolling hills
-- **Trees**: Oak (42 trees, 4m spacing)
+One compact, continuous island. Sprint across ~90 seconds. Everything open from minute one. Every region and main route works for every family, through different physics paths where needed.
 
-### Sunstone Dunes
-- **Colors**: Sandy gold (0.80-0.93, 0.47-0.80, 0.34-0.54)
-- **Flora**: Cactus, flowers (petals)
-- **Weather**: Sand flurry
-- **Wind strength**: 3.5 (base)
-- **Resources**: Fiber, petal
-- **Features**: Large sand dunes
-- **Thermals**: Updrafts on dune crests (for reaching sky islands)
-- **Trees**: Cactus (28 trees, 4.5m spacing)
+| Region (display name) | Built Biome | Role |
+| --- | --- | --- |
+| Verdant Refuge | Lush Plains | Friendly hub with a clear home landmark. Crafting, storage, comfort. Useful, never required. |
+| Wildwood | Mystic Grove | Gathering, gentle wildlife, sheltered routes, soil. |
+| Waterworn Basin | Frostpeak Taiga | Snowmelt streams feed ponds, ditches and diving. Home of water and digging. |
+| Windcarved Heights | Sunstone Dunes | Hot sand makes natural thermals. Gliding, wind, sand traction, momentum routes. |
 
-### Frostpeak Taiga
-- **Colors**: Cold blue-green (0.26-0.55, 0.46-0.56, 0.36-0.60)
-- **Flora**: Pine trees, rocks, flowers (petals)
-- **Weather**: Snowfall
-- **Wind strength**: 4.0 (base)
-- **Resources**: Timber, sap, fibre, petal
-- **Features**: Mountains with snow caps
-- **Cold air drainage**: Wind flows downhill on slopes steeper than ~15 degrees
-- **Trees**: Pine (100 trees, 2.8m spacing)
-
-### Mystic Grove
-- **Colors**: Mystical purple-green (0.34-0.52, 0.38-0.56, 0.55-0.68)
-- **Flora**: Mushrooms, flowers (spores)
-- **Weather**: Spore aurora
-- **Wind strength**: 1.0 (base)
-- **Resources**: Fibre, spore
-- **Features**: Swirling vortices
-- **Swirling**: 2D scalar field with ~12m cells creates curl-like wind patterns
-- **Gravity**: 0.9x (slightly floaty)
-- **Trees**: Mushroom (38 trees, 4m spacing)
+Each region needs one authored landmark, one shortcut and one safe resting point. Supporting content is procedural.
 
 ---
 
-## Wind System
+## Terrain & Hybrid Grid
 
-### Base Wind Strength
-Per biome base strength (before modifiers):
-- Plains: 1.5 m/s
-- Dunes: 3.5 m/s
-- Taiga: 4.0 m/s
-- Grove: 1.0 m/s
+Chunked heightfield rendered as flat-shaded low-poly geometry with baked vertex ambient occlusion. Under it sits a flat integer grid of 1 m cells storing soil moisture, crop stage, trench depth and water level.
 
-### Wind Direction
-- Base angle: Rotates slowly over time (period = 90s)
-- Angle formula: 0.7 + 1.2 * sin(TAU * t / 90)
-
-### Modifiers
-- **Gusts**: Random gusts (2-4s duration, 6-8s interval)
-  - Gust multiplier: 1 + 0.6 * gustValue
-- **Weather modifiers**:
-  - Sand flurry: +60% wind speed
-  - Snowfall: -30% wind speed
-  - Rain: +10% wind speed
-  - Spore aurora: no wind speed change
-- **Slope effects**: Windward slopes speed wind up
-  - Slope factor: 1 + 0.3 * min(1, slope) * (dot product)
-- **Taiga drainage**: Cold air flows downhill on steep slopes
-  - Slope threshold: > 0.27 (~15 degrees)
-  - Drainage factor: 2 * biome weight
-
-### Special Wind Features
-- **Thermals**: Updrafts over dune crests
-  - Located at local height maxima in dunes biome
-  - Height: base + 12m
-  - Radius: 5m
-  - Strength: 4 m/s (fades at top)
-  - Max 40 thermals
-- **Mushroom updrafts**: Updrafts over mushroom caps
-  - Height: base + 8m
-  - Strength: 3 m/s
-- **Grove vortices**: Swirling patterns
-  - Scalar field at 0.52/m and 0.47/m resolution
-  - Creates curl-like wind patterns
-  - Strength: 2.4 m/s
-
-### Wind Interaction & Physics Rules (v4)
-- **Universal Moor Rule**: With no player input and while grounded, an automatic moor force cancels ambient wind force up to a safety threshold cap. No form is ever pushed around or drifted helplessly while idle. Light forms gain from thermals and gliding, never from accidental drift.
-- **Atmospheric Currents Acceleration**: $\vec{a}_{\text{current}} = (\vec{u}_{\text{air}} - \vec{v}) \cdot \frac{A_{\text{coeff}} \cdot k}{m}$. Drives bodies toward ambient air velocity; force is inversely scaled by mass.
-- **Aerolite Lift Magic**: Aerolite possesses a stone body ($1.5\text{ kg}$ mass, stone drag, rigid collisions), but its aerodynamic current coupling uses an air-creature coefficient rather than $1 / m$. Updrafts, thermals, and gales carry it effortlessly, and it sparkles in thermals.
-- **Steady by Default (Rule 4)**: Wind never moves, slows, or lifts a grounded moving creature unless Riding or in an updraft/thermal.
-- **Ride (Shift)**: Holding Ride lets wind carry and boost you:
-  - Tailwinds: Up to +40% speed boost
-  - Headwinds: Projected component cancelled (never slow you down)
-  - Updrafts: Lift you upward smoothly
-- **Per-Form Wind Sensitivity**:
-  - Slime: 1.0x (base)
-  - Stone: 0.5x (heavy inertia resists drift; Aerolite is air-boosted)
-  - Wisp: 2.0x (light atmospheric coupling)
+**Ditches:** digging lowers a cell's trench depth (0.3 m). It does not rebuild the terrain collider. The avatar's ground probe subtracts trench depth so feet sink in. Water, moisture and visuals read the grid. Rolling props use the flat collider and ignore ditches. Phase 0 experiment: if a rolling Geode visibly floats over a ditch, give rolling props the same ground-probe offset or add a thin collider strip.
 
 ---
 
-## Weather System
+## Water System
 
-Each biome has its own weather state machine with 4 phases:
-1. **Clear**: Duration 25-70s (random)
-2. **Building**: Duration 10s (weather ramps up)
-3. **Active**: Duration 60-180s (full weather)
-4. **Clearing**: Duration 15s (weather ramps down)
+Water level per grid cell moves downhill in a small flow step (~4 per second). Active radius ~24 m around player at full detail; distant basins keep one summary value and exchange water through fixed weirs. Rain fills reservoirs, trenches carry water, moisture spreads 2–3 cells. Buoyancy and swimming read the grid directly.
 
-### Weather Types per Biome
-- Plains: Rain (sun shower)
-- Dunes: Sand flurry
-- Taiga: Snowfall
-- Grove: Spore aurora
+**Demo version:** one reservoir and one authored trench path.
 
-### Weather Effects
-- **Rain**:
-  - Visual: Rain lines falling
-  - Gameplay: Jump +20%, Wisp breath refill +2 per second when wet
-  - Wind: +10% speed
-  - Wisp float drain: Reduced to 1/3
-- **Sand**:
-  - Visual: Sand particles blowing
-  - Gameplay: None (visual only)
-  - Wind: +60% speed
-- **Snow**:
-  - Visual: Snowflakes falling gently
-  - Gameplay: None (visual only)
-  - Wind: -30% speed
-- **Spore**:
-  - Visual: Glowing spores floating upward
-  - Gameplay: Gravity -15% (floatier), vertical wind +0.8 m/s
-  - Wind: No speed change
+### Universal Water Movement
 
-### Weather Override
-- Manual override in UI: Clear, Sun shower, Sand flurry, Snowfall, Spore aurora
-- Default: Auto (follows biome machines)
+All nine forms obey the same rules:
+- **No underwater glide.** Gliding disabled when submerged fraction >8%.
+- **Swimming replaces glide.** WASD paddles (~9 m/s²; 7 for Lantern/Geode, 5 for Obsidian). Space strokes upward up to 3 m/s.
+- **Dense forms** (Geode, Obsidian) sink and walk lakebed, can jump from it. Obsidian doesn't stroke upward.
+- **Planing** (Oobleck, Aerolite) is a speed effect above 3.5 m/s, not glide. Gas forms hover over the surface.
+- **Bounce off** while submerged.
+
+---
+
+## Weather, Air & Wildlife
+
+- **Clear, wind and rain** with smooth transitions. Weather never damages buildings and never forces shelter.
+- **Thermals:** authored upward air fields, concentrated over the Heights, with a few elsewhere. Zephyr, Bubble and Aerolite ride them.
+- **Five species:** frogs, moths, birds, dragonflies, owls. Simple routines and habitat attraction (ponds → dragonflies, porches → owls, Lantern → moths). Trust 0–100 per species. Companions are stretch goal. No death or neglect.
+
+### Wind Rules
+
+- **Moor rule:** no input + on ground = not pushed by wind. Light forms gain from thermals/gliding, never helpless drift. Obsidian is wind-immune.
+- **Ride the wind (G hold):** tailwinds speed you up, headwinds never slow you, updrafts lift you.
 
 ---
 
 ## Resources
 
-### Raw Resources
-| Resource | Source | Stack Cap | Notes |
-|----------|--------|-----------|-------|
-| Timber | Oak trees, pine trees | 40 (80 stone) | From tree impact/pound |
-| Sap | Oak trees, pine trees | 40 (80 stone) | Slime gets +1 per tree (sticky perk) |
-| Fiber | Cactus, reeds (swamp) | 40 (80 stone) | From cactus impact/pound |
-| Starstone | Geodes | 40 (80 stone) | From geode impact/pound/roll |
-| Clay | Clay deposits, lakebed | 40 (80 stone) | From clay impact/pound/roll |
-| Petal | Flowers (plains, dunes, taiga) | 40 (80 stone) | From flower absorb |
-| Spore | Flowers (grove) | 40 (80 stone) | From flower absorb |
+Resources are gathered by interaction with the world. No hunger or survival pressure.
 
 ### Harvesting Methods
-- **Impact**: Slime/stone hitting flora at speed
-  - Slime: 3.2 m/s threshold
-  - Stone: 2.6 m/s threshold
-- **Pound**: Ground pound near flora
-  - Range: 3.8m
-- **Absorb**: Wisp passing through flowers
-  - Range: Slime/stone 1.1m, Wisp 2.75m
-- **Rolling**: Stone rolling into geodes/clay
-  - Speed threshold: 5 m/s
-  - Range: 1.0m horizontal, 1.2m vertical
-
-### Flora Resource Drops
-- **Oak**: 2 timber, 1 sap (+1 for slime sticky)
-- **Pine**: 1 timber, 1 sap (+1 for slime sticky)
-- **Cactus**: 2 fiber
-- **Mushroom**: 3 spore
-- **Geode**: 2 starstone (2-4 from pound)
-- **Clay**: 2 clay (2 from pound, +1 for slime)
-- **Flower (petal)**: 1 petal
-- **Flower (spore)**: 1 spore
+- **Impact:** running into flora at speed
+- **Pound (F):** ground pound near flora
+- **Absorb:** passing through flowers
+- **Rolling:** stone rolling into geodes/clay
 
 ---
 
 ## Crafting
 
-### Recipes
-
-| ID | Output | Cost | Station | Notes |
-|----|--------|------|---------|-------|
-| twine | Twine | 2 fiber | Pocket | - |
-| torch | Torch | 1 timber, 1 sap | Pocket | - |
-| campfire | Campfire | 3 timber, 1 sap | Pocket | - |
-| bowl | Clay bowl | 2 clay | Pocket | - |
-| workbench | Workbench | 5 timber, 2 twine | Pocket | - |
-| foundation | Foundation | 4 timber, 1 twine | Bench | Snaps to grid |
-| wall | Log wall | 2 timber, 1 twine | Bench | Snaps to foundation |
-| doorwall | Door wall | 2 timber, 1 twine | Bench | Snaps to foundation |
-| roof | Thatched roof | 3 fiber, 1 timber | Bench | Snaps to foundation |
-| table | Table | 3 timber | Bench | Prop |
-| bed | Bed | 2 timber, 3 fiber, 3 petal | Bench | Prop |
-
-### Bench Range
-- Workbench must be within 5m to craft bench recipes
-- Pocket recipes can be crafted anywhere
-
-### Stack Caps
-- Stone: 80 items per resource
-- Slime/Wisp: 40 items per resource
+- **Pocket items** (twine, torch, campfire, bowl, workbench) craft anywhere.
+- **Building pieces** need a workbench within 5 m.
+- **Nearby storage** supplies crafting; no global inventory.
 
 ---
 
 ## Building
 
-### Placeable Pieces
+### Pieces
+Foundations, floors, walls, roofs, stairs, ramps, doors, windows, bridges. Furniture rotates freely and snaps to surfaces. Structural pieces snap to 0.5 m and 1.0 m grid. Adaptive stilts reach down to 3.0 m.
 
-| Type | Kind | Snapping | Notes |
-|------|------|----------|-------|
-| foundation | floor | Grid (2m) | Has stilts in shallow water |
-| wall | wall | Foundation edge | Fades when inside |
-| doorwall | wall | Foundation edge | Has 1.4m door gap |
-| roof | roof | Foundation center | Fades when inside |
-| table | prop | Foundation floor | - |
-| bed | prop | Foundation floor | - |
-| campfire | ground | Grid (0.5m) | Has fire light |
-| torch | ground | Grid (0.5m) | Has fire light |
-| bowl | ground | Grid (0.5m) | - |
-| workbench | ground | Grid (0.5m) | Enables bench crafting |
+### Rules
+- Pieces need support when placed; nothing ever collapses or decays.
+- **Undo/redo:** 20 steps, restoring full cost.
+- **Dismantling** returns 75%.
+- **Ghost preview:** green = valid, red = invalid.
+- **Build mode:** B toggles. Enter places, Backspace removes, X rotates.
+- **Ctrl+Z / Ctrl+Y** undo/redo.
 
-### Building Mechanics
-- **Ghost preview**: Green = valid, red = invalid
-- **Reach**: Slime/stone 4.5m, Wisp 7m
-- **Slope max**: Slime 4.0, Stone/Wisp 2.5
-- **Snapping**:
-  - Foundations: Snap to 2m grid, connect to nearby foundations
-  - Walls: Snap to foundation edges (4 positions per foundation)
-  - Roofs: Snap to foundation center
-  - Props: Snap to foundation floor with 0.5m grid
-  - Ground items: Snap to 0.5m grid
-- **Overlap refusal**: Pieces cannot overlap
-- **Player collision**: Cannot place where you are standing
-- **Removal**: Delete removes nearest piece (5m range)
-- **Cascading removal**: Removing a foundation removes all pieces attached to it
+### Farming
+- Crops grow from soil moisture and weather.
+- Never die; dry plant just pauses.
+- Offline growth computed on load, capped at 72 hours.
 
-### Structure Features
-- **Roof and wall fade**: Fade when creature is inside a foundation footprint
-  - Roof opacity: 0.08 when inside
-  - Wall opacity: 0.1 when facing inside
-  - Camera-facing walls fade
-- **Stilts**: Shallow water foundations have posts to bed
-  - Post positions: ±1.8m on both axes
-  - Post length: foundation top - bed height + 0.3m
-- **Fire lights**: Campfires and torches emit light
-  - 3 nearest fires get real lights
-  - Light intensity: 1.2 + 0.25 * sin(time * 11 + offset)
-  - Range: 12m
+### Progression
+- Comes from recipes, resources, discoveries, convenience and decoration.
+- Never from gated regions, grind or forced quests.
 
-### Build Perks by Form
-- **Reach**: Wisp 7m, Slime/Stone 4.5m
-- **Slope max**: Slime 4.0, Stone/Wisp 2.5
+### Stretch Goals
+- Copy/paste, mirror, blueprints saved as JSON.
+
+---
+
+## Puzzles
+
+- Handcrafted landmarks plus physics interactions (weight/impact plates, gates, water routing).
+- Optional hints and a reset always.
+- No puzzle can ruin a save.
 
 ---
 
 ## Numbers Summary
 
 ### Terrain
-- Landmass size: 240 × 240 m
-- Height grid cell size: 0.5 m
-- Chunk size: 40 m
-- Chunks: 6 × 6
-- Broadphase grid cell size: 4 m
-
-### Flora Counts (Aetheria)
-- Oak trees: 42
-- Pine trees: 100
-- Cactus: 28
-- Mushrooms: 38
-- Rocks: 20
-- Geodes: 9 (3 per biome: plains, taiga, grove)
-- Clay deposits: 8 (4 per biome: plains, grove)
-- Flowers (petal): 140 (90 plains, 24 dunes, 32 taiga)
-- Flowers (spore): 70 (grove)
+- Sprint crossing: ~90 s
+- Height grid cell: 1 m (hybrid grid)
+- Trench depth: 0.3 m
 
 ### Weather
-- Weather particle count: Full 650, Light 350
-- Weather radius: 18 m around player
-- Weather height range: -6 to +11 m around player
+- Transitions: smooth
+- No damage, no forced shelter
 
 ### Wind
-- Base wind period: 90 s
-- Gust duration: 2-4 s
-- Gust interval: 6-8 s
-- Thermal radius: 5 m
-- Thermal height: +12 m
-- Mushroom updraft height: +8 m
+- Moor rule: cancels wind while idle + grounded
+- Ride (G hold): tailwind boost, no headwind slowdown
 
-### Resources
-- Max stack: Stone 80, Slime/Wisp 40
-- Harvest cooldown: Slime/stone 7 s, Stone 3 s
-- Tree cooldown after hit: Slime/stone 7 s, Stone 3 s
+### Water
+- Flow steps: ~4 per second
+- Active radius: ~24 m
+- Submerge threshold: 8%
+- Paddle drive: 9 m/s² (7 Lantern/Geode, 5 Obsidian)
+- Upward stroke cap: 3 m/s
+- Planing threshold: 3.5 m/s, full at 5 m/s
 
 ### Building
-- Foundation size: 4 × 4 m
-- Wall height: 3 m
-- Wall thickness: 0.3 m
-- Door gap: 1.4 m
-- Roof size: 4.6 × 4.6 m
-- Roof thickness: 0.3 m
-- Bench range: 5 m
-- Build reach: Slime/stone 4.5 m, Wisp 7 m
+- Grid: 0.5 m and 1.0 m
+- Stilts: to 3.0 m
+- Undo: 20 steps
+- Dismantle: 75% return
+- Workbench range: 5 m
+
+### Farming
+- Offline growth cap: 72 h
+
+### Day/Night
+- Cycle: 24 minutes

@@ -1,367 +1,129 @@
-# ASSETS.md - Asset Sources, Licenses, Pipeline, Budgets
+# ASSETS.md — Asset Sources, Licenses, Pipeline, Budgets
 
-## Asset Pipeline Overview
-
-Assets are fetched from CC0 sources, optimized, and referenced via a manifest. Procedural primitives serve as fallbacks.
-
-### Pipeline Steps
-1. **Fetch**: `scripts/fetch-assets.mjs` downloads packs from sources
-2. **Optimize**: `scripts/optimize-assets.mjs` processes with glTF-Transform
-3. **Check**: `scripts/check-assets.mjs` validates in CI
-4. **Placeholders**: `scripts/make-placeholders.mjs` creates UI icon placeholders
-
-### File Locations
-- **Sources**: `assets/sources.json` (pack definitions)
-- **Raw downloads**: `assets/raw/` (gitignored)
-- **Optimized models**: `public/assets/models/` (GLB files)
-- **Manifest**: `public/assets/models/manifest.json`
-- **UI assets**: `public/assets/ui/` (SVG placeholders)
-- **Licenses**: `assets/LICENSES.json` (auto-generated credits)
+Aligned with `AETHERIA_MASTER_PLAN.md` (v4). Desktop browser only.
 
 ---
 
-## Candidate CC0 Sources
+## 1. Asset Pipeline Overview
 
-### Kenney (kenney.nl)
-**License**: CC0 (Creative Commons Zero)
+Assets in Aetheria are fetched from curated CC0 / public domain sources, optimized using glTF-Transform, tracked in a manifest, and given procedural fallback geometry. The game must run cleanly even with an empty `public/assets/` folder.
 
-**Packs**:
-- Nature Kit: Trees, rocks, flowers, mushrooms
-- Survival Kit: Workbench, campfire, tools
-- Furniture Kit: Tables, beds, chairs
-- Fantasy Town Kit: Fantasy structures
-- Pirate Kit: Boats, docks
-- Interface Sounds: UI sound effects
-- Impact Sounds: Impact/hit sounds
-- Music Jingles: Short music clips
-
-**Download type**: Direct
-
----
-
-### Quaternius (quaternius.com)
-**License**: CC0
-
-**Packs**:
-- Stylized nature packs: Trees, bushes, rocks (variety)
-
-**Download type**: Direct or page
-
----
-
-### KayKit (kaylousberg.itch.io)
-**License**: CC0
-
-**Packs**:
-- Forest and nature packs: Trees, bushes, rocks
-- Hats and props: Cosmetic items
-
-**Download type**: Manual (itch.io requires click)
-
----
-
-### Poly Pizza
-**License**: Varies (CAUTION)
-
-**Note**: Only use CC0 or CC-BY with attribution in CREDITS.md
-- Avoid Sketchfab (unclear licenses)
-- Only use if license is explicitly CC0 or CC-BY
-
-**Download type**: Manual
-
----
-
-## Asset Rules
-
-### sources.json Format
-```json
-{
-  "packs": [
-    {
-      "id": "kenney-nature-kit",
-      "name": "Nature Kit",
-      "author": "Kenney",
-      "pageUrl": "https://kenney.nl/assets/nature-kit",
-      "license": "CC0",
-      "downloadType": "direct",
-      "downloadUrl": "https://example.com/nature-kit.zip",
-      "files": ["*.glb", "*.gltf"],
-      "destination": "models/nature"
-    }
-  ]
-}
+```
+External CC0 Sources
+        │
+        ▼ (scripts/fetch-assets.mjs)
+assets/raw/  (gitignored raw source packs)
+        │
+        ▼ (scripts/optimize-assets.mjs via glTF-Transform)
+public/assets/models/*.glb  +  public/assets/models/manifest.json
+        │
+        ▼ (scripts/check-assets.mjs CI budget check)
+Verified & bundled for runtime
 ```
 
-### Fetch Script
-- Downloads "direct" and "page" sources automatically
-- Parses page for .zip link for "page" type
-- Prints manual steps for itch.io/Patreon/Drive downloads
-- Verifies what was fetched
-- Creates LICENSES.json entry
-
-### Optimize Script
-Uses `@gltf-transform/cli`:
-- **Dedupe**: Remove duplicate vertices/attributes
-- **Prune**: Remove unused nodes/meshes
-- **Weld**: Merge nearby vertices
-- **Quantize**: Reduce precision to save space
-- **Meshopt**: Apply meshoptimizer compression
-- **Merge by material**: Combine meshes with same material
-- **Output**: GLB to `public/assets/models/`
-- **Manifest**: Generates `manifest.json` with model IDs
-
-### Check Script (CI)
-Fails if:
-- Model has no LICENSES.json entry
-- License is not CC0 or attributed CC-BY
-- Prop exceeds triangle budget (2,000 triangles)
-- Prop exceeds size budget (20 KB gzipped)
-- Total models exceed budget (4 MB gzipped)
-
-### Placeholder Script
-Creates SVG placeholders for:
-- UI icons (32×32 or 64×64)
-- Logo (256×256)
-- With README instructions for file names to replace
+### Pipeline Scripts
+1. **Fetch**: `pnpm run assets:fetch` downloads or guides downloads of packs from licensed sources into `assets/raw/`.
+2. **Optimize**: `pnpm run assets:optimize` deduplicates, welds, quantizes, and applies meshopt compression via glTF-Transform.
+3. **Check**: `pnpm run assets:check` validates licenses, triangle budgets, and file sizes in CI.
+4. **Placeholders**: `pnpm run make-placeholders` generates procedural fallback SVG icons and materials.
 
 ---
 
-## Asset Manifest
+## 2. Directory Structure
 
-### Manifest Format
-```json
-{
-  "models": {
-    "oak_tree": {
-      "file": "oak_tree.glb",
-      "license": "CC0",
-      "author": "Kenney",
-      "triangles": 1200,
-      "size": "15KB"
-    },
-    "pine_tree": {
-      "file": "pine_tree.glb",
-      "license": "CC0",
-      "author": "Kenney",
-      "triangles": 800,
-      "size": "12KB"
-    }
-  }
-}
+```
+Aetheria/
+├── assets/
+│   ├── sources.json          # Pack definitions, URLs, and licenses
+│   ├── LICENSES.json         # Auto-generated attribution database
+│   └── raw/                  # Gitignored raw downloads (.zip, .gltf, .obj)
+├── public/
+│   └── assets/
+│       ├── models/           # Optimized runtime GLB files
+│       │   └── manifest.json # Asset registry (IDs, sizes, triangles)
+│       ├── audio/            # Ambient loops, chimes, UI audio
+│       └── ui/               # SVG icons, HUD elements
+└── src/render/
+    └── fallbacks.ts          # Procedural Three.js geometry fallbacks
 ```
 
-### Usage
-- Game references models by manifest ID (not file path)
-- Fallback to procedural primitives if ID not found
-- Runtime loads from `public/assets/models/`
+---
+
+## 3. Approved CC0 Sources
+
+Only CC0 or properly attributed CC-BY 4.0 assets are permitted:
+
+1. **Kenney (kenney.nl)** — CC0:
+   - Nature Kit (trees, rocks, flowers, mushrooms)
+   - Survival Kit (workbench, campfire, wooden planks)
+   - Furniture Kit (tables, stools, lanterns)
+   - Interface & Impact Sounds (clicks, chimes, landing thuds)
+2. **Quaternius (quaternius.com)** — CC0:
+   - Stylized low-poly plants, conifers, desert flora, crystals.
+3. **KayKit (kaylousberg.itch.io)** — CC0:
+   - Low-poly props, decorative pieces, hats/accessories.
+4. **Self-Authored Procedural Primitives**:
+   - Custom low-poly geometries generated via Three.js (slimes, wisps, geodes).
 
 ---
 
-## Procedural Fallbacks
+## 4. Asset Budgets (Desktop Only)
 
-Every asset has a procedural fallback using Three.js primitives:
-- **Trees**: Cylinder (trunk) + Cone/Sphere (foliage)
-- **Rocks**: Icosahedron with flat shading
-- **Geodes**: Icosahedron with emissive color
-- **Flowers**: Small spheres
-- **Workbench**: Box geometry
-- **Campfire**: Cylinders + cones for fire
-- **Furniture**: Box combinations
-
-**Rule**: Game must run with empty `public/assets/` folder
-
----
-
-## In-Game Models
-
-### Required Models
-- **Trees**: Oak, pine, cactus, mushroom
-- **Rocks**: Various sizes
-- **Geodes**: Glowing crystals
-- **Flowers**: Petal and spore types
-- **Crafting**: Workbench, campfire, torch, bowl
-- **Furniture**: Table, bed
-- **Boats/Docks**: For R3+ (sea access)
-- **Hats**: Optional cosmetic overrides (R5+)
-
-### Cosmetics
-- **Default**: Procedural primitives
-- **Optional**: CC0 hat models from manifest
-- **Slots**: Head, face, back, aura, trail
+| Metric | Budget | Description |
+| :--- | :--- | :--- |
+| **Initial JS Bundle** | $< 700\text{ KB}$ | Gzipped JavaScript payload |
+| **Total Models** | $< 5\text{ MB}$ | All runtime GLBs combined (gzipped) |
+| **Per-Prop Model** | $< 25\text{ KB}$ | Single compressed prop GLB |
+| **Prop Triangle Count** | $\le 2,000$ | Triangles per individual prop model |
+| **Total Visible Triangles** | $\le 150,000$ | On-screen triangle budget at 60 FPS |
+| **Draw Calls** | $\le 60$ | Enforced via InstancedMesh & batched meshes |
+| **Heap Memory** | $< 250\text{ MB}$ | Peak browser tab memory footprint |
+| **Texture Resolution** | $256 \times 256$ to $512 \times 512$ | Prefer vertex colors or lightweight palettes |
 
 ---
 
-## Asset Budgets
+## 5. Procedural Primitives & Fallbacks
 
-### Size Budgets
-- **Initial JS (gzipped)**: < 400 KB
-- **First load**: < 2.5 MB
-- **Total models (gzipped)**: < 4 MB
-- **Per prop**: < 20 KB gzipped
-- **Textures**: 256-512 px or none
+**Mandatory Rule**: The entire island must generate and render using procedural Three.js primitives if asset GLBs are missing or disabled.
 
-### Triangle Budgets
-- **Per prop**: < 2,000 triangles
-- **Total visible**: 40,000-60,000 triangles
-
-### Memory Budget
-- **Total memory**: < 120 MB
-- **Draw calls**: 25-35
+| Asset Type | Procedural Fallback |
+| :--- | :--- |
+| **Deciduous Trees** | Cylinder trunk + Icosahedron/Cone foliage with vertex noise |
+| **Conifers / Pines** | Stacked stepped cones on a tapered cylinder trunk |
+| **Rocks & Boulders** | Low-poly Dodecahedron / Icosahedron with random vertex jitter |
+| **Crystals / Geodes** | Sharpened Octahedron with emissive material accent |
+| **Flora / Flowers** | Small extruded cylinders / disc clusters with vibrant vertex tint |
+| **Workbench / Campfire** | Composed boxes, stone ring cylinder, point-light flicker |
+| **Structures / Walls** | Extruded rectangular geometry with snapped grid coordinates |
 
 ---
 
-## Asset Categories
+## 6. Four Regional Prop Manifest
 
-### Nature
-- Trees (oak, pine, cactus, mushroom)
-- Rocks (various sizes)
-- Flowers (petal, spore)
-- Geodes (glowing crystals)
-- Clay deposits
+Props are mapped across the four island regions:
 
-### Structures
-- Workbench
-- Campfire
-- Torch
-- Table
-- Bed
-- Foundation pieces
-- Wall pieces
-- Roof pieces
-- Door pieces
-
-### Cosmetics
-- Hats (wizard, crown, ears, etc.)
-- Face items (glasses, blush)
-- Back items (backpack, wings)
-- Aura effects (sparkles, fireflies)
-- Trail effects (stars, petals)
-
-### Audio (R5+)
-- Ambient sounds per biome
-- UI sounds (craft, build, harvest)
-- Chimes and feedback sounds
+1. **The Shimmering Coast**:
+   - Driftwood logs, smooth beach stones, seashells, kelp clumps, dock pilings, tidepool stones.
+2. **Whispering Pines**:
+   - Tall pine trees, granite slabs, alpine moss patches, fallen logs, pinecone pickups.
+3. **Sunbaked Crags**:
+   - Sandstone arches, hoodoos, terracotta boulders, dry brush, clay mounds, oasis palms.
+4. **The Bioluminescent Basin**:
+   - Giant glowing mushrooms, bioluminescent spores, cypress knees, damp marsh reeds, glowing crystals.
 
 ---
 
-## License Tracking
+## 7. Quality & Governor Settings
 
-### LICENSES.json Format
-```json
-{
-  "packs": [
-    {
-      "id": "kenney-nature-kit",
-      "name": "Nature Kit",
-      "author": "Kenney",
-      "license": "CC0",
-      "url": "https://kenney.nl/assets/nature-kit",
-      "attribution": null
-    },
-    {
-      "id": "custom-model",
-      "name": "Custom Model",
-      "author": "Artist Name",
-      "license": "CC-BY 4.0",
-      "url": "https://example.com",
-      "attribution": "© 2024 Artist Name, CC-BY 4.0"
-    }
-  ]
-}
-```
+The runtime performance governor maintains 60 FPS on desktop:
 
-### CREDITS.md Generation
-- Script reads LICENSES.json
-- Generates human-readable credits
-- Never hand-edited (always regenerate)
-
----
-
-## Manual Download Steps
-
-For sources requiring manual clicks (itch.io, Patreon, Drive):
-
-1. Run `npm run assets:fetch`
-2. Script prints exact URL and folder
-3. Download pack manually
-4. Drop zip into `assets/raw/`
-5. Run `npm run assets:optimize`
-
----
-
-## Scripts Reference
-
-### fetch-assets.mjs
-```bash
-npm run assets:fetch
-```
-- Downloads automatic sources
-- Prints manual download instructions
-- Verifies downloads
-- Updates LICENSES.json
-
-### optimize-assets.mjs
-```bash
-npm run assets:optimize
-```
-- Processes raw assets with glTF-Transform
-- Outputs GLB to public/assets/models/
-- Generates manifest.json
-- Reports size and triangle counts
-
-### check-assets.mjs
-```bash
-npm run assets:check
-```
-- Validates all assets
-- Checks licenses
-- Enforces budgets
-- Fails CI if violations found
-
-### make-placeholders.mjs
-```bash
-npm run make-placeholders
-```
-- Creates SVG placeholders for UI
-- Creates README with replacement instructions
-- Outputs to public/assets/ui/
-
----
-
-## Quality Settings
-
-### Full Quality
-- All assets loaded
-- Full resolution textures
-- All flora instances
-
-### Light Quality (Default on Touch)
-- Reduced flora count
-- Pixel ratio at most 1.25
-- Shadow map 1024
-- 350 weather particles
-- No outline blur
-- No caustics
-
----
-
-## Numbers Summary
-
-### Size Budgets
-- Initial JS: < 400 KB gzipped
-- First load: < 2.5 MB
-- Total models: < 4 MB gzipped
-- Per prop: < 20 KB gzipped
-
-### Triangle Budgets
-- Per prop: < 2,000 triangles
-- Total visible: 40,000-60,000 triangles
-
-### Texture Budgets
-- Resolution: 256-512 px or none
-- Prefer vertex colors over textures
-
-### Performance
-- Draw calls: 25-35
-- Memory: < 120 MB
-- Light quality particle counts: 162 (slime), 48 (wisp), 350 (weather)
+- **Standard Quality**:
+  - Full InstancedMesh density for foliage and grass.
+  - Shadow map resolution $2048 \times 2048$.
+  - Full particle budgets (500 ambient/weather particles).
+  - Screen-space outlines & water caustic highlights.
+- **Throttled / Eco Quality** (if sustained frame drops occur):
+  - Drops foliage instance count by 35%.
+  - Shadow map reduced to $1024 \times 1024$ or soft directional shadow.
+  - Particle count capped at 200.
+  - Preserves 60 FPS target without altering physics or gameplay.

@@ -1,252 +1,103 @@
-# WATER.md - Water Types, Per-Form Perks, Currents, Buoyancy
+# WATER.md — Water Bodies, Hydrodynamics, Per-Form Interactions
 
-## Core Water Rules (Rule 2 Applies)
-
-**Peaceful water mechanics - no form is disadvantaged:**
-- No drowning
-- No damage
-- No speed loss in water
-- No breath cost for being in water
-- Water never slows, slips, or weighs down any form
-
-## Water Types
-
-### Sea (R3)
-- **Location**: Surrounds the landmass
-- **Beach band**: Shallow transition zone near shore
-- **Depth**: Up to ~6 m near shore
-- **Surface level**: Constant (typically Y = 0)
-- **Resources**: Pearl, kelp fibre (counts as fibre)
-- **Rendering**: Transparent plane with vertex-shader waves, depth colors, shoreline foam
-
-### Lakes and Rivers (R4)
-- **Location**: Inside land biomes (plains, grove, taiga)
-- **Lakebed clay**: Clay resource
-- **Rivers**: Follow splines
-- **Flow field**: Rivers have current vectors
-- **Depth**: Variable, typically 1-3 m
-
-### Swamp (R4)
-- **Location**: Shallow water bodies
-- **Depth**: 1 m or less
-- **Appearance**: Murky tint
-- **Resources**: Reeds (fibre), glowing spores
-- **Wading**: Full speed (no slowdown)
-
-### Frozen Water (R4)
-- **Location**: Ice sheets in cold areas
-- **Physics**: Neutral (no slipping)
-- **Walking**: Can walk on ice with normal physics
-- **Ground pound**: Cracks a ring open, drops ice crystals
-- **Rendering**: White/ice colored surface
+Aligned with `AETHERIA_MASTER_PLAN.md` (v4). Desktop browser only.
 
 ---
 
-## Universal Water Movement (v4.1)
+## 1. Core Water Philosophy
 
-All nine forms obey the same hydrodynamic physical rules:
-
-1. **No Underwater Glide**: Gliding, hovering-glide, and crystal sails are strictly disabled whenever the submerged fraction exceeds $8\%$.
-2. **Universal Swimming**:
-   - `WASD`: Paddles through water with $\sim 9\text{ m/s}^2$ drive force ($7\text{ m/s}^2$ for Lantern and Geode, $5\text{ m/s}^2$ for Obsidian).
-   - `Space`: Strokes upward up to $3.0\text{ m/s}$.
-   - Terminal swimming speed is governed naturally by quadratic water drag ($\vec{F}_{\text{drag}} = \frac{1}{2} \rho_w v_{\text{rel}}^2 C_d A$, where $\rho_w = 1000\text{ kg/m}^3$).
-3. **Lakebed & Seabed Walking**: Dense forms (Geode, Obsidian) sink to the floor, walk along the bed at full speed, and can jump upward from it. Obsidian does not stroke upward.
-4. **Planing Hydrodynamic Lift**: When moving horizontally above $3.5\text{ m/s}$ in the surface layer ($f_{\text{submerged}} \in [0.1, 0.7]$), planing lift allows dense skimming forms (Oobleck, Aerolite) to run across water without sinking.
-5. **No Bounce While Submerged**: Surface impact bounce is disabled while immersed in water.
+Water in Aetheria is an inviting playground, not an obstacle or hazard:
+- **No Drowning & No Damage**: Forms can remain submerged indefinitely without penalty.
+- **No Forced Penalties**: Water never artificially slows or traps any form.
+- **Physics-Driven Buoyancy**: Density, displacement, and form shapes govern whether a creature floats, skims, or walks along the floor.
+- **Steady Currents (Rule 4)**: Rivers and ocean currents are neutral by default. They never sweep you away or disrupt movement unless you hold **Shift (Ride)** to harness their downstream speed boost. Headwinds/upcurrents never slow you down.
 
 ---
 
-## Per-Form Water Interactions (Nine Forms)
+## 2. Water Bodies Across the Four Regions
 
-### Slimes
-- **Oobleck**: Relative density 1.12. Sinks slowly when stationary, but above $3.5\text{ m/s}$ planing lift engages; runs fully on top of water above $5\text{ m/s}$.
-- **Dewdrop**: Relative density $0.8 + 0.19 B$ ($B \in [0, 1]$). Soaks water as ballast exclusively while submerged ($+0.50\text{ /s}$). Hold `K` for rocket water jet propulsion that exhausts ballast in ~2.5 s. Splats flat without bounce when ballast is full.
-- **Aether Bubble**: Relative density 0.25. Highly buoyant; floats naturally on surface with slow vertical bobbing; tap `J` for buoyant lift hop.
+The island features distinct aquatic environments integrated into the four regions:
 
-### Wisps
-- **Mist**: Relative density 0.08. Gaseous dispersion hovers effortlessly over water surfaces; skimming over water counts as ground proximity, regenerating breath tank at $+25\text{ /s}$.
-- **Zephyr**: Relative density 0.12. Agile surface skimmer; hold `K` for gust dash to push floating crates across lakes.
-- **Lantern**: Density condenses from 0.05 up to 2.40 by holding `K`. Condensing into hard-light causes the Lantern to sink deep into lakebeds; releasing `K` or running out of breath causes it to float back to the surface.
-
-### Stone
-- **Aerolite**: Relative density 0.55 (density < 1.0 floats naturally). Pumice-light stone; skims water efficiently at speed. Couples to thermals and currents like an air creature.
-- **Geode**: Relative density 2.60. Sinks to lakebed; rolls with near-zero friction; paddles at $7\text{ m/s}^2$ and jumps from lakebed.
-- **Obsidian**: Relative density 5.00. Plunges rapidly to lakebed; anchor (`J`) locks immovably to bed floor against strong river currents.
-
----
-
-## Water Inputs & Controls
-
-| Action | Control | Behavior |
+| Region | Water Feature | Characteristics |
 | :--- | :--- | :--- |
-| **Swim / Paddle** | `WASD` / Arrows | Directional paddle drive ($9\text{ m/s}^2$; $7\text{ m/s}^2$ Geode/Lantern; $5\text{ m/s}^2$ Obsidian) |
-| **Upward Stroke** | `Space` | Upward swim stroke up to $3\text{ m/s}$ (disabled for Obsidian) |
-| **Jump from Bed** | `Space` | Jump impulse when grounded on lakebed/seabed |
-| **Water Jet** | `K` (hold) | Dewdrop rocket propulsion (expels ballast, rises in acceleration) |
-| **Condense Sink** | `K` (hold) | Lantern hard-light condensation (increases density to 2.4, sinking to floor) |
-| **Anchor** | `J` (hold) | Obsidian immovable bed anchor |
-| **Ride Current** | `Shift` | Harness river currents for directional boost |
+| **The Shimmering Coast** | Ocean Border & Tide Pools | Endless turquoise sea surrounding the island; shallow tide pools ($0.3\text{ m}$–$1.0\text{ m}$) with sea shells and kelp; gentle beach surf. |
+| **Whispering Pines** | Mountain Streams & Alpine Tarn | Clear alpine lake ($2\text{ m}$–$4\text{ m}$ depth) fed by rushing granite streams; rapid downstream current vectors; cold mist. |
+| **Sunbaked Crags** | Oasis & Wadis | Palm-fringed desert oasis spring; dry wadi gullies that channel flash water during regional rainstorms. |
+| **The Bioluminescent Basin** | Shallow Marsh & Sunken Channels | Murky, bioluminescent swamp ($0.5\text{ m}$–$1.5\text{ m}$); glowing reed beds; floating lily-pad platforms; subterranean caverns. |
 
 ---
 
-## Currents
+## 3. Universal Water Controls
 
-### River Currents
-- **Location**: Rivers in land biomes
-- **Flow field**: Per-cell velocity vectors
-- **Effect**: Only affects while Riding (Rule 4)
-- **Steady by default**: Never moves you unless Riding
-- **Tailwind boost**: +40% max if aligned
-- **Headwind cancel**: Never slows you
-
-### Current Mechanics
-```javascript
-// Current vector at position
-current = sampleFlowField(x, z);
-
-// Apply only while Riding
-if (riding) {
-  const aligned = dot(velocity, current);
-  if (aligned < 0) {
-    // Headwind: cancel component
-    current -= projected_component;
-  } else {
-    // Tailwind: boost
-    speed *= 1 + 0.4 * min(1, aligned / 4);
-  }
-}
-```
+| Input | In-Water Action | Notes |
+| :--- | :--- | :--- |
+| **`W`, `A`, `S`, `D`** | Swim / Paddle / Bed-Walk | Horizontal directional propulsion through water or along lakebed |
+| **`Space`** | Upward Stroke / Bed-Jump | Strokes upwards toward surface (or jumps if grounded on floor) |
+| **`Shift` (Hold)** | Ride Current | Aligns with flow vector for up to $+40\%$ speed boost; no slowdown upstream |
+| **`J`** | Primary Ability | Form-specific ability (e.g. bounce, anchor, light pulse) |
+| **`K`** | Secondary Ability | Form-specific utility (e.g. water jet, gust, hard-light condense) |
 
 ---
 
-## Buoyancy
+## 4. Per-Form Water Interactions (9 Forms)
 
-### Soft Body Buoyancy
-For slime and stone (soft body physics):
-- **Per-particle upward acceleration**: Proportional to depth below surface
-- **Clamped**: No infinite acceleration
-- **Water drag**: Reduced velocity in water
-- **Tuned**: Rule 2 must hold (no form slower in water)
+### Slime Family
+- **Oobleck** (Shear-Thickening):
+  - *Density*: $1.12$ (sinks gently when idle).
+  - *Behavior*: Planing hydrodynamic lift engages at speeds $> 3.5\text{ m/s}$. When sprinting or hopping fast across water, Oobleck solidifies on impact and runs cleanly across the surface without submerging.
+- **Dewdrop** (Water Absorber):
+  - *Density*: $0.80 \to 1.05$ (varies with soaked ballast).
+  - *Behavior*: Naturally floats when light. Holding `K` absorbs surrounding water to gain weight; tapping or holding `K` again exhausts stored water in a high-velocity rocket jet for vertical or forward propulsion.
+- **Aether Bubble** (Pure Buoyancy):
+  - *Density*: $0.20$ (super buoyant).
+  - *Behavior*: Bobs high on water surface like a soap bubble. Never sinks. Space or `J` triggers high buoyant bounces off waves.
 
-### Buoyancy Formula
-```javascript
-// For each particle:
-depth = surfaceY - particleY;
-if (depth > 0) {
-  buoyancy = depth * buoyancyConstant;
-  buoyancy = min(buoyancy, maxBuoyancy);
-  velocityY += buoyancy * dt;
-  velocity *= (1 - waterDrag * dt);
-}
-```
+### Wisp Family
+- **Mist** (Vapor Dispersion):
+  - *Density*: $0.08$.
+  - *Behavior*: Glides effortlessly over water surfaces with zero drag. Skimming close to water replenishes float duration and stamina meter.
+- **Zephyr** (Wind Current):
+  - *Density*: $0.12$.
+  - *Behavior*: Skims surface while generating miniature water ripples. Holding `K` fires a directional gust that pushes floating crates, logs, and lily pads across lakes.
+- **Lantern** (Hard-Light Core):
+  - *Density*: $0.05$ (standard) $\to 2.40$ (condensed).
+  - *Behavior*: Normally hovers over water. Holding `K` condenses light into hard matter, causing Lantern to sink down to the seabed. Underwater, its intense glow reveals hidden seabed geode deposits and sunken paths.
 
-### Tuning Goals
-- **Slime**: Floats at surface, dives when holding F
-- **Stone**: Sinks to bed, walks it
-- **Wisp**: Skims or dives as mist (no buoyancy needed)
-
----
-
-## Water Rendering
-
-### Cheap Rendering Approach
-- **Per-body plane**: One transparent plane per water body
-- **Vertex-shader waves**: Animated displacement in vertex shader
-- **Depth colors**: Precomputed depth stored in vertex colors
-  - No depth texture needed
-  - No refraction
-  - No reflection
-- **Shoreline foam**: From depth band near edges
-- **Underwater tint**: Fog + CSS overlay when camera submerged
-- **Fake caustics**: Only in Medium+ quality (optional)
-
-### Depth Band
-- **Near shore**: Shallow, light color
-- **Deep**: Darker color
-- **Foam**: White band at depth threshold
-
-### Underwater Effect
-- **Fog**: Exponential fog in shader
-- **Tint**: CSS overlay with opacity based on depth
-- **Trigger**: Camera target below surface
+### Stone Family
+- **Aerolite** (Porous Pumice):
+  - *Density*: $0.55$ ($< 1.0$, floats naturally).
+  - *Behavior*: Pumice stone that floats and bobs like driftwood. Skims surface with water currents and thermals.
+- **Geode** (Hollow Crystal Sphere):
+  - *Density*: $2.60$.
+  - *Behavior*: Plunges smoothly to the lakebed or seabed. Walks along the floor with full ground traction. Can jump off the seabed to ascend.
+- **Obsidian** (Super-Dense Bed Anchor):
+  - *Density*: $5.00$.
+  - *Behavior*: Sinks immediately like an iron weight. Walks along deep seabed undisturbed. Holding `J` anchors immovably into underwater substrate, allowing it to withstand extreme river rapids.
 
 ---
 
-## Water Physics Numbers
+## 5. Hydrodynamics & Current Math
 
-### Surface
-- **Surface level**: Y = 0 (sea), variable per body
-- **Depth**: Sea up to 6 m near shore, lakes 1-3 m, swamp ≤1 m
+### Quadratic Drag & Buoyancy
+For immersed particles or rigid bodies:
+$$\vec{F}_{\text{buoyancy}} = \rho_w \cdot V_{\text{submerged}} \cdot g \cdot \hat{y}$$
+$$\vec{F}_{\text{drag}} = -\frac{1}{2} \cdot \rho_w \cdot |\vec{v}_{\text{rel}}| \vec{v}_{\text{rel}} \cdot C_d \cdot A$$
 
-### Buoyancy
-- **Buoyancy constant**: To be tuned (target: slime floats at surface)
-- **Max buoyancy**: Clamped to prevent infinite acceleration
-- **Water drag**: To be tuned (target: no slowdown per Rule 2)
-
-### Currents
-- **River speed**: ~1-2 m/s
-- **Current effect**: Only while Riding
-- **Tailwind boost**: Up to +40%
-- **Headwind cancel**: Never slows
-
-### Slime Skip-Dash
-- **Max bounces**: 3
-- **Speed preservation**: Maintained through bounces
-- **Charge time**: Same as ground jump (0.85 s)
-
-### Stone Seabed
-- **Seabed walking**: Full ground speed
-- **Gather speed**: One hit for seabed resources
-- **Current immunity**: Unaffected by currents
-
-### Wisp Skimming
-- **Low threshold**: Within 1.4 m of surface
-- **Breath refill**: 60/s when low
-- **Dive speed**: Normal speed (no penalty)
+### River Flow & Steady Current (Rule 4)
+Current vectors $\vec{C}(x, z)$ are defined by spline flow fields along river courses:
+- **Default State**: Player velocity is unaffected by $\vec{C}$. You can swim upstream or downstream with identical base responsiveness.
+- **Riding (`Shift`)**:
+  $$\text{if } \vec{v} \cdot \vec{C} > 0 \implies \vec{v}_{\text{final}} = \vec{v} + \vec{C} \cdot \min\left(1.0, \frac{\vec{v} \cdot \vec{C}}{|\vec{C}|^2}\right) \times 0.4$$
+  Headway is boosted downstream by up to $+40\%$.
+  If $\vec{v} \cdot \vec{C} \le 0$ (swimming against current), the counter-force is zeroed.
 
 ---
 
-## Water Tests
+## 6. Water Rendering Strategy
 
-### Rule 2 Tests
-- **No form slower**: Each form tested in water vs land
-  - Move 10 m forward in water and on land
-  - Time difference < 10%
-- **No breath cost**: Breath not spent for being in water
-- **No slowdown**: No terrain penalty for water
-
-### Per-Form Tests
-- **Slime**:
-  - Surfaces automatically
-  - Dives when holding F
-  - Skip-dash bounces up to 3 times
-- **Wisp**:
-  - Skims over water (low state, breath refills)
-  - Dives as mist at normal speed
-- **Stone**:
-  - Sinks to seabed
-  - Walks seabed at full speed
-  - Ignores currents
-
-### Current Tests
-- **Steady by default**: Currents don't move you unless Riding
-- **Headwind cancel**: Headwinds never slow you
-- **Tailwind boost**: Tailwinds speed you up (up to +40%)
-- **Ride only**: Effect only applies while Riding
-
-### Buoyancy Tests
-- **Slime floats**: Stays at surface without input
-- **Stone sinks**: Sinks to bed and stays
-- **Wisp**: No buoyancy (skims or dives)
-- **No NaN**: No NaN values in water physics
-
----
-
-## Water Interaction Summary
-
-| Form | Surface | Dive | Currents | Seabed | Breath |
-|------|---------|------|----------|--------|--------|
-| Slime | Floats (F to dive) | Skip-dash | Affects (Ride) | N/A | No cost |
-| Wisp | Skims (refills) | Mist (normal) | Affects (Ride) | N/A | No cost |
-| Stone | Sinks | N/A | Ignores | Walks (full speed) | No cost |
+To satisfy the $\le 60$ draw call budget and run smoothly at 60 FPS:
+- **Geometry**: Single planar meshes segmented per water body (ocean ring, mountain tarn, marsh).
+- **Vertex Animation**: Lightweight sine-wave displacement inside vertex shader for gentle surface motion.
+- **Depth Color Ramp**: Distance to underwater terrain mapped to a 2-stop color gradient (shallow turquoise to deep sapphire).
+- **Shoreline Foam**: Edge intersection detection against scene depth buffer or vertex distance mask generates subtle white foam lines.
+- **Camera Immersion**: Exponential depth fog with soft cyan/emerald tint when the camera dips below water level. No expensive full-screen screen-space reflections (SSR) required.

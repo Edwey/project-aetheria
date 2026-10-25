@@ -1,142 +1,67 @@
-# AGENT.md - Rules for AI Working on Project Aetheria
+# AGENT.md — Rules for AI Working on Project Aetheria
 
-This document contains rules for any AI (cloud or local) working on this codebase.
+Aligned with `AETHERIA_MASTER_PLAN.md` (v4).
 
-## For Small/Local Models (Task Files)
+This document contains rules for any AI agent working on this codebase.
 
-When executing task files from `tasks/`:
+---
 
-1. **One task at a time** - Read the task file completely, complete it, then stop. Do not attempt multiple tasks in one session.
+## 1. Ground Rules & Scope
 
-2. **Never rewrite whole files** - Make minimal, targeted edits. Use the exact line ranges specified in the task.
+1. **Follow the Master Plan**: `AETHERIA_MASTER_PLAN.md` is the primary source of truth. All docs and code must align with it. `Aetheria.html` is an experimental prototype / feel reference only; do not copy its monolithic structure.
+2. **Desktop Only**: Project Aetheria is desktop-browser only (Chrome, Edge, Firefox; Safari desktop best-effort). No mobile, no touch controls, no responsive downscaling for phones.
+3. **Peaceful Sandbox**: No combat, no health, no damage, no drowning, no hunger, no death, no punishment. Never add mechanics that punish or frustrate the player.
+4. **Permanent Forms**: Nine forms across three families (Slime, Wisp, Stone). All forms are always available from minute one. Switching is free and unrestricted (`C` switches family, `1`/`2`/`3` selects form).
+5. **Universal Verbs**: Every form can perform core verbs: Move, Jump, Glide, Squeeze, Cling, Anchor/Float. Forms differ by weight, bounce, friction, and signature abilities (J / K), but no form is locked out of moving through the world.
+6. **Steady Wind & Water (Rule 4)**: Wind, thermals, and currents are steady and neutral by default. They never push, pull, slow, or blow the player off course unless the player explicitly holds **Shift** (Ride). Headwinds never slow you down; tailwinds provide boost.
 
-3. **Run tests after changes** - After each change, run `npm test` (or the specific test command in the task). If tests fail, stop and report the failure.
+---
 
-4. **Stop and report on failure** - If a test fails or an error occurs, stop immediately. Report the exact error message and what you were doing. Do not attempt to fix unless the task explicitly tells you to.
+## 2. Architecture & Code Quality
 
-5. **No new features** - Only implement what the task describes. Do not add extra functionality, refactor, or optimize unless explicitly requested.
+- **Language & Stack**: TypeScript (strict mode), Three.js (pinned r128+), Vite, pnpm.
+- **Physics Abstraction**: All physics must sit behind a clean `PhysicsWorld` interface (spiked in Phase 0: Jolt Physics WASM single-thread vs custom minimal physics). Game logic and character controllers interact only with `PhysicsWorld`.
+- **Pure Game Simulation**: Simulation and gameplay logic must not tightly couple to Three.js render objects or DOM elements. ECS or decoupled system architecture: state in data, rendering observes state.
+- **Zero Allocations in Hot Loops**: Reuse vectors (`THREE.Vector3`), quaternions, and temporary objects. Avoid instantiating objects inside `update(dt)` or render loops.
+- **Instanced Rendering**: Use `THREE.InstancedMesh` for repeated props, foliage, and particles. Keep draw calls $\le 60$.
+- **Procedural Fallbacks**: Every visual asset must have a procedural geometry fallback. The game must boot and be fully playable even if `public/assets/` is empty.
 
-6. **Preserve formatting** - Keep the existing code style (indentation, spacing, comments). Use Prettier for formatting.
+---
 
-7. **Ask for clarification** - If a task is ambiguous or you cannot determine what to do, stop and ask for clarification rather than guessing.
+## 3. Controls Reference
 
-## For All AI (Cloud and Local)
+Never invent custom control schemes; adhere strictly to the master plan:
 
-### Core Game Rules (Never Violate)
+| Action | Key / Input | Notes |
+| :--- | :--- | :--- |
+| **Move** | `W`, `A`, `S`, `D` / Arrows | Directional movement relative to camera |
+| **Jump / Climb / Swim-Up** | `Space` | Jump on ground, climb on walls, upward swim stroke |
+| **Sprint / Ride Wind / Currents**| `Shift` (hold) | Boost speed on ground; harness wind/current vectors |
+| **Primary Ability** | `J` | Form signature ability (e.g. bounce, gust, anchor) |
+| **Secondary Ability** | `K` | Form signature utility (e.g. squish, hard-light, geyser) |
+| **Switch Family** | `C` | Cycles Slime $\to$ Wisp $\to$ Stone $\to$ Slime |
+| **Select Form** | `1`, `2`, `3` | Direct selection within active family |
+| **Inventory / Crafting** | `Tab` | Toggle inventory & crafting panel |
+| **Pause / Settings** | `Esc` | Opens settings, controls, audio, graphics |
 
-1. **Advantages Only (Rule 2)** - Every change must provide advantages to at least one form. No terrain, weather, wind, or water may slow, slip, or weigh down any form. If a change makes any form worse at any verb, revert it.
+---
 
-2. **Pure Simulation Modules** - Files in `packages/sim/` must import nothing from render or UI. They contain pure game logic only and must run in Node.
+## 4. Performance Budgets (Desktop Only)
 
-3. **Physics Constants** - The prototype's numbers are the source of truth. All physical constants are documented in CHARACTERS.md and ENVIRONMENT.md. Do not change them without updating documentation.
+| Metric | Budget | CI Gate |
+| :--- | :--- | :--- |
+| **Initial JS bundle** | $< 700\text{ KB}$ gzipped | Fails build if exceeded |
+| **Total 3D models** | $< 5\text{ MB}$ gzipped | Checked via asset script |
+| **Target Frame Rate** | $60\text{ FPS}$ baseline | Monitored in performance governor |
+| **Triangles visible** | $\le 150,000$ | Checked per scene |
+| **Draw calls** | $\le 60$ | Instancing enforced |
+| **Memory footprint** | $< 250\text{ MB}$ heap | No memory leaks in entity lifecycles |
 
-4. **Steady/Ride Wind (Rule 4)** - Wind and currents are STEADY by default—they never move, slow, or lift a creature. Holding Ride (Shift) lets them carry and boost you. Headwinds never slow you; tailwinds can speed you up.
+---
 
-5. **Peaceful Game** - No combat, no damage, no drowning, no hunger. Never add systems that punish the player.
+## 5. Development Workflow & Tasks
 
-### Advantage Audit Table
-
-Every change must fill in this table. A cell that reads "worse" blocks the change.
-
-| Verb | Slime | Wisp | Stone |
-|------|-------|------|-------|
-| Move | same/better | same/better | same/better |
-| Jump | same/better | same/better | same/better |
-| Climb | same/better | same/better | same/better |
-| Glide | same/better | same/better | same/better |
-| Squeeze | same/better | same/better | same/better |
-| Hover | same/better | same/better | same/better |
-| Gather | same/better | same/better | same/better |
-| Craft | same/better | same/better | same/better |
-| Build | same/better | same/better | same/better |
-| Swim | same/better | same/better | same/better |
-| Emote | same/better | same/better | same/better |
-
-### Code Style
-
-- **TypeScript Strict Mode** - Use TypeScript with strict mode enabled. No `any` types unless absolutely necessary.
-- **TSDoc Comments** - Use TSDoc for type annotations in TypeScript.
-- **Minimal Comments** - Code should be self-documenting. Add comments only for complex logic.
-- **Compact Code** - Collapse duplicate else branches, avoid unnecessary nesting, share abstractions.
-- **Follow Existing Patterns** - Mimic the code style, use existing libraries and utilities, follow existing patterns.
-- **Prettier** - Use Prettier for consistent formatting.
-
-### Dependencies
-
-- **Verify Before Adding** - Before adding a dependency, check that this codebase already uses it (look at package.json).
-- **When Adding**: Prefer running `pnpm add` instead of editing package.json directly.
-- **Version Policy**: Strongly prefer versions published at least 7 days ago. Avoid floating ranges (`latest`, `*`, unbounded `>=`).
-- **Three.js Version**: Pin r128+ in package.json. Upgrading is its own later task.
-- **Physics**: Single-engine architecture via `PhysicsWorld` interface (Phase 6 spike: Jolt Physics WASM single-thread build vs custom 162-particle PBD slime solver).
-
-### Architecture Rules
-
-- **Layer Dependency** - Never import from higher layers. Core has no dependencies. Sim depends only on core. Render depends on core and sim (read-only). UI depends on core and sim (read-only). Assets depends on core.
-- **ECS Data Flow** - Simulation owns component data. Rendering reads component data to update Three.js objects. Never store Three.js objects in components.
-- **Forms as Pure Data (Phase 5b)** - All nine forms are data rows in Table A1. Adding a form never adds a system.
-- **Universal Movement Verbs** - All forms support walk, jump, climb, glide, and hop.
-- **Type Safety** - Use branded types for entity IDs. Use discriminated unions for variant data.
-- **No Circular Dependencies** - Package graph must be a DAG.
-
-### Testing & CI Performance Gates
-
-- **Unit Tests** - Test pure functions in isolation. Core and sim packages must have no Three.js dependencies in tests.
-- **Integration Tests** - Test package interactions in test fixtures.
-- **ECS Tests** - Test entity lifecycle, component queries, system execution.
-- **CI Performance Gates (Phase 6 Exit Criterion)** - Gated via `perf-budget.json`: physics benchmark ms/step (<2ms mobile, <3.5ms desktop), bundle size checks (<400KB initial JS, <800KB WASM gzip), and 6x CPU-throttled browser frame test (frame time <16.6ms, draw calls 25-35, triangles <60k).
-- **Playwright Tests** - End-to-end gameplay scenarios and UI interaction.
-
-### Performance
-
-- **Budgets** - See PERFORMANCE.md for budgets (400KB initial JS, 2.5MB first load, 4MB models gzipped).
-- **Zero Allocations in Hot Loops** - Reuse objects, use object pools, avoid GC pressure.
-- **InstancedMesh** - Use InstancedMesh for repeated geometry (flora, particles).
-- **Mobile Slime Skinning** - 162 simulation particles driving render mesh via GPU Phong-tessellation skinning.
-- **FPS Governor** - When frames stay slow, lower quality mid-session. Never raise it mid-session.
-
-### Prototype Reference
-
-- **Tester Only** - `Aetheria.html` is a throwaway tester build for feel only; its code is not copied.
-- **Physics Constants** - Numbers in CHARACTERS.md, ENVIRONMENT.md, and PLAN.md are the source of truth.
-- **Keep Rules** - All core game pillars and rules (Rule 2 advantages only, Rule 4 steady wind, Universal Moor rule, peaceful game) must be preserved.
-
-### Documentation
-
-- **Every Number in Docs** - Every number a player can feel must appear in CHARACTERS.md or ENVIRONMENT.md.
-- **Update on Change** - When changing gameplay numbers, update the relevant documentation immediately.
-- **DECISIONS.md** - Record every assumption you make with a "change me if" note.
-- **ARCHITECTURE.md** - Reference ARCHITECTURE.md for structure decisions.
-
-### Git Workflow
-
-- **Commit After Every Step** - Commit after each logical step with a short message.
-- **Never Leave Build/Tests Red** - If build fails or tests fail, fix before committing.
-- **Format**:
-  ```bash
-  git commit -m "$(cat <<'EOF'
-  Brief description of change.
-
-  Generated with [Devin](https://devin.ai)
-
-  Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>
-  EOF
-  )"
-  ```
-
-### CI
-
-- GitHub Actions runs on every push: install, lint, tests, build.
-- Build fails if bundle exceeds budget.
-- Tests must pass before merging.
-
-### Asking Questions
-
-- Max 5 questions when blocked
-- Each question must have a default you'll use if I don't answer
-- Only ask when truly blocked (cannot proceed without clarification)
-
-### Honesty
-
-- Say plainly what is untested (no real-device testing)
-- Report what failed and what you could not do
-- When in doubt, choose the simpler option and log it in DECISIONS.md
+- **Phases 0–9**: Follow the sequential roadmap laid out in `docs/PLAN.md`.
+- **Small, verified steps**: Verify compilation (`pnpm build` or `npm run build`) and tests (`pnpm test` or `npm test`) frequently.
+- **Never leave tests or builds broken**: Fix compile errors or test regressions immediately.
+- **Document decisions**: If an edge case requires an assumption, log it in `docs/DECISIONS.md` with a "change me if" rationale.

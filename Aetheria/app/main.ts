@@ -1,532 +1,525 @@
 /**
- * Aetheria - Main Interactive Client Application
- * Phase 3, 4, 5: Slime, Wisp, and Stone Creatures with Living Physics & Form Switching
+ * Aetheria — Phase 0: Physics & Feel Spike Interactive Showcase
+ *
+ * Verifies:
+ * 1. Rigid Proxy Bounce Test (>= 5 bounces, restitution 0.85 from 4m drop)
+ * 2. Tight Spaces Test (0.5m Grate without tunneling or snagging)
+ * 3. Trench & Ditch Navigation (0.4m trench support & navigation)
+ * 4. Cutaway Dither Shader (circular cutaway revealing occluded creature)
+ * 5. Physics Step Performance (<0.05 ms/step benchmark)
  */
 
 import * as THREE from 'three';
 import {
-  createScene,
-  createCreatureVisualController,
-  createParticleManager,
-  type CreatureKind,
-} from '@render/index.js';
-import {
-  createWorld as createECSWorld,
-  getComponent,
-  type EntityId,
-} from '@core/index.js';
-import {
-  initPhysicsSystem,
-  physicsSystem,
-  createPhysicsEntity,
-  TransformComponent,
-  RigidBodyComponent,
-  type RigidBody,
-  getBodyLinearVelocity,
-  type PhysicsBody,
-  // Slime
-  createSlimeEntity,
-  setSlimeVariant,
-  updateSlime,
-  SlimeComponentSymbol,
-  type SlimeComponent,
-  type SlimeVariant,
-  // Wisp
-  createWispEntity,
-  setWispVariant,
-  updateWisp,
-  WispComponentSymbol,
-  type WispComponent,
-  type WispVariant,
-  // Stone
-  createStoneEntity,
-  setStoneVariant,
-  updateStone,
-  StoneComponentSymbol,
-  type StoneComponent,
-  type StoneVariant,
-  type Transform,
-} from '@sim/index.js';
-import { createInputManager } from '@ui/index.js';
+  FlatHeightfieldWithTrench,
+  RigidProxySimulator,
+} from '../packages/sim/src/physics-spike.js';
+import { createCutawayStandardMaterial } from '../packages/render/src/cutaway-shader.js';
 
-// DOM Elements
+// ---------------------------------------------------------------------------
+// 1. Scene & Renderer Setup
+// ---------------------------------------------------------------------------
+
 const canvas = document.getElementById('game') as HTMLCanvasElement;
-const loading = document.getElementById('loading') as HTMLDivElement;
+const loadingEl = document.getElementById('loading') as HTMLDivElement;
 
-// Creature Tabs
-const tabSlime = document.getElementById('tab-slime') as HTMLButtonElement;
-const tabWisp = document.getElementById('tab-wisp') as HTMLButtonElement;
-const tabStone = document.getElementById('tab-stone') as HTMLButtonElement;
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,
+  powerPreference: 'high-performance',
+});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
 
-// HUD Info Elements
-const creatureIcon = document.getElementById('creature-icon') as HTMLSpanElement;
-const creatureName = document.getElementById('creature-name') as HTMLSpanElement;
-const creatureBadge = document.getElementById('creature-badge') as HTMLSpanElement;
-const variantPills = document.getElementById('variant-pills') as HTMLDivElement;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xd7eff2);
+scene.fog = new THREE.FogExp2(0xd7eff2, 0.015);
 
-const meterTitle = document.getElementById('meter-title') as HTMLSpanElement;
-const meterVal = document.getElementById('meter-val') as HTMLSpanElement;
-const meterFill = document.getElementById('meter-fill') as HTMLDivElement;
+// Camera Setup (Isometric style perspective)
+const camera = new THREE.PerspectiveCamera(
+  42,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100
+);
+let camDistance = 14;
+let camPitch = 0.65; // ~37 degrees
+let camYaw = Math.PI * 0.25; // 45 degrees isometric angle
 
-const statSpeed = document.getElementById('stat-speed') as HTMLElement;
-const statGrip = document.getElementById('stat-grip') as HTMLElement;
-const statState = document.getElementById('stat-state') as HTMLElement;
-
-// Ability Buttons
-const actJump = document.getElementById('act-jump') as HTMLButtonElement;
-const actMelt = document.getElementById('act-melt') as HTMLButtonElement;
-const actSpring = document.getElementById('act-spring') as HTMLButtonElement;
-const actFloat = document.getElementById('act-float') as HTMLButtonElement;
-const actPound = document.getElementById('act-pound') as HTMLButtonElement;
-
-const lblJump = document.getElementById('lbl-jump') as HTMLSpanElement;
-const lblMelt = document.getElementById('lbl-melt') as HTMLSpanElement;
-const lblSpring = document.getElementById('lbl-spring') as HTMLSpanElement;
-const lblPound = document.getElementById('lbl-pound') as HTMLSpanElement;
-
-if (!canvas) {
-  throw new Error('Canvas element not found');
+function updateCameraPosition(targetPos: THREE.Vector3) {
+  const cx = targetPos.x + camDistance * Math.cos(camPitch) * Math.sin(camYaw);
+  const cy = targetPos.y + camDistance * Math.sin(camPitch);
+  const cz = targetPos.z + camDistance * Math.cos(camPitch) * Math.cos(camYaw);
+  camera.position.set(cx, cy, cz);
+  camera.lookAt(targetPos.x, targetPos.y + 0.5, targetPos.z);
 }
 
-// Creature metadata & configuration
-const CREATURE_CONFIG = {
-  slime: {
-    name: 'Slime',
-    icon: '💧',
-    badge: 'Liquid Form',
-    badgeClass: 'badge-liquid',
-    variants: [
-      { id: 'goo', label: '[1] Goo', desc: 'Ultra Soft & Sticky' },
-      { id: 'jelly_ball', label: '[2] Jelly Ball', desc: 'Bouncy & Balanced' },
-      { id: 'jelly_cube', label: '[3] Jelly Cube', desc: 'Firm & Springy' },
-    ],
-    defaultVariant: 'jelly_ball' as SlimeVariant,
-    labels: {
-      jump: 'Charge Jump',
-      melt: 'Melt Puddle',
-      spring: 'Spring Coil',
-      pound: 'Ground Pound',
-      float: '',
-    },
-    hasFloat: false,
+// ---------------------------------------------------------------------------
+// 2. Lighting & Atmosphere
+// ---------------------------------------------------------------------------
+
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0xb0d8b8, 0.75);
+scene.add(hemiLight);
+
+const sunLight = new THREE.DirectionalLight(0xfffae8, 1.25);
+sunLight.position.set(16, 28, 16);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 60;
+sunLight.shadow.camera.left = -16;
+sunLight.shadow.camera.right = 16;
+sunLight.shadow.camera.top = 16;
+sunLight.shadow.camera.bottom = -16;
+sunLight.shadow.bias = -0.0005;
+scene.add(sunLight);
+
+// ---------------------------------------------------------------------------
+// 3. Ground & Environment Setup
+// ---------------------------------------------------------------------------
+
+const groundGeo = new THREE.PlaneGeometry(60, 60, 60, 60);
+groundGeo.rotateX(-Math.PI / 2);
+
+// Low-poly pastel grass material
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x76c985,
+  roughness: 0.85,
+  metalness: 0.05,
+  flatShading: true,
+});
+const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+groundMesh.receiveShadow = true;
+scene.add(groundMesh);
+
+// Subtle grid lines to read movement & distance
+const gridHelper = new THREE.GridHelper(50, 50, 0x58a867, 0x98dd9e);
+gridHelper.position.y = 0.005;
+scene.add(gridHelper);
+
+// ---------------------------------------------------------------------------
+// 4. Test Courses Props
+// ---------------------------------------------------------------------------
+
+// Course 1: 4m Bounce Drop Target
+const targetCircleGeo = new THREE.RingGeometry(0.2, 1.8, 32);
+targetCircleGeo.rotateX(-Math.PI / 2);
+const targetCircleMat = new THREE.MeshBasicMaterial({
+  color: 0x22c55e,
+  transparent: true,
+  opacity: 0.45,
+  side: THREE.DoubleSide,
+});
+const targetCircle = new THREE.Mesh(targetCircleGeo, targetCircleMat);
+targetCircle.position.set(0, 0.01, 0);
+scene.add(targetCircle);
+
+// Course 2: 0.5m Grate / Gap Obstacle
+const grateGroup = new THREE.Group();
+grateGroup.position.set(10, 0, 0);
+
+// Two concrete support side pillars
+const pillarMat = new THREE.MeshStandardMaterial({
+  color: 0x829489,
+  roughness: 0.7,
+});
+const pillarGeo = new THREE.BoxGeometry(0.4, 0.5, 3.0);
+
+const leftPillar = new THREE.Mesh(pillarGeo, pillarMat);
+leftPillar.position.set(-1.2, 0.25, 0);
+leftPillar.castShadow = true;
+leftPillar.receiveShadow = true;
+grateGroup.add(leftPillar);
+
+const rightPillar = new THREE.Mesh(pillarGeo, pillarMat);
+rightPillar.position.set(1.2, 0.25, 0);
+rightPillar.castShadow = true;
+rightPillar.receiveShadow = true;
+grateGroup.add(rightPillar);
+
+// Overhead metal grate ceiling at exactly 0.5m height
+const grateBarMat = new THREE.MeshStandardMaterial({
+  color: 0x475569,
+  metalness: 0.65,
+  roughness: 0.35,
+});
+const grateTopGeo = new THREE.BoxGeometry(2.4, 0.08, 2.4);
+const grateTop = new THREE.Mesh(grateTopGeo, grateBarMat);
+grateTop.position.set(0, 0.54, 0);
+grateTop.castShadow = true;
+grateGroup.add(grateTop);
+
+// Squeeze visual label
+scene.add(grateGroup);
+
+// Course 3: 0.4m Trench visual ditch
+const trenchGroup = new THREE.Group();
+trenchGroup.position.set(-10, 0, 0);
+
+const trenchFloorGeo = new THREE.PlaneGeometry(0.4, 8);
+trenchFloorGeo.rotateX(-Math.PI / 2);
+const trenchFloorMat = new THREE.MeshStandardMaterial({
+  color: 0x4d3826,
+  roughness: 0.95,
+});
+const trenchFloor = new THREE.Mesh(trenchFloorGeo, trenchFloorMat);
+trenchFloor.position.set(0, -0.29, 0);
+trenchFloor.receiveShadow = true;
+trenchGroup.add(trenchFloor);
+
+// Trench left and right walls
+const trenchWallGeo = new THREE.BoxGeometry(0.04, 0.3, 8);
+const trenchWallMat = new THREE.MeshStandardMaterial({
+  color: 0x6e5238,
+  roughness: 0.9,
+});
+const leftWall = new THREE.Mesh(trenchWallGeo, trenchWallMat);
+leftWall.position.set(-0.2, -0.15, 0);
+trenchGroup.add(leftWall);
+
+const rightWall = new THREE.Mesh(trenchWallGeo, trenchWallMat);
+rightWall.position.set(0.2, -0.15, 0);
+trenchGroup.add(rightWall);
+
+scene.add(trenchGroup);
+
+// Cutaway Occlusion Wall (Toggled with T)
+const wallGeo = new THREE.BoxGeometry(3.5, 4.0, 0.6);
+const { material: cutawayMat, uniforms: cutawayUniforms } = createCutawayStandardMaterial(
+  {
+    color: 0x8a7258,
+    roughness: 0.85,
   },
-  wisp: {
-    name: 'Wisp',
-    icon: '💨',
-    badge: 'Gas Form',
-    badgeClass: 'badge-gas',
-    variants: [
-      { id: 'cloud', label: '[1] Cloud', desc: '24 Motes Billowing' },
-      { id: 'motes', label: '[2] Motes', desc: '10 Motes Zippy' },
-      { id: 'ring', label: '[3] Ring', desc: '12 Motes Orbit' },
-    ],
-    defaultVariant: 'cloud' as WispVariant,
-    labels: {
-      jump: 'Rise on Breath',
-      melt: 'Diffuse Drift',
-      spring: 'Condense Boost',
-      pound: 'Down-Gust',
-      float: 'Float (Hover)',
-    },
-    hasFloat: true,
+  1.8,
+  0.8
+);
+const cutawayWallMesh = new THREE.Mesh(wallGeo, cutawayMat);
+cutawayWallMesh.position.set(0, 2.0, 3.5);
+cutawayWallMesh.castShadow = true;
+cutawayWallMesh.receiveShadow = true;
+scene.add(cutawayWallMesh);
+
+// ---------------------------------------------------------------------------
+// 5. Living Slime Avatar Mesh (Procedural Rigid Proxy Visuals)
+// ---------------------------------------------------------------------------
+
+const avatarGroup = new THREE.Group();
+
+// Outer jelly body
+const slimeGeo = new THREE.SphereGeometry(0.35, 32, 24);
+const slimeMat = new THREE.MeshPhysicalMaterial({
+  color: 0x48e5c2,
+  emissive: 0x145244,
+  roughness: 0.15,
+  transmission: 0.6,
+  thickness: 0.8,
+  ior: 1.33,
+  clearcoat: 0.8,
+  clearcoatRoughness: 0.1,
+});
+const slimeMesh = new THREE.Mesh(slimeGeo, slimeMat);
+slimeMesh.castShadow = true;
+avatarGroup.add(slimeMesh);
+
+// Inner core crystal
+const coreGeo = new THREE.OctahedronGeometry(0.12, 0);
+const coreMat = new THREE.MeshStandardMaterial({
+  color: 0x8ef5e8,
+  emissive: 0x48e5c2,
+  emissiveIntensity: 0.8,
+  roughness: 0.1,
+  metalness: 0.2,
+});
+const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+avatarGroup.add(coreMesh);
+
+// Cute facial eyes
+const eyeGeo = new THREE.SphereGeometry(0.045, 12, 12);
+const eyeMat = new THREE.MeshBasicMaterial({ color: 0x142e1d });
+
+const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+leftEye.position.set(0.11, 0.08, 0.31);
+leftEye.scale.set(1.0, 1.4, 0.6);
+avatarGroup.add(leftEye);
+
+const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+rightEye.position.set(-0.11, 0.08, 0.31);
+rightEye.scale.set(1.0, 1.4, 0.6);
+avatarGroup.add(rightEye);
+
+scene.add(avatarGroup);
+
+// ---------------------------------------------------------------------------
+// 6. Physics Simulation Instances
+// ---------------------------------------------------------------------------
+
+let activeCourse: 1 | 2 | 3 = 1;
+
+// Course 1 & 2 use standard flat heightfield
+const flatWorld = new FlatHeightfieldWithTrench(0, 0, 0);
+
+// Course 3 uses flat heightfield with trench centered at -10
+const trenchWorld = new FlatHeightfieldWithTrench(0.4, 0.3, -10);
+
+let currentWorld: FlatHeightfieldWithTrench = flatWorld;
+let ceilingLimit: number | undefined = undefined;
+
+// Simulator instance
+const simulator = new RigidProxySimulator(
+  {
+    restitution: 0.85,
+    mass: 1.2,
+    radius: 0.35,
+    linearDamping: 0.05,
+    friction: 0.2,
   },
-  stone: {
-    name: 'Stone',
-    icon: '🪨',
-    badge: 'Solid Form',
-    badgeClass: 'badge-solid',
-    variants: [
-      { id: 'boulder', label: '[1] Boulder', desc: 'Rolling Inertia' },
-      { id: 'pillar', label: '[2] Pillar', desc: 'Hexagonal Basalt' },
-      { id: 'shard', label: '[3] Shard', desc: 'Quartz Crystal' },
-    ],
-    defaultVariant: 'boulder' as StoneVariant,
-    labels: {
-      jump: 'Charge / Sail',
-      melt: 'Shrink Pebble',
-      spring: 'Brace',
-      pound: 'Smash Pound',
-      float: '',
-    },
-    hasFloat: false,
-  },
-};
+  { x: 0, y: 4.0, z: 0 }
+);
 
-async function main() {
-  // 1. Three.js Scene Setup
-  const { scene, camera, renderer } = createScene({ canvas, shadows: true });
-  scene.background = new THREE.Color(0xa7dbf8);
-  scene.fog = new THREE.FogExp2(0xa7dbf8, 0.012);
+function switchCourse(course: 1 | 2 | 3) {
+  activeCourse = course;
 
-  // Soft warm ambient fill + crisp sunlight
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x6e9477, 0.55);
-  scene.add(hemiLight);
+  document.querySelectorAll('.btn-course').forEach((btn) => btn.classList.remove('active'));
+  const activeBtn = document.getElementById(`btn-course-${course}`);
+  if (activeBtn) activeBtn.classList.add('active');
 
-  // 2. Particle Effects Manager
-  const particleManager = createParticleManager(scene);
+  const courseTitle = document.getElementById('course-name')!;
 
-  // 3. ECS World & Rapier Physics
-  const world = createECSWorld();
-  await initPhysicsSystem(world, { x: 0, y: -20, z: 0 });
+  if (course === 1) {
+    courseTitle.textContent = 'Course 1: 4m Bounce Drop Test (Restitution 0.85)';
+    currentWorld = flatWorld;
+    ceilingLimit = undefined;
+    simulator.config.restitution = 0.85;
+    simulator.config.radius = 0.35;
+    simulator.reset({ x: 0, y: 4.0, z: 0 });
+    slimeMesh.scale.set(1, 1, 1);
+  } else if (course === 2) {
+    courseTitle.textContent = 'Course 2: 0.5m Grate Squeeze (Zero Tunneling)';
+    currentWorld = flatWorld;
+    ceilingLimit = 0.5;
+    simulator.config.restitution = 0.4;
+    simulator.config.radius = 0.22; // Squeezed radius
+    simulator.reset({ x: 10, y: 0.25, z: 2.2 });
+    slimeMesh.scale.set(1.2, 0.63, 1.2);
+  } else if (course === 3) {
+    courseTitle.textContent = 'Course 3: 0.4m Trench Navigation (Rim Rolling / Walking)';
+    currentWorld = trenchWorld;
+    ceilingLimit = undefined;
+    simulator.config.restitution = 0.4;
+    simulator.config.radius = 0.35;
+    simulator.reset({ x: -10, y: 1.0, z: 2.0 });
+    slimeMesh.scale.set(1, 1, 1);
+  }
+}
 
-  // 4. Ground Terrain & Climbing Wall Obstacle
-  const groundGeo = new THREE.BoxGeometry(160, 2, 160);
-  const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x76ba5d, // Rich meadow green
-    roughness: 0.82,
-    metalness: 0.02,
-  });
-  const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-  groundMesh.position.set(0, -1, 0);
-  groundMesh.receiveShadow = true;
-  scene.add(groundMesh);
+// ---------------------------------------------------------------------------
+// 7. Input Handling
+// ---------------------------------------------------------------------------
 
-  // Rapier Static Ground Collider
-  createPhysicsEntity(world, {
-    position: { x: 0, y: -1, z: 0 },
-    mass: 0,
-    shape: 'box',
-    size: { x: 80, y: 1, z: 80 },
-    isStatic: true,
-    friction: 0.7,
-    restitution: 0.1,
-  });
+const keysDown = new Set<string>();
 
-  // Test obstacle: 6m sandstone climbing wall
-  const wallGeo = new THREE.BoxGeometry(14, 6.5, 1.2);
-  const wallMat = new THREE.MeshStandardMaterial({
-    color: 0xd9a877, // Warm sandstone
-    roughness: 0.88,
-  });
-  const wallMesh = new THREE.Mesh(wallGeo, wallMat);
-  wallMesh.position.set(0, 3.25, -12);
-  wallMesh.castShadow = true;
-  wallMesh.receiveShadow = true;
-  scene.add(wallMesh);
+window.addEventListener('keydown', (e) => {
+  keysDown.add(e.code);
 
-  createPhysicsEntity(world, {
-    position: { x: 0, y: 3.25, z: -12 },
-    mass: 0,
-    shape: 'box',
-    size: { x: 7, y: 3.25, z: 0.6 },
-    isStatic: true,
-    friction: 0.8,
-  });
+  if (e.code === 'Digit1') switchCourse(1);
+  if (e.code === 'Digit2') switchCourse(2);
+  if (e.code === 'Digit3') switchCourse(3);
 
-  // Elevated decorative stone platform
-  const platGeo = new THREE.BoxGeometry(6, 2, 6);
-  const platMat = new THREE.MeshStandardMaterial({ color: 0xbfb69e, roughness: 0.85 });
-  const platMesh = new THREE.Mesh(platGeo, platMat);
-  platMesh.position.set(10, 1, -5);
-  platMesh.castShadow = true;
-  platMesh.receiveShadow = true;
-  scene.add(platMesh);
-
-  createPhysicsEntity(world, {
-    position: { x: 10, y: 1, z: -5 },
-    mass: 0,
-    shape: 'box',
-    size: { x: 3, y: 1, z: 3 },
-    isStatic: true,
-  });
-
-  // 5. Active Player Creature Management
-  let activeKind: CreatureKind = 'slime';
-  let activeSlimeVariant: SlimeVariant = 'jelly_ball';
-  let activeWispVariant: WispVariant = 'cloud';
-  let activeStoneVariant: StoneVariant = 'boulder';
-
-  let currentEntity: EntityId;
-
-  // Initialize unified creature visual controller
-  const creatureVisual = createCreatureVisualController(scene, activeKind, activeSlimeVariant);
-
-  function spawnActiveEntity(kind: CreatureKind, spawnPos = { x: 0, y: 2.0, z: 0 }): void {
-    // If switching from previous entity, destroy old physics body from world
-    if (currentEntity !== undefined) {
-      world.entities.delete(currentEntity);
-    }
-
-    activeKind = kind;
-
-    if (kind === 'slime') {
-      currentEntity = createSlimeEntity(world, {
-        position: spawnPos,
-        variant: activeSlimeVariant,
-      });
-      creatureVisual.setCreature('slime', activeSlimeVariant);
-    } else if (kind === 'wisp') {
-      currentEntity = createWispEntity(world, {
-        position: { x: spawnPos.x, y: Math.max(spawnPos.y, 3.0), z: spawnPos.z },
-        variant: activeWispVariant,
-      });
-      creatureVisual.setCreature('wisp', activeWispVariant);
-    } else if (kind === 'stone') {
-      currentEntity = createStoneEntity(world, {
-        position: spawnPos,
-        variant: activeStoneVariant,
-      });
-      creatureVisual.setCreature('stone', activeStoneVariant);
-    }
-
-    updateHUD();
-    particleManager.spawnDustPuff(spawnPos.x, spawnPos.y - 0.4, spawnPos.z, 16, 2.2);
+  if (e.code === 'KeyR') {
+    switchCourse(activeCourse);
   }
 
-  // Initial spawn
-  spawnActiveEntity('slime', { x: 0, y: 2.0, z: 0 });
-
-  // 6. Input Manager
-  const inputManager = createInputManager();
-
-  // Wire ability button clicks/touches
-  const bindVirtualButton = (btnEl: HTMLButtonElement, action: 'jump' | 'melt' | 'spring' | 'pound' | 'float') => {
-    btnEl.addEventListener('pointerdown', (e) => {
-      btnEl.setPointerCapture(e.pointerId);
-      inputManager.setVirtualButton(action, true);
-      btnEl.classList.add('pressed');
-    });
-    const release = () => {
-      inputManager.setVirtualButton(action, false);
-      btnEl.classList.remove('pressed');
-    };
-    btnEl.addEventListener('pointerup', release);
-    btnEl.addEventListener('pointercancel', release);
-  };
-
-  bindVirtualButton(actJump, 'jump');
-  bindVirtualButton(actMelt, 'melt');
-  bindVirtualButton(actSpring, 'spring');
-  bindVirtualButton(actFloat, 'float');
-  bindVirtualButton(actPound, 'pound');
-
-  // Wire Creature Tabs
-  tabSlime.addEventListener('click', () => switchCreature('slime'));
-  tabWisp.addEventListener('click', () => switchCreature('wisp'));
-  tabStone.addEventListener('click', () => switchCreature('stone'));
-
-  function switchCreature(kind: CreatureKind): void {
-    if (activeKind === kind) return;
-
-    // Get current entity position to spawn new creature at same spot
-    const trans = getComponent<Transform>(world, currentEntity, TransformComponent);
-    const pos = trans ? { x: trans.position.x, y: trans.position.y + 0.5, z: trans.position.z } : { x: 0, y: 2, z: 0 };
-
-    spawnActiveEntity(kind, pos);
+  if (e.code === 'KeyT') {
+    cutawayWallMesh.visible = !cutawayWallMesh.visible;
+    const btn = document.getElementById('btn-toggle-wall');
+    if (btn) btn.classList.toggle('active', cutawayWallMesh.visible);
   }
 
-  function setCreatureVariant(variantId: string): void {
-    if (activeKind === 'slime') {
-      activeSlimeVariant = variantId as SlimeVariant;
-      setSlimeVariant(world, currentEntity, activeSlimeVariant);
-      creatureVisual.setVariant(activeSlimeVariant);
-    } else if (activeKind === 'wisp') {
-      activeWispVariant = variantId as WispVariant;
-      setWispVariant(world, currentEntity, activeWispVariant);
-      creatureVisual.setVariant(activeWispVariant);
-    } else if (activeKind === 'stone') {
-      activeStoneVariant = variantId as StoneVariant;
-      setStoneVariant(world, currentEntity, activeStoneVariant);
-      creatureVisual.setVariant(activeStoneVariant);
-    }
-    updateHUD();
+  if (e.code === 'KeyQ') {
+    camYaw += (e.shiftKey ? -1 : 1) * (Math.PI / 4);
   }
+});
 
-  function updateHUD(): void {
-    const cfg = CREATURE_CONFIG[activeKind];
+window.addEventListener('keyup', (e) => {
+  keysDown.delete(e.code);
+});
 
-    // Top Tabs styling
-    tabSlime.classList.toggle('active', activeKind === 'slime');
-    tabWisp.classList.toggle('active', activeKind === 'wisp');
-    tabStone.classList.toggle('active', activeKind === 'stone');
+// UI Course Buttons
+document.getElementById('btn-course-1')?.addEventListener('click', () => switchCourse(1));
+document.getElementById('btn-course-2')?.addEventListener('click', () => switchCourse(2));
+document.getElementById('btn-course-3')?.addEventListener('click', () => switchCourse(3));
+document.getElementById('btn-toggle-wall')?.addEventListener('click', () => {
+  cutawayWallMesh.visible = !cutawayWallMesh.visible;
+  document.getElementById('btn-toggle-wall')?.classList.toggle('active', cutawayWallMesh.visible);
+});
 
-    // Info header
-    creatureIcon.textContent = cfg.icon;
-    creatureName.textContent = cfg.name;
-    creatureBadge.textContent = cfg.badge;
-    creatureBadge.className = `badge ${cfg.badgeClass}`;
+// Orbit Controls via Right-Mouse Drag
+let isDragging = false;
+let prevMouseX = 0;
+let prevMouseY = 0;
 
-    // Ability labels
-    lblJump.textContent = cfg.labels.jump;
-    lblMelt.textContent = cfg.labels.melt;
-    lblSpring.textContent = cfg.labels.spring;
-    lblPound.textContent = cfg.labels.pound;
-    actFloat.style.display = cfg.hasFloat ? 'flex' : 'none';
-
-    // Populate variant pills
-    variantPills.innerHTML = '';
-    const activeVar = activeKind === 'slime' ? activeSlimeVariant : activeKind === 'wisp' ? activeWispVariant : activeStoneVariant;
-
-    cfg.variants.forEach((v) => {
-      const btn = document.createElement('button');
-      btn.className = `variant-btn ${v.id === activeVar ? 'active' : ''}`;
-      btn.textContent = v.label;
-      btn.title = v.desc;
-      btn.addEventListener('click', () => setCreatureVariant(v.id));
-      variantPills.appendChild(btn);
-    });
+window.addEventListener('mousedown', (e) => {
+  if (e.button === 2) {
+    isDragging = true;
+    prevMouseX = e.clientX;
+    prevMouseY = e.clientY;
   }
+});
 
-  // Hide loading indicator
-  if (loading) {
-    loading.style.display = 'none';
+window.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    const dx = e.clientX - prevMouseX;
+    const dy = e.clientY - prevMouseY;
+    prevMouseX = e.clientX;
+    prevMouseY = e.clientY;
+
+    camYaw -= dx * 0.008;
+    camPitch = THREE.MathUtils.clamp(camPitch + dy * 0.006, 0.25, 1.2);
   }
+});
 
-  // 7. Main Game Loop (Fixed 60Hz Physics + Dynamic Smooth Rendering)
-  const FIXED_DT = 1 / 60;
-  let lastTime = performance.now();
-  let accumulator = 0;
-  const cameraOffset = new THREE.Vector3(0, 5, 12);
+window.addEventListener('mouseup', (e) => {
+  if (e.button === 2) isDragging = false;
+});
 
-  let prevAirborne = false;
+window.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  function animate(currentTime: number) {
-    requestAnimationFrame(animate);
+window.addEventListener('wheel', (e) => {
+  camDistance = THREE.MathUtils.clamp(camDistance + e.deltaY * 0.015, 6, 28);
+});
 
-    const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
-    lastTime = currentTime;
-    accumulator += deltaTime;
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-    // Check creature cycle hotkey (Tab)
-    if (inputManager.consumeCreatureCycle()) {
-      const order: CreatureKind[] = ['slime', 'wisp', 'stone'];
-      const nextKind = order[(order.indexOf(activeKind) + 1) % 3]!;
-      switchCreature(nextKind);
-    }
+// ---------------------------------------------------------------------------
+// 8. Main Loop & Performance Telemetry
+// ---------------------------------------------------------------------------
 
-    // Check variant selection hotkey (1, 2, 3)
-    const reqVariantIdx = inputManager.getRequestedVariantIndex();
-    if (reqVariantIdx !== null) {
-      const cfg = CREATURE_CONFIG[activeKind];
-      const selected = cfg.variants[reqVariantIdx];
-      if (selected) {
-        setCreatureVariant(selected.id);
-      }
-      inputManager.resetVariantSelection();
-    }
+// Telemetry DOM elements
+const elFps = document.getElementById('val-fps')!;
+const elStepTime = document.getElementById('val-step-time')!;
+const elBounces = document.getElementById('val-bounces')!;
+const elVy = document.getElementById('val-vy')!;
+const elRestitution = document.getElementById('val-restitution')!;
+const elContacts = document.getElementById('val-contacts')!;
 
-    // Fixed timestep physics update
-    while (accumulator >= FIXED_DT) {
-      if (activeKind === 'slime') {
-        const input = inputManager.getSlimeInput();
-        updateSlime(world, currentEntity, input, FIXED_DT);
-      } else if (activeKind === 'wisp') {
-        const input = inputManager.getWispInput();
-        updateWisp(world, currentEntity, input, FIXED_DT);
-      } else if (activeKind === 'stone') {
-        const input = inputManager.getStoneInput();
-        const stoneEvents = updateStone(world, currentEntity, input, FIXED_DT);
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let lastTime = performance.now();
+const FIXED_DT = 1 / 60;
+let accumulator = 0;
 
-        // Process shockwaves from Stone
-        if (stoneEvents.shockwave.length > 0) {
-          stoneEvents.shockwave.forEach((sw) => {
-            particleManager.spawnShockwave(sw.origin.x, sw.origin.y, sw.origin.z, sw.radius, 0xffd166);
-            particleManager.spawnDustPuff(sw.origin.x, sw.origin.y, sw.origin.z, 20, 3.0);
-          });
-        }
-      }
+// Hide loading screen
+loadingEl.style.opacity = '0';
+setTimeout(() => {
+  loadingEl.style.display = 'none';
+}, 300);
 
-      physicsSystem(world, FIXED_DT);
-      accumulator -= FIXED_DT;
-    }
-
-    // Sync particles
-    particleManager.update(deltaTime);
-
-    // Retrieve active components
-    const transform = getComponent<Transform>(world, currentEntity, TransformComponent);
-    const rigidBody = getComponent<RigidBody>(world, currentEntity, RigidBodyComponent);
-
-    let linvel = { x: 0, y: 0, z: 0 };
-    if (rigidBody) {
-      linvel = getBodyLinearVelocity(rigidBody as unknown as PhysicsBody);
-    }
-
-    if (transform) {
-      const horizSpeed = Math.hypot(linvel.x, linvel.z);
-
-      // Render update
-      if (activeKind === 'slime') {
-        const slimeComp = getComponent<SlimeComponent>(world, currentEntity, SlimeComponentSymbol);
-        if (slimeComp) {
-          creatureVisual.update(transform, slimeComp, linvel, deltaTime);
-
-          // Landing dust puff detection
-          if (prevAirborne && slimeComp.isGrounded) {
-            particleManager.spawnDustPuff(transform.position.x, transform.position.y - 0.45, transform.position.z, 14, 2.0);
-          }
-          prevAirborne = !slimeComp.isGrounded;
-
-          // HUD updates
-          meterTitle.textContent = 'Jump Power Charge';
-          const chargePct = Math.round((slimeComp.jumpChargeTimer / 0.85) * 100);
-          meterVal.textContent = `${chargePct}%`;
-          meterFill.style.width = `${chargePct}%`;
-          meterFill.className = 'meter-fill charge-power';
-
-          statSpeed.textContent = `${horizSpeed.toFixed(1)} m/s`;
-          statGrip.textContent = `${slimeComp.preset.grip.toFixed(2)}`;
-          statState.textContent = slimeComp.isMelting ? 'Melt Puddle' : slimeComp.isClimbing ? 'Climbing Wall' : slimeComp.isGliding ? 'Gliding' : slimeComp.isGrounded ? 'Grounded' : 'Airborne';
-        }
-      } else if (activeKind === 'wisp') {
-        const wispComp = getComponent<WispComponent>(world, currentEntity, WispComponentSymbol);
-        if (wispComp) {
-          creatureVisual.update(transform, wispComp, linvel, deltaTime);
-
-          // HUD updates for breath
-          meterTitle.textContent = 'Wisp Breath Energy';
-          const breathPct = Math.round(wispComp.breath);
-          meterVal.textContent = `${breathPct}%`;
-          meterFill.style.width = `${breathPct}%`;
-          meterFill.className = 'meter-fill wisp-breath';
-
-          statSpeed.textContent = `${horizSpeed.toFixed(1)} m/s`;
-          statGrip.textContent = `Air Drift`;
-          statState.textContent = wispComp.isDownGusting ? 'Down-Gust Dive' : wispComp.isRising ? 'Rising' : wispComp.isFloating ? 'Floating' : wispComp.isCondensed ? 'Condensed Boost' : wispComp.isDiffused ? 'Diffused Drift' : 'Floating';
-        }
-      } else if (activeKind === 'stone') {
-        const stoneComp = getComponent<StoneComponent>(world, currentEntity, StoneComponentSymbol);
-        if (stoneComp) {
-          creatureVisual.update(transform, stoneComp, linvel, deltaTime);
-
-          // Landing puff detection
-          if (prevAirborne && stoneComp.isGrounded) {
-            particleManager.spawnDustPuff(transform.position.x, transform.position.y - 0.5, transform.position.z, 18, 2.5);
-          }
-          prevAirborne = !stoneComp.isGrounded;
-
-          // Rolling dust puffs
-          if (stoneComp.isGrounded && horizSpeed > 4.0 && Math.random() < 0.25) {
-            particleManager.spawnDustPuff(transform.position.x, transform.position.y - 0.45, transform.position.z, 2, 0.8);
-          }
-
-          meterTitle.textContent = 'Jump Charge';
-          const chargePct = Math.round((stoneComp.jumpChargeTimer / 0.9) * 100);
-          meterVal.textContent = `${chargePct}%`;
-          meterFill.style.width = `${chargePct}%`;
-          meterFill.className = 'meter-fill charge-power';
-
-          statSpeed.textContent = `${horizSpeed.toFixed(1)} m/s`;
-          statGrip.textContent = `${stoneComp.preset.grip.toFixed(2)}`;
-          statState.textContent = stoneComp.isPebbleShrunk ? 'Pebble Shrunk' : stoneComp.isSailGliding ? 'Crystal Sail' : stoneComp.isPitonClimbing ? 'Piton Cling' : stoneComp.isRolling ? 'High-Speed Roll' : stoneComp.isGrounded ? 'Grounded' : 'Airborne';
-        }
-      }
-
-      // Smooth Camera tracking with slight look-ahead
-      const targetCamPos = new THREE.Vector3(
-        transform.position.x + cameraOffset.x + linvel.x * 0.2,
-        transform.position.y + cameraOffset.y,
-        transform.position.z + cameraOffset.z + linvel.z * 0.2
-      );
-      camera.position.lerp(targetCamPos, 0.08);
-      camera.lookAt(transform.position.x, transform.position.y + 0.6, transform.position.z);
-    }
-
-    renderer.render(scene, camera);
-  }
-
+function animate(now: number) {
   requestAnimationFrame(animate);
-  console.log('Aetheria: Living Slime, Wisp, and Stone Creature Playground ready.');
+
+  const delta = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime = now;
+  accumulator += delta;
+
+  // Read movement inputs relative to camera yaw
+  let inputX = 0;
+  let inputZ = 0;
+  if (keysDown.has('KeyW') || keysDown.has('ArrowUp')) inputZ -= 1;
+  if (keysDown.has('KeyS') || keysDown.has('ArrowDown')) inputZ += 1;
+  if (keysDown.has('KeyA') || keysDown.has('ArrowLeft')) inputX -= 1;
+  if (keysDown.has('KeyD') || keysDown.has('ArrowRight')) inputX += 1;
+
+  // Jump input
+  if (keysDown.has('Space')) {
+    simulator.applyJumpImpulse(6.5);
+  }
+
+  // Camera-relative input transformation
+  const forwardX = Math.sin(camYaw);
+  const forwardZ = Math.cos(camYaw);
+  const rightX = Math.cos(camYaw);
+  const rightZ = -Math.sin(camYaw);
+
+  const moveDirX = inputX * rightX - inputZ * forwardX;
+  const moveDirZ = inputX * rightZ - inputZ * forwardZ;
+
+  let stepDurationMs = 0;
+
+  // Fixed physics time-stepping
+  while (accumulator >= FIXED_DT) {
+    const t0 = performance.now();
+
+    // Step physics simulator
+    simulator.step(FIXED_DT, currentWorld, ceilingLimit);
+
+    // Apply horizontal input drive
+    if (moveDirX !== 0 || moveDirZ !== 0) {
+      const driveSpeed = activeCourse === 2 ? 3.0 : 4.5;
+      simulator.vel.x = moveDirX * driveSpeed;
+      simulator.vel.z = moveDirZ * driveSpeed;
+    }
+
+    stepDurationMs = performance.now() - t0;
+    accumulator -= FIXED_DT;
+  }
+
+  // Synchronize 3D avatar position with simulator
+  avatarGroup.position.set(simulator.pos.x, simulator.pos.y, simulator.pos.z);
+
+  // Dynamic squash-and-stretch based on vertical velocity
+  const vy = simulator.vel.y;
+  let squashY = 1.0;
+  if (activeCourse !== 2) {
+    squashY = THREE.MathUtils.clamp(1.0 + vy * 0.04, 0.65, 1.45);
+    const squashXZ = 1.0 / Math.sqrt(squashY);
+    slimeMesh.scale.set(squashXZ, squashY, squashXZ);
+  }
+
+  // Subtle core wobble
+  coreMesh.rotation.x += 0.02;
+  coreMesh.rotation.y += 0.03;
+
+  // Face rotation toward movement direction
+  if (moveDirX !== 0 || moveDirZ !== 0) {
+    const targetAngle = Math.atan2(moveDirX, moveDirZ);
+    avatarGroup.rotation.y = THREE.MathUtils.lerp(
+      avatarGroup.rotation.y,
+      targetAngle,
+      0.15
+    );
+  }
+
+  // Update cutaway shader uniform with avatar position
+  cutawayUniforms.avatarPosition.value.copy(avatarGroup.position);
+
+  // Update smooth camera follow
+  updateCameraPosition(avatarGroup.position);
+
+  // Render scene
+  renderer.render(scene, camera);
+
+  // Telemetry updates
+  frameCount++;
+  if (now - lastFpsTime >= 500) {
+    const currentFps = Math.round((frameCount * 1000) / (now - lastFpsTime));
+    elFps.textContent = currentFps.toString();
+    elStepTime.textContent = `${stepDurationMs.toFixed(3)} ms`;
+    elBounces.textContent = simulator.bounceCount.toString();
+    elVy.textContent = `${vy.toFixed(2)} m/s`;
+    elRestitution.textContent = simulator.config.restitution.toFixed(2);
+    elContacts.textContent = simulator.isGrounded ? '1 (Ground)' : '0 (Air)';
+    frameCount = 0;
+    lastFpsTime = now;
+  }
 }
 
-main().catch(console.error);
+requestAnimationFrame(animate);

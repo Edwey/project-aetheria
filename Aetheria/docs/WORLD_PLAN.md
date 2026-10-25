@@ -1,104 +1,112 @@
-# WORLD PLAN (proposal for review — concrete layout for R1/R2)
+# WORLD_PLAN.md — Island Layout, Regional POIs & World Design
 
-This is the concrete world to build. Numbers follow the prototype and
-WORLD.md/ENVIRONMENT.md; anything I invented is marked [NEW]. Correct me
-wherever I'm wrong — especially island themes and POI placement.
+Aligned with `AETHERIA_MASTER_PLAN.md` (v4).
 
-## 1. Landmass map (240 × 240 m, 10 m cells, north = -z up)
+---
+
+## 1. Island Overview & Topology
+
+Aetheria is **one compact, continuous island** surrounded by open sea. There are **no sky islands**; every area is physically grounded, reachable on foot, glide, or swim, and visible from elevated viewpoints.
+
+### Core Dimensions & Scale
+- **Footprint**: ~280 × 280 meters (bounded within coordinates $[-140, +140]$ on X and Z axes).
+- **Travel Time**: ~90 seconds to sprint from one coast to the opposite shore.
+- **Vertical Relief**: Sea level at $Y = 0$; Central Lookout Ridge rises to $Y \approx +24\text{ m}$; Whispering Pines granite peaks at $Y \approx +18\text{ m}$; Bioluminescent Basin drops into a sunken hollow at $Y \approx +1\text{ m}$.
+- **Open World from Minute One**: Zero artificial gates, loading screens, or invisible walls. Ocean surf and natural rock outcroppings form organic boundaries.
+
+---
+
+## 2. World Layout & Regional Map
 
 ```
-        N (-z, taiga NW | grove NE)
-      -120  -80  -40    0   +40  +80 +120  x
--120   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  -120
- -80   ~ TTTTTTTTTT GGGGGGGG ~~~~~~~~~~~~~~~~~~~   -80   T=taiga peaks
- -60   ~ TTT^^TTTTTT GGGGGGGG ~~ [SporeIsle34]~~   -60   ^=LookoutTor
- -40   ~ TTT(frost) LLL GGG(trampolines) SSSSS ~~   -40   L=lake, S=swamp
- -20   ~ TTTTTT MMMMMMMM GGGGG river ~~~~~~~~~~~   -20   M=meadow
-   0   ~ TTTTTT MMMM(8,8 grotto)MMMM DDD ~~~~~~~     0
- +20   ~ PPPP hut(-20,16) spawn(-24,28) DDD ~~~~~  +20   P=plains home
- +40   ~ PPPPPPPPPP DDDD DDDD E(boat dock) ~~~~~~  +40   E=east docks
- +60   ~ PPPPPPP DDDD(thermals)DDDD [Ember38] ~~~  +60
- +80   ~ PPPP DDDDDDDDDDDD B(boat dock)~~~~~~~~~~  +80   B=south beach
-+100   ~ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ~~~~ +100   b=beach ring
-+120   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ +120
-        S (+z, plains SW | dunes SE)
+                     NORTH (-Z)
+             [ Whispering Pines ]
+          Granite Tor & Alpine Stream
+             (Tarns, Pines, Moss)
+                      │
+  WEST (-X)           │           EAST (+X)
+[ Sunbaked Crags ] ───┼─── [ The Shimmering Coast ]
+ Terracotta Canyons   │     Sandy Beaches, Sea Caves,
+ Arches, Clay Flats   │       Tide Pools, Driftwood
+                      │
+            [ Bioluminescent Basin ]
+           Sunken Fungal Marsh, Glowing
+               Spore Geysers, Mud
+                     SOUTH (+Z)
 ```
 
-Quadrants (from `biomeW` in terrain.js): SW plains, SE dunes, NW taiga, NE grove.
-Sea surrounds everything in R3; `~` marks approximate shoreline (where height
-falls below ~0.5 m — exact line comes from the height grid, R3 task).
+### Central Overlook (The Hearth Ridge)
+- **Coordinates**: $(0, 0)$ at $Y \approx +24\text{ m}$.
+- **Role**: Panoramic 360-degree vantage point overlooking all four regional borders. Features an ancient stone altar, windsock/weather chime, and thermal column.
 
-## 2. Land POIs ([NEW] names; coords are x,z in metres, A=120 bounds)
+---
 
-| # | Name | Coords | Biome | What / why | Resources |
-|---|------|--------|-------|------------|-----------|
-| P0 | Hearth Meadow (spawn) | (-24, 28) | plains | Safe starter bowl, gentle hills, first oaks/flowers | timber, sap, petal, fibre |
-| P1 | Hut home | (-20, 16) | plains | Keep the prototype test hut as the starter home [NEW: Wsuggest keeping it]; workbench inside | bench crafting |
-| P2 | Mingle Meadow | (0, 8) | border | Center of the map; Sun Grotto tunnel (8,8) kept as 0.95 m squeeze showcase | petal |
-| P3 | Dune sea + crests | (60, 60) (80, 70) (45, 85) | dunes | Tall dunes; thermal columns on the 3 crests (R2-003) | fibre (cactus), petal |
-| P4 | Frostpeak ridge | (-60, -60) | taiga | Highest ground (~10 m), pines, snow; launch point toward Lookout Isle | timber, sap, starstone (geodes) |
-| P5 | Frozen tarn (R4) | (-75, -45) | taiga | Walkable ice sheet; pound cracks ring → ice crystals | ice crystals |
-| P6 | Trampoline Grove | (55, -50) (70, -35) | grove | 4+ giant mushrooms as bounce chains toward Spore Isle | spore, fibre |
-| P7 | Murk Swamp (R4) | (75, -40) | grove | Shallow murky water ≤1 m, reeds, glowing spores | fibre (reeds), spore |
-| P8 | Mirror Lake (R4) | (0, -40) | north | Lake with clay bed; river spline east to the sea (currents, Ride-only) | clay |
-| P9 | South Beach + docks (R3) | (0, 105) (-40, 100) | shore | Beach band, raft dock, pearl/kelp beds offshore | pearl, kelp (=fibre) |
-| P10 | East landing (R3) | (105, 40) | shore | Dune-side dock for boat trips (boats are decor/props in R3) | pearl |
-| P11 | Clay flats | (-60, 60) | plains | Extra clay deposits near home so bowl/workbench never gate on travel | clay |
+## 3. The Four Regions & Major POIs
 
-Old test tunnels: keep (8,8) as Sun Grotto; move (-10,15) and (4,-16) or drop
-them in R1-002 (your call — Q2 below). The playground/hills/stairs/ramps/rocky/
-walls terrains stay as-is (lab courses, untouched).
+### Region 1: The Shimmering Coast (South & East)
+- **Aesthetic**: Warm turquoise sea, soft golden sands, weathered driftwood logs, tide pools.
+- **Key POIs**:
+  - `P101` **Pebble Cove (Player Spawn)** `(60, 40)`: Calm, sheltered cove with small tide pools, starter shells, and gentle slopes to teach basic movement.
+  - `P102` **Driftwood Pier & Beach Hut** `(80, 20)`: Weathered wooden dock with starter workbench; calm water for testing early swimming and rafts.
+  - `P103` **Sunken Cavern** `(110, -10)`: Half-submerged sea cave accessible by swimming or seabed walking; contains glowing pearl geodes and hidden alcoves.
+  - `P104` **Tidal Flats** `(70, 80)`: Wide expanse of shallow water where Oobleck can test surface planing and Aerolite floats like driftwood.
 
-## 3. Sky islands (3, each ~60 m wide; heights above sea Y=0)
+### Region 2: Whispering Pines (North)
+- **Aesthetic**: Deep evergreen canopy, misty mountain air, granite crags, cool alpine streams.
+- **Key POIs**:
+  - `P201` **Whispering Ridge Tor** `(-20, -90)`: Towering granite outcrop ($Y \approx +18\text{ m}$) ideal for launching long glides across the forest canopy.
+  - `P202` **Mirror Tarn** `(10, -70)`: Deep mountain tarn ($3.5\text{ m}$ depth) fed by a bubbling cascade; clay deposits along bed.
+  - `P203` **Logging Glade** `(-50, -60)`: Clearing with ancient fallen cedar logs, pinecone groves, and sap tapping sites.
+  - `P204` **Granite Stair** `(30, -100)`: Stepped natural terraces requiring hops, climbs, or wisp ascents to scale.
 
-| Isle | Sky coords | Top Y | Theme / landmark [NEW] | Resource | Route summary (details §5) |
-|------|-----------|-------|------------------------|----------|---------------------------|
-| Ember Isle | (75, 55) SE | 38 | Sunstone camp: campfire circle + **geode spire** (starstone) | starstone, petal | Dune thermals → glide (slime/stone); rise+float (wisp) |
-| Spore Isle | (60, -60) NE | 34 | Mushroom garden: **giant mushroom ring** | spore, petal | Trampoline chain (slime/stone); rise+float (wisp) |
-| Lookout Isle | (-60, -55) NW | 44 | Pine lookout: **wood tower** (table+torch) | timber, sap | Taiga ridge glide + thermal assist (all); bridges later |
+### Region 3: Sunbaked Crags (West)
+- **Aesthetic**: Terracotta red rocks, wind-carved sandstone arches, dry riverbeds, clay flats.
+- **Key POIs**:
+  - `P301` **The Great Arch** `(-80, -20)`: Massive natural sandstone bridge spanning a deep canyon ($Y \approx +16\text{ m}$).
+  - `P302` **Thermal Gulch** `(-90, 20)`: Canyon featuring 3 persistent thermal updrafts for wisp soaring and glider launch.
+  - `P303` **Clay Flats & Dried Wadi** `(-60, 50)`: Smooth terracotta basin with abundant clay nodes; fills with temporary water channels during rain.
+  - `P304` **Cactus Oasis** `(-110, 0)`: Small desert oasis surrounded by fan palms and succulent plants; shade rest stop.
 
-Heights are first guesses: R2-007 reachability tests verify every island × every
-form; if a route fails we move a thermal/trampoline (world data), never buff a
-form (rules 2/4).
+### Region 4: The Bioluminescent Basin (Southwest & Central Hollow)
+- **Aesthetic**: Sunken twilight depression, massive bioluminescent mushrooms, misty ground fog, glowing spores.
+- **Key POIs**:
+  - `P401` **Spore Canopy Ring** `(-20, 60)`: Cluster of giant bouncy mushroom caps acting as natural trampoline chains.
+  - `P402` **Glowmoss Grotto** `(0, 80)`: Deep subterranean grotto accessed via a narrow squeeze fissure ($0.95\text{ m}$); glowing crystals.
+  - `P403` **Murk Marsh Channels** `(-40, 90)`: Shallow marsh with reeds, floating lily-pads, and water currents.
+  - `P404` **The Geyser Mound** `(-10, 110)`: Vents that emit periodic pressurized steam/spore bursts, propelling light forms into the air.
 
-## 4. Thermals (R2-003) — dune crests + ridge assist
+---
 
-| # | Base (x,z) | Base Y≈ | Radius | Strength | Serves |
-|---|-----------|---------|--------|----------|--------|
-| T1 | (60, 60) | ~6 (crest) | 5 m | 4 m/s, +12 m | Ember Isle leg 1 |
-| T2 | (80, 70) | ~7 (crest) | 5 m | 4 m/s, +12 m | Ember Isle leg 2 |
-| T3 | (45, 85) | ~5 (crest) | 5 m | 4 m/s, +12 m | Ember Isle alternate |
-| T4 | (-45, -70) | ~10 (ridge) | 5 m | 4 m/s, +12 m | Lookout Isle assist |
-| T5 | (30, -70) | ~4 (grove edge) | 5 m | 3 m/s, +10 m | Spore Isle assist (weak, trampolines primary) |
+## 4. Pressure Plates & Puzzle Mechanics
 
-Max 40 thermals per WORLD.md; we start with 5.
+Scattered throughout the island are ancient stone switches and environmental puzzles:
 
-## 5. Reachability matrix (must all pass in R2-007)
+1. **Light Pressure Plates (Wisp / Small Slime)**:
+   - Activated by weights $\le 15\text{ kg}$ (Mist, Zephyr, Aether Bubble). Heavy forms trigger an overload spring lock.
+2. **Medium Pressure Plates (Standard Form / Crates)**:
+   - Activated by weights between $30\text{ kg}$ and $80\text{ kg}$ (Oobleck, Dewdrop, Aerolite, wooden crates).
+3. **Heavy Pressure Plates (Dense Stone)**:
+   - Activated only by weights $\ge 120\text{ kg}$ (Geode, Obsidian). Requires heavy stone grounding or stacked boulders.
+4. **Impact Plates**:
+   - Requires dynamic downward momentum (e.g. Geode ground slam or Dewdrop drop from height).
+5. **Narrow Squeeze Fissures**:
+   - $0.95\text{ m}$ openings accessible only by compressed Oobleck, Dewdrop, or Mist.
 
-| Isle | Slime | Wisp | Stone |
-|------|-------|------|-------|
-| Ember 38 m | T1/T2 ride → glide from ~18–22 m to island rim | Rise (~13 m) + float-glide from crest | T1/T2 ride → crystal-sail glide |
-| Spore 34 m | Trampoline chain (2 bounces ≈ 10–14 m) + glide | Rise + float direct | Trampoline chain + sail |
-| Lookout 44 m | T4 ride from 10 m ridge (~22 m) + long glide | Rise + float from ridge | Trampoline at ridge base + sail, or bridge (R2-005) |
+---
 
-Fallback ladder (in order): move/strengthen thermal → add trampoline →
-extend bridge anchor. Never: change physics numbers.
+## 5. Wind Currents & Thermals
 
-## 6. Water placement (R3/R4)
+Thermals are column triggers with soft radial falloff that elevate wisps and gliders:
+- `TH-01` **Hearth Crest** `(0, 10)`: Lift from $Y = 12 \to 26\text{ m}$ ($3.5\text{ m/s}$).
+- `TH-02` **Crags Gulch A** `(-85, 15)`: Lift from $Y = 6 \to 22\text{ m}$ ($4.0\text{ m/s}$).
+- `TH-03` **Crags Gulch B** `(-95, 30)`: Lift from $Y = 5 \to 20\text{ m}$ ($4.0\text{ m/s}$).
+- `TH-04` **Pines North Ridge** `(-25, -85)`: Lift from $Y = 14 \to 28\text{ m}$ ($3.0\text{ m/s}$).
+- `TH-05` **Basin Spore Chimney** `(-15, 65)`: Warm fungal updraft from $Y = 2 \to 18\text{ m}$ ($4.5\text{ m/s}$).
 
-- R3 sea: ring body around landmass, beach band where grid height in [-0.5, 0.8];
-  docks at P9/P10; pearl + kelp beds at 2–6 m depth off south/east shores.
-- R4 Mirror Lake at P8 (clay bed), river spline P8 → (120,-20) sea, Ride-only flow.
-- R4 Murk Swamp at P7 (depth ≤1 m, reeds, spore glints).
-- R4 Frozen tarn at P5 (ice sheet, neutral physics, pound-crack ring).
+---
 
-## 7. What I need from you (max 5, defaults marked *)
+## 6. Procedural Generation & Hand-Authored Blending
 
-APPROVED 2026-10-16 (all defaults):
-1. Island themes/landmarks: KEEP as drafted.
-2. Old test tunnels: KEEP (8,8) as Sun Grotto (now a real in-world 0.95 m
-   tunnel, flattened site, melted-only passage — implemented in terrain.js);
-   the (-10,15)/(4,-16) tunnels live in the `walls` lab course, untouched.
-3. Starter hut: KEEP at (-20,16).
-4. Sky access: THERMALS FIRST, bridges optional.
-5. Open vibe question: no correction received — map stands as drafted.
+- **Base Mesh**: Continuous heightmap generated via 2D Simplex noise with domain warping, shaped by a circular radial falloff towards sea level at the coastline.
+- **Hand-Crafted Anchors**: Landmark POIs, cave entrances, arches, and key paths are stamped into the heightmap and feature placed prefab colliders.
+- **Surface Biome Splatting**: Four splat weights blend smoothly across height, slope, and regional distance, driving ground shader color and prop distribution.

@@ -2,7 +2,7 @@
   "name": "aetheria",
   "version": "0.0.1",
   "private": true,
-  "description": "A cozy 3D browser game with TypeScript, Three.js, and Rapier WASM",
+  "description": "A cozy, low-poly sandbox in the browser with TypeScript and Three.js",
   "type": "module",
   "scripts": {
     "dev": "vite",

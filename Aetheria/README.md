@@ -1,30 +1,47 @@
 # Aetheria
 
-A cozy, peaceful 3D browser game built with TypeScript, Three.js, and Rapier WASM physics.
+A cozy, isometric, low-poly sandbox in the browser. Desktop only.
 
 ## About
 
-Aetheria is a single-player exploration game featuring three unique creatures—slime, wisp, and stone—each with multiple forms and abilities. Explore a procedurally generated world, gather resources, craft items, and build structures in a peaceful, stress-free environment.
+Aetheria is a single-player exploration game on one connected island. You play one of nine permanent forms in three families (Slime, Wisp, Stone). Each form moves differently because of its physics: bounce, buoyancy, air, weight, momentum. You explore, gather, craft, build a home, redirect water, grow plants and befriend gentle wildlife. There is no combat, no hunger, no timers and no way to permanently break a save. Free to play, donations only, no ads, no account.
 
-**Visual Style**: Cozy low-poly aesthetic with soft pastel colors and painterly NPR shaders.
+**Visual Style**: Flat-shaded faceted low-poly environment, smooth soft creatures, toon ramp lighting, tinted depth fog, gradient sky.
 
-**Tech Stack**: Vite + TypeScript + Three.js + Rapier WASM + ECS architecture
+**Tech Stack**: Vite + TypeScript (strict) + Three.js (WebGL 2) + ECS + pnpm monorepo
 
-## Features
+**Physics**: Behind a `PhysicsWorld` interface. Decided in the Phase 0 spike (Jolt WASM vs custom sphere-vs-heightfield collider).
 
-- **Three Playable Forms**: Slime (liquid), Wisp (gas), Stone (solid)
-- **Form Variants**: Each form has 4 unique variants with different gameplay
-- **Procedural World**: Generated terrain with biomes, flora, and resources
-- **Peaceful Gameplay**: No combat, damage, or punitive mechanics
-- **Building System**: Place structures with ghost preview and snapping
-- **Crafting**: Pocket recipes and workbench recipes
-- **Weather System**: Dynamic weather and wind
-- **Customization**: Colors, cosmetics, and body parameters
-- **Save System**: Local persistence with auto-save
+## Pillars
+
+1. Nine forms, nine identities. Each form is a real choice, not a skin.
+2. One connected world. No form locks a region; a form can make a route faster, never the only way.
+3. Physics with purpose. Weight, buoyancy, air and momentum create play that is readable and forgiving.
+4. Everyone can do everything. All nine forms can walk, jump, climb, glide, collect, craft, build and swim.
+5. Alive in the first ten seconds. Every action answers with motion, a visual and a sound.
+6. Cozy and safe. No death, no decay, no soft-locks, no lost work.
+
+## Non-Goals (First Solo Release)
+
+Combat, PvP, economy, phone or tablet support, co-op, modding platform, desktop wrapper, trading, cloud sync, WebGPU, hunger, tool breakage, structural collapse.
+
+## The Nine Forms
+
+| Family | Form | Identity |
+| --- | --- | --- |
+| Slime | Oobleck | Bounce champion. Planes across water at speed. |
+| Slime | Dewdrop | Bouncy when dry, splats when full of water. |
+| Slime | Aether Bubble | Low gravity, slow falls, soft floaty bounces. |
+| Wisp | Mist | Light aerosol that hovers close to surfaces. |
+| Wisp | Zephyr | Streamlined air. Gust dash pushes props. |
+| Wisp | Lantern | Floats loose, condenses into dense hard light. |
+| Stone | Aerolite | Pumice. Floats and skims water. Rides updrafts. |
+| Stone | Geode | Rolling stone with near-zero friction. |
+| Stone | Obsidian | Dense, wind-immune, sinks. |
 
 ## Development Status
 
-**Current Phase**: Phase 2 Complete (Core Architecture & Physics Integration). Ready for Phase 3 (Creature Forms: Slime).
+**Current Phase**: Phase 0 — Spikes and Measurement
 
 See [docs/PLAN.md](docs/PLAN.md) for the full development roadmap.
 
@@ -56,33 +73,38 @@ pnpm build
 ```
 Aetheria/
 ├── packages/
-│   ├── core/      # ECS, math, types, events
-│   ├── sim/       # Physics, forms, world, environment
+│   ├── core/      # Loop, fixed step, input commands, camera
+│   ├── data/      # Forms, recipes, regions, all tuning numbers
+│   ├── sim/       # Movement, abilities, water grid, weather, wildlife, farming
+│   ├── physics/   # PhysicsWorld interface and adapter
 │   ├── render/    # Three.js rendering, shaders
-│   ├── ui/        # DOM UI, HUD, input
-│   └── assets/    # GLB loading, manifests
+│   ├── audio/     # Procedural Web Audio
+│   ├── build/     # Building system
+│   ├── save/      # Save, export, import
+│   ├── ui/        # DOM UI, HUD, menus
+│   └── dev/       # Proving Grounds, perf hooks
 ├── app/           # Game entry point
 └── docs/          # Documentation
 ```
 
 ## Documentation
 
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - Technical architecture and design decisions
-- [PLAN.md](docs/PLAN.md) - Development roadmap and phases
-- [AGENT.md](docs/AGENT.md) - Rules for AI working on this codebase
-- [CHARACTERS.md](docs/CHARACTERS.md) - Forms, abilities, controls, and physics constants
-- [ENVIRONMENT.md](docs/ENVIRONMENT.md) - Biomes, weather, resources, crafting
-- [WORLD.md](docs/WORLD.md) - World design, terrain, save format
-- [PERFORMANCE.md](docs/PERFORMANCE.md) - Performance budgets and targets
-- [DECISIONS.md](docs/DECISIONS.md) - Assumptions and design decisions
-- [REFERENCES.md](docs/REFERENCES.md) - Reference games and inspirations
+- [PLAN.md](docs/PLAN.md) — Development roadmap and phases
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Technical architecture
+- [CHARACTERS.md](docs/CHARACTERS.md) — Forms, abilities, controls, physics
+- [ENVIRONMENT.md](docs/ENVIRONMENT.md) — Regions, weather, resources, crafting, building
+- [WORLD.md](docs/WORLD.md) — Island layout, terrain, save format
+- [PERFORMANCE.md](docs/PERFORMANCE.md) — Performance budgets and targets
+- [DECISIONS.md](docs/DECISIONS.md) — Assumptions and design decisions
+- [WATER.md](docs/WATER.md) — Water mechanics
+- [AGENT.md](docs/AGENT.md) — Rules for AI working on this codebase
+- [REFERENCES.md](docs/REFERENCES.md) — Reference games and inspirations
+
+## Reference Files
+
+- `AETHERIA_MASTER_PLAN.md` — The canonical design document (v4). All docs derive from it.
+- `Aetheria.html` — A throwaway tester/reference build. Not the real game; its code is not copied.
 
 ## License
 
 MIT
-
-## Acknowledgments
-
-- Original prototype: Aetheria.html (physics rules reference)
-- Asset sources: 3dassets.dev, Grab3D.com (CC0)
-- Visual inspiration: A Short Hike, Susurrus, cozy-isle

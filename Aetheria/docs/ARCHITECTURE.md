@@ -1,185 +1,143 @@
-# ARCHITECTURE.md - Aetheria Game Architecture
+# ARCHITECTURE.md — Aetheria Technical Architecture
+
+Aligned with `AETHERIA_MASTER_PLAN.md` v4. Desktop browser only.
 
 ## Tech Stack
 
-- **Build Tool**: Vite 5.x
-- **Language**: TypeScript (strict mode)
-- **Renderer**: Three.js (r128+)
-- **Physics**: Single-engine architecture via `PhysicsWorld` interface (Jolt Physics WASM single-thread build with Phase 6 engine spike evaluating Jolt soft bodies vs custom 162-particle PBD slime solver)
-- **Architecture**: ECS (Entity Component System) with data-driven nine forms (Phase 5b)
-- **Assets**: CC0 GLB/GLTF 2.0 with manifest-driven fetcher (`pnpm assets:fetch`) and procedural Three.js fallbacks
-- **Units**: Relative density (water = 1); real water density (1000 kg/m³) is used only inside the quadratic water drag formula.
+| Layer | Choice |
+| --- | --- |
+| Language & build | TypeScript (strict), Vite, pnpm, one project with folders |
+| Rendering | Three.js, WebGL 2, instanced meshes, vertex colours, few textures |
+| ECS | Small library (miniplex or bitECS) for world entities and props. Hot loops use plain typed arrays. |
+| Physics | Behind a `PhysicsWorld` interface. Decided in the Phase 0 spike. |
+| Audio | Raw Web Audio API, zero files |
+| Saves | IndexedDB + browser storage, JSON export |
 
 ## Core Principles
 
-1. **Physics-First and Consistent**
-   - All nine forms obey the exact same physical laws; form differences emerge strictly from data (mass, relative density, drag coefficients, tanks), never special-case hacks.
-   - Simulation owns game state, physics, and saveable data via ECS.
-   - Rendering owns scene composition, camera, and visuals.
-   - UI owns DOM overlays, HUD, and menus.
-   - Universal Moor Rule: when grounded and idle, a moor force cancels wind drift up to a cap.
+1. **Physics with purpose**
+   - All nine forms obey the same physical laws. Differences come from data (mass, density, drag, stop time), never special-case hacks.
+   - Simulation owns game state, physics, and saveable data.
+   - Rendering owns scene composition, camera, visuals.
+   - UI owns DOM overlays, HUD, menus.
+   - Moor Rule: with no input and on ground, nothing is pushed by wind.
 
+2. **Data-oriented design**
+   - Forms as data rows. Adding a form changes a table, never a system.
+   - ECS with Structure-of-Arrays (SoA) component storage.
+   - Systems are pure functions that iterate data.
 
-2. **Data-Oriented Design**
-   - ECS with Structure-of-Arrays (SoA) component storage
-   - Systems are pure functions that iterate data
-   - Cache-friendly memory layout
+3. **Type safety**
+   - Full TypeScript strict mode.
+   - Branded types for entity IDs.
+   - Discriminated unions for variant data.
 
-3. **Type Safety**
-   - Full TypeScript strict mode
-   - Branded types for entity IDs
-   - Discriminated unions for variant data
+4. **Desktop web-first**
+   - All code targets desktop browser (WebGL 2, requestAnimationFrame).
+   - WASM for performance-critical paths (physics, if Jolt is chosen).
+   - No Node-only dependencies in core packages.
+   - No mobile/touch requirements.
 
-4. **Web-First**
-   - All code targets browser (WebGL, Canvas, requestAnimationFrame)
-   - WASM for performance-critical paths (physics)
-   - No Node-only dependencies in core packages
-
-## Package Structure
+## Code Layout
 
 ```
 Aetheria/
 ├── packages/
-│   ├── core/          # Layer 0: Foundation
-│   │   ├── ecs/       # Entity Component System
-│   │   ├── math/      # Vector, matrix, quaternion utilities
-│   │   ├── types/     # Core type definitions
-│   │   └── events/    # Event bus
-│   ├── sim/           # Layer 1: Simulation
-│   │   ├── physics/   # Rapier integration
-│   │   ├── forms/     # Creature forms (slime, wisp, stone)
-│   │   ├── world/     # World generation, terrain
-│   │   └── env/       # Environment (weather, wind)
-│   ├── render/        # Layer 2: Rendering
-│   │   ├── scene/     # Three.js scene setup
-│   │   ├── camera/    # Camera controller
-│   │   ├── materials/ # Cozy low-poly shaders
-│   │   └── effects/   # Post-processing (Kuwahara)
-│   ├── ui/            # Layer 3: UI
-│   │   ├── hud/       # HUD overlay
-│   │   ├── panels/    # Control panels
-│   │   └── input/     # Input mapping
-│   └── assets/        # Layer 4: Assets
-│       ├── loader/    # GLB loading
-│       └── manifest/  # Asset manifests
-└── app/               # Game entry point
+│   ├── core/       # Loop, fixed step, input commands, camera
+│   ├── data/       # Forms, recipes, regions, all tuning numbers
+│   ├── sim/        # Movement, abilities, water grid, weather, wildlife, farming
+│   ├── physics/    # PhysicsWorld interface and adapter
+│   ├── render/     # Three.js scene, materials, effects
+│   ├── audio/      # Procedural Web Audio synthesis
+│   ├── build/      # Building system (place, undo, snap)
+│   ├── save/       # Save, export, import, backups
+│   ├── ui/         # DOM HUD, menus, input mapping
+│   └── dev/        # Proving Grounds, perf hooks
+└── app/            # Game entry point
     ├── main.ts
     └── bootstrap.ts
 ```
 
 ## Layer Dependency Rules
 
-- Layer 0 (core): No dependencies on other layers
-- Layer 1 (sim): Depends only on core
-- Layer 2 (render): Depends on core, sim (read-only)
-- Layer 3 (ui): Depends on core, sim (read-only)
-- Layer 4 (assets): Depends on core only
-- No circular dependencies
-- No upward imports
+- `core/`: no dependencies on other packages
+- `data/`: depends only on core
+- `sim/`: depends on core, data
+- `physics/`: depends on core, data
+- `render/`: depends on core, data, sim (read-only)
+- `audio/`: depends on core, data, sim (read-only)
+- `build/`: depends on core, data, sim
+- `save/`: depends on core, data, sim
+- `ui/`: depends on core, data, sim (read-only)
+- `dev/`: depends on all (internal only)
+- No circular dependencies. No upward imports.
+
+## Physics Architecture
+
+### PhysicsWorld Interface
+
+Physics is abstracted behind a `PhysicsWorld` interface so the implementation can be swapped.
+
+**Phase 0 spike (1–2 weeks)** decides between:
+1. **Jolt Physics WASM** — full rigid body engine with character controller, heightfield terrain
+2. **Custom sphere-vs-heightfield collider** — may be enough, removes WASM dependency
+
+Gate: if testers can't feel the difference, adopt the simpler approach.
+
+### Slime Physics
+
+Target design: rigid proxy collider with visual-only jelly lattice (~162 particles skinned in vertex shader). The prototype's soft-body solver stays as the feel reference until Phase 0 settles it.
+
+### Fixed Timestep
+
+- **Physics tick**: fixed 60 Hz with visual interpolation
+- **Catch-up**: at most 4 steps per frame; excess discarded after tab suspension
+- **Phase order**: input → ability → motor → physics → contacts → world update → render
+
+### Simulation-Rendering Boundary
+
+- `PhysicsWorld` owns collision detection and spatial dynamics
+- ECS owns game-specific state, form data tables, abilities
+- Three.js mirrors physics transforms each visual frame
+- Zero Three.js objects inside simulation state
+- Input is commands, simulation is separate from rendering
+- Every entity has a stable ID (keeps later co-op possible)
 
 ## ECS Architecture
 
 ### Entities
-- Unique 64-bit IDs (branded type)
+- Unique IDs (branded type)
 - Generated from a sequence
-- IDs can be reused after deletion
+- Stable across saves
 
 ### Components
 - Data-only structures (no logic)
 - Stored in Structure-of-Arrays for cache efficiency
-- Example components:
-  - `Position` (x, y, z)
-  - `Velocity` (x, y, z)
-  - `Form` (slime, wisp, stone, variant)
-  - `Health` (current, max)
-  - `State` (idle, moving, jumping, etc.)
 
 ### Systems
-- Pure functions that iterate over component queries
-- Deterministic order via topological sort
-- Example systems:
-  - `MovementSystem` - updates position from velocity
-  - `PhysicsSystem` - runs Rapier simulation
-  - `FormSystem` - handles form-specific logic
-  - `RenderSystem` - syncs Three.js meshes from ECS data
+- Pure functions iterating component queries
+- Deterministic order
 
 ### Queries
 - Filter entities by component presence
 - Cached for performance
-- Example: `Query<Position, Velocity>` returns all moving entities
-
-## Physics Integration
-
-### Single-Engine Architecture (`PhysicsWorld` Interface)
-- Single-engine physics interface abstracts the underlying engine (Jolt Physics WASM single-thread build)
-- Phase 6 engine spike: compares Jolt soft body vs custom 162-particle PBD solver behind the exact same `PhysicsWorld` interface
-- Fixed timestep simulation (1/60 s) with accumulator clamping (`maxSubSteps = 3`)
-- Single world handles rigid bodies, heightfield terrain, soft bodies (with pressure/volume constraints), character controller, and buoyancy
-- Lazy WASM loading after title screen (~0.74 MB gzip WASM + 0.14 MB glue cached by service worker)
-- Mobile slime tier: ~162 simulation particles driving render mesh via GPU Phong-tessellation skinning
-
-### Simulation-Rendering Boundary
-- `PhysicsWorld` owns collision detection and spatial dynamics
-- ECS owns game-specific state, nine-form data tables, abilities, and resource tanks
-- Three.js mirrors physics transforms each visual frame
-- Zero direct Three.js objects inside simulation state
-
-## Asset Pipeline
-
-### Asset Format
-- Standard: GLB (binary glTF with embedded textures)
-- Fallback: Procedural generation
-- CDN-ready URLs from 3dassets.dev
-
-### Manifest System
-- JSON manifest defines all assets
-- Stable keys for references
-- Grouped by domain: characters, environment, props, audio
-
-### Loading Strategy
-- Preload critical assets on startup
-- Lazy load non-critical assets
-- Progress indicator for user feedback
-
-## Input System
-
-### Action Mapping
-- Define abstract actions: `move`, `jump`, `interact`, `menu`, etc.
-- Map physical inputs to actions in one place
-- Support keyboard, mouse, touch, gamepad
-
-### Input Processing
-- Input manager collects raw events
-- Action mapper converts to game actions
-- Systems consume actions, not raw input
 
 ## Save System
 
-### Saveable State
-- Only ECS component data (no Three.js objects)
-- Serialized as JSON
-- Encrypted/obfuscated if needed
+- Local-first, multiple named worlds, no account.
+- Browser storage (fast path) + IndexedDB mirror with 3 rolling backups (`backup_1` to `backup_3`).
+- Backups only rotate when content changed.
+- **Staged import:** parse → check version → validate keys → show summary → backup first → apply → reload. Never silently overwrites.
+- Versioned schema with validated migrations.
+- Export/import via JSON text (copy/paste or file download where host allows).
+- Destructive actions (reset, delete world) require explicit confirmation.
 
-### Save Format
-```json
-{
-  "version": 1,
-  "timestamp": 1234567890,
-  "entities": [
-    {
-      "id": "entity-123",
-      "components": {
-        "Position": {"x": 10, "y": 0, "z": 5},
-        "Form": {"kind": "slime", "variant": "blob"}
-      }
-    }
-  ],
-  "world": {
-    "seed": 42,
-    "visitedAreas": ["area-1", "area-2"]
-  }
-}
-```
+## Input System
+
+- Abstract actions: move, jump, sprint, ride, ability_j, ability_k, stomp, interact, build, undo, redo, cycle_form, select_family, emote, orbit, menu, respawn
+- Map physical inputs to actions in one place
+- All keys remappable with conflict warnings and restore-defaults
+- Sprint can be hold or toggle
 
 ## Performance Strategy
 
@@ -191,83 +149,52 @@ Aetheria/
 ### Rendering
 - InstancedMesh for repeated geometry
 - Frustum culling
-- LOD for distant objects
-- Draw call budget: 25-35
+- Draw call budget: ~60
+- ~150k visible triangles
+- Baked vertex AO, toon ramp lighting
 
-### Physics
-- Fixed timestep with substeps
-- Broadphase spatial hashing
-- Narrowphase: Rapier WASM
+### Quality Presets
+- **Low**: 0.75 scale, pixel ratio 1.0, blob shadows, no post-processing
+- **Medium**: 0.85–1.0 scale, one cheap shadow map
+- **High**: full resolution, full effects
+- **Custom**: user-adjustable
+- Two-way governor: drops after ~1 s slow, recovers after ~12 s good, stops after two relapses
 
-## Debug System
-
-### Debug Overlays
-- FPS counter
-- Entity count
-- Draw calls
-- Physics debug draw (optional)
-- Entity inspector (click to inspect)
-
-### Logging
-- Structured logging with levels
-- Performance markers
-- Error tracking
-
-## Testing Strategy
-
-### Unit Tests
-- Pure functions tested in isolation
-- No Three.js in core/sim tests
-- Mock dependencies where needed
-
-### Integration Tests
-- Test package interactions
-- Test asset loading
-- Test save/load roundtrips
-
-### Playwright Tests
-- End-to-end gameplay scenarios
-- UI interaction testing
-- Performance regression tests
+### Memory
+- Under ~400 MB tab memory
+- Initial JS ~700 KB gzip
+- Whole demo ~4 MB gzip
 
 ## Build Pipeline
 
 ### Development
 - Vite dev server with HMR
 - TypeScript for type checking
-- ESLint for code quality
 
 ### Production
 - Tree-shaking via Rollup
 - Minification
-- WASM bundling
-- Asset optimization
+- WASM bundling (if Jolt chosen)
 
-## Migration Path from Aetheria.html
-`Aetheria.html` is a throwaway tester build published only to test feel. It constrains nothing in the production codebase.
+## Migration from Aetheria.html
 
-### Keep (Feel & Physics Truth)
+`Aetheria.html` is a throwaway tester build. It constrains nothing in the production codebase.
+
+### Keep (feel reference)
 - Gravity: -20 m/s²
 - Particle radius: 0.07 m
-- Jump feel, squash, soft-slime behaviour, performance tiers
-- Proven feel numbers reproduced cleanly in production
+- Jump feel, squash, soft-slime behaviour
+- Performance tier concepts
 
-### Change (Architecture & v4 Roadmap)
-- Monolithic prototype → Modular ECS packages
-- Custom JS prototype physics → Jolt Physics WASM behind `PhysicsWorld` interface
-- Legacy per-creature presets → Nine forms as pure data (Phase 5b)
-- Universal movement verbs: walk, jump, climb, glide, hop for all forms
-- Build order: Loop Slice (Phase 6b: 3 slice forms explore, harvest, craft, build) before expanding remaining forms
-- CI performance gates as Phase 6 exit criterion
-
-### Change (Visuals & Assets)
-- Procedural-first Three.js geometry + CC0 GLB pipeline (`pnpm assets:fetch` with SHA-256 manifest)
-- Procedural Three.js fallback guarantee (game runs with empty asset cache)
-- Procedural Web Audio synthesizer (zero audio file dependencies)
-- Painted pastel palette, soft shadows, edge vignette, and bloom
+### Change
+- Monolithic single file → modular package structure
+- Custom JS physics → `PhysicsWorld` interface (engine TBD via Phase 0 spike)
+- Legacy per-creature presets → nine forms as pure data
+- Mobile/touch UI → deleted (desktop only)
+- Build order follows 10-phase roadmap (Phases 0–9)
 
 ## Reference
 
-- Tester prototype: `Aetheria.html` (reference for feel only)
-- Asset sources: Kenney CC0, Poly Haven API
+- Canonical design: `AETHERIA_MASTER_PLAN.md` (v4)
+- Tester prototype: `Aetheria.html` (feel reference only)
 - Visual reference: A Short Hike, Susurrus (cozy low-poly miniature)

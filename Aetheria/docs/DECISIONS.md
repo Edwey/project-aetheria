@@ -1,251 +1,198 @@
-# DECISIONS.md - Assumptions and Design Decisions
+# DECISIONS.md — Assumptions & Design Decisions
 
-This document records assumptions made during development. Each entry includes a "change me if" note for when circumstances change.
+Aligned with `AETHERIA_MASTER_PLAN.md` v4. Each entry includes a "change me if" note.
 
 ---
 
 ## Architecture Decisions
 
-### ECS Architecture
-**Decision**: Use Entity Component System for game state management.
-**Rationale**: Data-oriented design, cache-friendly, scalable, separates simulation from rendering.
-**Change me if**: Performance profiling shows significant overhead, or team prefers simpler component-based approach.
+### Physics Engine
+**Decision**: Adopted custom TypeScript heightfield and primitive collider behind `PhysicsWorld` interface; heavy WASM physics (Rapier/Jolt) dropped for core traversal.
+**Rationale**: Phase 0 spike verified that custom collider executes in <0.05ms per step, handles trenches and steps smoothly, and avoids 750KB+ WASM overhead that violates the 700KB initial JS budget.
+**Change me if**: Complex multi-body dynamic rigid body puzzle mechanics require a full constraints solver later (candidate: lightweight cannon-es for props only).
 
-### Layered Package Structure
-**Decision**: Organize code into 5 layers (core, sim, render, ui, assets) with strict dependency rules.
-**Rationale**: Prevents circular dependencies, enforces separation of concerns, makes testing easier.
-**Change me if**: Monorepo becomes too complex, or single-package structure proves simpler.
+### Slime Physics
+**Decision**: Rigid proxy collider with procedural visual jelly deformation (squash & stretch, damped harmonic ground squish, 162-vertex lattice).
+**Rationale**: Phase 0 spike proved the rigid proxy achieves >= 5 bounces at 0.85 restitution without artificial boosts, passes 100/100 tight-space grate tests without tunneling or pinching, and is 20x faster than full particle XPBD simulation.
+**Change me if**: Playtesters report visual jelly deformation lacks specific soft-body tactile response.
+
+### Desktop Only
+**Decision**: Desktop browser only. No phone, tablet or touch support. The dormant touch UI from the tester build is deleted.
+**Rationale**: Mobile adds enormous complexity for a solo developer. Desktop-first lets us focus on feel and quality.
+**Change me if**: Demand justifies mobile support post-launch.
+
+### ECS Architecture
+**Decision**: Small ECS library (miniplex or bitECS) for world entities and props. Hot loops use plain typed arrays.
+**Rationale**: Data-oriented, cache-friendly, scalable, separates simulation from rendering.
+**Change me if**: Performance profiling shows significant overhead.
+
+### Code Layout
+**Decision**: Single project with folders: `core/`, `data/`, `sim/`, `physics/`, `render/`, `audio/`, `build/`, `save/`, `ui/`, `dev/`.
+**Rationale**: Matches Master Plan §12. Input is commands, simulation is separate from rendering, every entity has a stable ID.
+**Change me if**: Monorepo becomes too complex.
 
 ### TypeScript Strict Mode
-**Decision**: Use TypeScript with strict mode enabled, no `any` types.
-**Rationale**: Type safety catches bugs early, better IDE support, self-documenting code.
-**Change me if**: Development speed is too slow, or TypeScript compilation becomes a bottleneck.
-
-### Physics Engine & Single-Engine Architecture
-**Decision**: Standardize on a single-engine physics abstraction via `PhysicsWorld` interface, using Jolt Physics (WASM, single-thread build). Run an engine spike in the first 2 days of Phase 6 comparing Jolt soft bodies vs a custom 162-particle PBD slime solver behind the same interface.
-**Rationale**: Combining rigid bodies, soft bodies (with volume/pressure constraints), character controller, heightfields, and buoyancy in one engine eliminates cross-engine coupling and synchronization issues. Jolt WASM is ~0.74 MB gzip wasm + 0.14 MB glue, lazy-loaded after title screen.
-**Change me if**: The Phase 6 engine spike proves custom PBD solver has significantly better mobile performance or feel.
-
-### GLB Asset Format & CC0 Pipeline
-**Decision**: Manifest-driven CC0 asset fetcher (`pnpm assets:fetch`) saving to ignored cache directories, with procedural Three.js fallbacks for every asset.
-**Rationale**: Guarantees zero licensing risk, keeps git repository lean (no binary bloat), and ensures the game runs cleanly even with an empty assets folder.
-**Change me if**: Asset requirements exceed procedural/CC0 availability.
+**Decision**: TypeScript strict mode, no `any` types.
+**Rationale**: Type safety catches bugs early.
+**Change me if**: Development speed is too slow.
 
 ---
 
 ## Tech Stack Decisions
 
 ### Vite Build Tool
-**Decision**: Use Vite for development and production builds.
-**Rationale**: Fast HMR, modern ES modules, built-in optimization, widely adopted.
-**Change me if**: Webpack/Vite feature gap becomes critical, or team prefers different tool.
+**Decision**: Vite for development and production builds.
+**Change me if**: Different build tool needed.
 
-### Three.js r128+
-**Decision**: Pin Three.js to r128+ (current stable), upgrade later if needed.
-**Rationale**: Stable API, good performance, large ecosystem, no breaking changes expected soon.
-**Change me if**: Need features only in newer versions, or performance regression occurs.
+### Three.js
+**Decision**: Three.js with WebGL 2.
+**Change me if**: WebGPU becomes a non-goal change.
 
-### pnpm Workspaces
-**Decision**: Use pnpm for monorepo workspaces management.
-**Rationale**: Fast, disk-efficient, strict dependency management, good for monorepos.
-**Change me if**: Team prefers npm/yarn workspaces, or pnpm has compatibility issues.
+### pnpm
+**Decision**: pnpm for package management.
+**Change me if**: Team prefers npm/yarn.
 
 ---
 
-## Visual Style Decisions
+## Gameplay Decisions
 
-### Cozy Low-Poly Aesthetic
-**Decision**: Use cozy low-poly style with soft pastel palette, NPR shaders, flat-shaded terrain and props, smooth soft creatures.
-**Rationale**: Matches "peaceful/cozy" game goal, miniature sandbox aesthetic.
-**Change me if**: Playtesting shows aesthetic doesn't resonate, or performance issues with shaders.
+### Nine Forms as Data
+**Decision**: All nine forms are data rows. Adding a form changes a table, never a system.
+**Change me if**: A form requires fundamentally new simulation.
 
-### Kuwahara Post-Processing
-**Decision**: Use Kuwahara filter for painterly/watercolor effect in Full quality; disable on mobile/Light quality.
-**Rationale**: Unique visual identity, cozy feel, adaptive performance scaling.
-**Change me if**: Performance impact is too high, or effect looks unnatural.
+### Four Regions (not biomes)
+**Decision**: Four display-name regions mapped onto built biomes. Old built names retired as display names.
+**Rationale**: Verdant Refuge, Wildwood, Waterworn Basin, Windcarved Heights give each area identity while the built biomes handle rendering.
+**Change me if**: The naming doesn't resonate with testers.
 
----
+### Controls
+**Decision**: WASD move, Space jump, Shift sprint, G ride wind, J/K abilities, F stomp, E interact, B build. All remappable.
+**Rationale**: Master Plan §5.2. Legacy M and C toggles retired; their effects live inside J and K.
+**Change me if**: Playtesting reveals control conflicts.
 
-## Gameplay & Physics Decisions (v4)
+### Pressure Plate Minimum Speed
+**Decision**: Impact only counts toward plates when landing speed ≥ 4 m/s (~0.8 m drop).
+**Rationale**: Without this, any hop above 1.5 m/s presses the plate for Oobleck/Aerolite/Geode/Obsidian and the height puzzle disappears.
+**Change me if**: Playtesting shows the 4 m/s threshold is too restrictive.
 
-### Nine Forms as Pure Data (Phase 5b)
-**Decision**: Replace legacy prototype forms (Goo, Jelly Ball, Cube, Cloud, Motes, Ring, Boulder, Pillar, Shard) with nine data-driven forms in a single unified table (Slime: Oobleck, Dewdrop, Aether Bubble; Wisp: Mist, Zephyr, Lantern; Stone: Aerolite, Geode, Obsidian).
-**Rationale**: Adding a form never adds a system; differences come strictly from mass, relative density, drag, and tanks. Eliminates modal confusion.
-**Change me if**: Specific forms require fundamentally new physical simulation solvers.
+### Coyote Time
+**Decision**: 100 ms default (plan said 80, build has ~120). Re-tune in playtests.
+**Change me if**: Playtesting reveals different sweet spot.
 
-### Loop Slice (Phase 6b)
-**Decision**: Prove the complete game loop (explore, harvest, craft, build, biomes) on a bounded island with three forms (one per family: Oobleck, Zephyr, Geode) before expanding to the remaining six forms.
-**Rationale**: Ensures core gameplay loop is fun, stable, and performant before scaling content.
-**Change me if**: Playtesting requires all nine forms simultaneously to evaluate loop balance.
+### Respawn
+**Decision**: 0.5 s fade to last safe ground, no inventory loss.
+**Change me if**: 0.5 s feels abrupt (this is an open item).
 
-### Units: Relative Density
-**Decision**: All densities are specified relative to water ($\text{water} = 1.0$).
-**Rationale**: Intuitive physical reasoning (forms with density < 1 float, > 1 sink). Real water density ($1000\text{ kg/m}^3$) appears only inside the quadratic water drag formula.
-**Change me if**: Simulation calculations require SI units across all internal equations.
+### No Default Start in Proving Grounds
+**Decision**: New players start on the island with short no-text onboarding. Proving Grounds stays as developer level.
+**Change me if**: Testing reveals onboarding needs the Proving Grounds.
 
-### Form Identity: Bounce, Water and Air (v4.1)
-**Decision**:
-1. **Airy Bubble**: Keep Aether Bubble airy rather than springy (restitution 0.5, low momentum, $0.35g$ gravity, long hang times, slow falls).
-2. **Dewdrop Ballast Splat**: Bouncy when dry (0.6), dropping to 0 (flat splat with splash particles) as ballast fills with water.
-3. **Universal Water Movement**: No glide while submerged (>8% submerged). Universal swimming replaces glide (`WASD` paddles at 9 m/s², `Space` upward stroke at 3 m/s). Dense forms walk the lakebed and jump from it.
-4. **Aerolite Lift Magic**: Stone body (mass 1.5, stone drag, rigid collisions), but air-creature current coupling (updrafts/thermals carry it detached from mass).
-5. **Universal Moor Rule**: Grounded idle forms cancel wind drift up to a safety threshold.
-**Rationale**: Provides sharp, distinct identity for all forms while eliminating frustrating physics traps (such as getting blown away while idle or gliding underwater).
-**Change me if**: Specific traversal puzzles require underwater gliding or idle wind drift.
+### Dewdrop J (Release Ballast)
+**Decision**: Hold J to dump soaked water and lose weight. Ties Dewdrop to plate puzzles.
+**Change me if**: A better ability emerges in playtesting.
 
----
-
-## Performance & CI Decisions
-
-### CI Performance Gates (Phase 6 Exit Criterion)
-**Decision**: Implement strict CI performance gates driven by `perf-budget.json`: physics ms/step benchmark, bundle-size check (initial, wasm, total gzip), and 6x CPU-throttled browser frame test gating frame time, draw calls (<35), and triangles (<60k).
-**Rationale**: Enforces performance budgets continuously rather than deferring optimization to the end of development.
-**Change me if**: CI infrastructure cannot reliably execute headless GPU/WASM frame tests.
-
-### Simulation Consistency over Cross-Device Determinism
-**Decision**: Run fixed timestep (1/60s) with decoupled accumulator clamping, but do not mandate bit-identical floating point across devices (single player sandbox).
-**Rationale**: Cross-device WASM bit-determinism adds massive complexity for zero gameplay gain in a single-player cozy game with local saves.
-**Change me if**: Multiplayer synchronization is introduced.
-
----
-
-## UI/UX Decisions
-
-### DOM Overlays for UI
-**Decision**: Use DOM/CSS for all UI (HUD, panels, menus), not in-canvas text.
-**Rationale**: Better accessibility, easier styling, responsive design, text crispness.
-**Change me if**: Performance issues with DOM, or need in-world UI.
-
-### Cozy UI Aesthetic
-**Decision**: Use rounded corners, pastel colors, soft shadows for UI.
-**Rationale**: Matches visual style, feels friendly and welcoming.
-**Change me if**: Playtesting shows readability issues, or aesthetic changes.
-
-### Touch Controls for Mobile
-**Decision**: Implement virtual joystick and buttons for touch devices.
-**Rationale**: Mobile support required, touch is primary input on phones.
-**Change me if**: Playtesting shows mobile isn't target audience, or better alternative exists.
-
----
-
-## Testing Decisions
-
-### Unit Tests for Core/Sim
-**Decision**: Core and sim packages must have comprehensive unit tests.
-**Rationale**: Pure functions easy to test, catches bugs early, ensures reliability.
-**Change me if**: Development speed too slow, or tests provide little value.
-
-### Playwright for E2E
-**Decision**: Use Playwright for end-to-end gameplay and UI testing.
-**Rationale**: Cross-browser, reliable, good for regression testing.
-**Change me if**: CI takes too long, or flaky tests become problematic.
-
-### No Real-Device Testing Initially
-**Decision**: Test on desktop browsers and device emulation only initially.
-**Rationale**: Faster iteration, emulator good enough for initial phases.
-**Change me if**: Real-device behavior differs significantly, or mobile is primary target.
+### No Legacy Toggles
+**Decision**: Old M and C toggles retired. Their effects live inside each form's J and K.
+**Change me if**: Never — this is a v4 decision.
 
 ---
 
 ## Save System Decisions
 
-### localStorage + IndexedDB
-**Decision**: Use localStorage for profile, IndexedDB for large save data.
-**Rationale**: localStorage for small fast data, IndexedDB for large structured data.
-**Change me if**: IndexedDB proves complex, or localStorage sufficient for all data.
+### Staged Import
+**Decision**: Parse → check version → validate keys → show summary → backup into `backup_1` first → apply → reload. If any step fails, change nothing and say why.
+**Rationale**: Import must never silently overwrite.
+**Change me if**: Never — this is a safety rule.
 
-### JSON Save Format
-**Decision**: Serialize game state as JSON.
-**Rationale**: Human-readable, easy to debug, widely supported.
-**Change me if**: Size too large, or need binary format for performance.
+### Multiple Named Worlds
+**Decision**: Local-first, multiple named worlds, no account.
+**Change me if**: Cloud sync is added post-launch.
 
-### Auto-Save on Terrain Switch
-**Decision**: Auto-save before switching terrain/world.
-**Rationale**: Prevents progress loss, good UX.
-**Change me if**: Performance impact, or user prefers manual saves only.
+### Browser Storage + IndexedDB
+**Decision**: Browser storage (fast path) + IndexedDB mirror with 3 rolling backups.
+**Rationale**: Browser storage can be evicted; backups mitigate this.
+**Change me if**: IndexedDB alone proves sufficient.
 
----
-
-## Asset Pipeline Decisions
-
-### Manifest-Based Loading
-**Decision**: Use JSON manifest to define all assets with stable keys.
-**Rationale**: Centralized asset management, easy to update, reference by key not URL.
-**Change me if**: Too much overhead, or direct URL loading proves simpler.
-
-### Preload Critical Assets
-**Decision**: Preload critical assets on startup, lazy load others.
-**Rationale**: Fast initial load, progressive loading for non-critical content.
-**Change me if**: Initial load too slow, or all assets needed immediately.
-
-### Procedural Fallback
-**Decision**: Provide procedural generation fallback if asset load fails.
-**Rationale**: Game always playable, graceful degradation.
-**Change me if**: Procedural quality too low, or all assets must be present.
+### Export/Import
+**Decision**: Copy/paste JSON text in Settings (file download only where host allows).
+**Change me if**: A simpler export method becomes available.
 
 ---
 
-## Phase Planning Decisions
+## Performance Decisions
 
-### 12-Phase Development
-**Decision**: Break development into 12 phases from architecture to release.
-**Rationale**: Manageable chunks, clear milestones, early testing and feedback.
-**Change me if**: Phases prove too rigid, or different rhythm works better.
+### Performance Is a Ratchet
+**Decision**: After vertical slice, re-baseline. Nothing gets worse by >10%.
+**Change me if**: The game needs a fundamental architecture change.
 
-### Test After Each Phase
-**Decision**: Run full test suite after completing each phase.
-**Rationale**: Catch issues early, prevent debt accumulation, quality gates.
-**Change me if**: Too time-consuming, or phase-specific testing sufficient.
+### Two-Way Governor
+**Decision**: Drops after ~1 s slow, recovers after ~12 s good, stops after two relapses. Measures CPU and GPU separately.
+**Change me if**: Playtesting reveals governor is too aggressive or too passive.
 
-### Phase 1 First
-**Decision**: Start with Phase 1 (Core Architecture) before any gameplay.
-**Rationale**: Foundation critical, hard to change later, sets patterns for rest.
-**Change me if**: Team prefers prototype-first approach, or wants to see visuals immediately.
+### Fixed 60 Hz Step
+**Decision**: Visual interpolation, max 4 catch-up steps, excess discarded.
+**Change me if**: Physics needs a different rate.
 
 ---
 
-## Unknown/To Be Decided
+## Visual Style Decisions
 
-### Monorepo vs Separate Repos
-**Decision**: OpenWorld contains Aetheria (3D) and Explore-2D (2D) in one repo.
-**Rationale**: Shared tooling, easier management, related projects.
-**Change me if**: Projects diverge significantly, or team prefers separate repos.
+### Flat-Shaded Low-Poly
+**Decision**: Flat-shaded faceted environment, smooth soft creatures. Toon ramp lighting, thin outline on creatures, rim light, fake thickness, tinted depth fog.
+**Change me if**: Playtesting shows aesthetic doesn't resonate.
 
-### CI/CD Platform
-**Decision**: Not yet decided (GitHub Actions likely).
-**Rationale**: Good integration with GitHub, free for public repos.
-**Change me if**: Need different platform, or GitHub Actions limitations.
+### No Post-Processing Chain
+**Decision**: No post-processing chain. Gradient sky, CSS vignette, additive-sprite bloom.
+**Change me if**: A lightweight effect proves essential.
 
-### Deployment Target
-**Decision**: Not yet decided (likely GitHub Pages or Vercel).
-**Rationale**: Simple static hosting, good for browser games.
-**Change me if**: Need server-side features, or different hosting requirements.
+### 24-Minute Day/Night Cycle
+**Decision**: Regional palettes for day/night.
+**Change me if**: Cycle length feels wrong in play.
 
-### Multiplayer Future
-**Decision**: Single-player only for now, multiplayer not ruled out.
-**Rationale**: Simplifies development, core gameplay is priority.
-**Change me if**: Multiplayer becomes key requirement, or tech needs to support it.
+---
+
+## Open Items (from Master Plan §17)
+
+1. **The real specs of the test computer**: Resolved in Phase 0 (Intel Core i7-9850H 2.60GHz, 6C/12T, 32 GB RAM, NVIDIA Quadro T1000 + Intel UHD Graphics 630, Windows 11).
+2. **The result of the physics spike**: Resolved in Phase 0 (Adopted Rigid Proxy with visual jelly deformation + custom TypeScript heightfield collider; passed bounce >= 5, 100/100 tight spaces, trench bridging, <0.05ms/step).
+3. **Provisional J/K slots**: Resolved in Phase 2 & Table A1 (Full signature abilities implemented for all 9 forms with physics behaviors and visual representations).
+4. **The purpose of sand traction on the Heights**: Open (to be calibrated during region testing).
+5. **Whether the 0.5 s respawn fade feels abrupt**: Open (to be tested during public preview).
+
+---
+
+## Loop Slice & Audio Decisions (Phase 3)
+
+### 20-Step Full Cost Undo
+**Decision**: Undo stack retains up to 20 building actions, restoring 100% of material costs to player inventory.
+**Rationale**: Eliminates building anxiety and promotes creative peaceful experimentation.
+**Change me if**: Memory constraints demand smaller stack (unlikely given tiny memory footprint).
+
+### Predictable 75% Dismantle Refund
+**Decision**: Manual targeted dismantling returns `Math.floor(cost * 0.75)` (minimum 1).
+**Rationale**: Aligned with Master Plan §9.
+
+### Zero-File Procedural Web Audio Engine
+**Decision**: 100% of sound effects, impacts, and musical bounce chains are synthesized via raw Web Audio API. Zero external audio asset files.
+**Rationale**: Keeps total bundle tiny (<150KB gzipped) and loads instantly on any connection.
+**Change me if**: Playtesting requires sampled loops for ambient music.
 
 ---
 
 ## Assumptions
 
 ### Target Device Performance
-**Assumption**: Target devices can sustain 30 FPS with Light quality.
-**Change me if**: Real-device testing shows performance issues.
+**Assumption**: Baseline laptop can sustain 60 FPS Balanced, 30 FPS Low.
+**Change me if**: Phase 0 measurement reveals different reality.
 
 ### Browser Support
-**Assumption**: Modern browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+) with WebGL 2 and WASM support.
-**Change me if**: Need to support older browsers, or WASM support issues.
-
-### Network Conditions
-**Assumption**: Players have reasonable internet for asset loading (not offline-first).
-**Change me if**: Offline support becomes requirement, or poor network conditions common.
-
-### Player Skill Level
-**Assumption**: Players can learn controls and mechanics without extensive tutorial.
-**Change me if**: Playtesting shows confusion, need better onboarding.
+**Assumption**: Current Chrome, Edge, Firefox with WebGL 2.
+**Change me if**: Need to support older browsers.
 
 ### Session Length
-**Assumption**: Typical play session is 10-30 minutes.
-**Change me if**: Game design changes to longer sessions, or different engagement pattern.
+**Assumption**: Typical play session 10–30 minutes.
+**Change me if**: Game design changes to longer sessions.
+
+### Hosting
+**Assumption**: Static files on a free CDN host. Check free-tier terms for donation-supported game.
+**Change me if**: Terms don't allow donation model.

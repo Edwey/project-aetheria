@@ -119,6 +119,91 @@ html:not([data-screen="play"]) #hud, html:not([data-screen="play"]) #touch { dis
 #abtn { right: calc(env(safe-area-inset-right, 0px) + 13rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 3.6rem); }
 #vbtn { right: calc(env(safe-area-inset-right, 0px) + 13rem); bottom: calc(env(safe-area-inset-bottom, 0px) + 8.2rem); }
 @media (pointer: coarse) { #abilities { display: none; } #hotbar { bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); left: calc(env(safe-area-inset-left, 0px) + 10.5rem); transform: none; max-width: calc(100vw - 25rem); } #jump { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 4.2rem); } .slot { width: 2.6rem; height: 2.6rem; font-size: 1.15rem; } }
+/* glass HUD v2 */
+.card{background:linear-gradient(180deg,rgba(255,255,255,.55),var(--paper));border-color:rgba(255,255,255,.7);border-radius:1.1rem;box-shadow:0 .6rem 1.8rem rgba(37,76,60,.16)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card{background:var(--paper);border-color:var(--line)}}
+:root[data-theme="dark"] .card{background:var(--paper);border-color:var(--line)}
+.eyebrow{font-size:.62rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#objective{position:absolute;right:max(.7rem,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 6.3rem);width:15rem;padding:.6rem .9rem;pointer-events:none}
+#objMain{font-weight:900;margin:.15rem 0 .1rem}#objSub{font-size:.78rem;color:var(--muted);font-weight:700;line-height:1.35}
+#fcard{position:absolute;left:max(.7rem,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 11.6rem);padding:.6rem;width:13.2rem}
+#fl{display:grid;gap:.25rem;margin-top:.4rem}.fgap{height:.2rem}
+.fbtn{display:flex;align-items:center;gap:.5rem;text-align:left;padding:.3rem .45rem;border-radius:.8rem;border:1px solid transparent;background:transparent;color:inherit;cursor:pointer;font:inherit}
+.fbtn:hover{background:rgba(255,255,255,.35)}.fbtn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.fbtn .dot{width:1.5rem;height:1.5rem;border-radius:50%;flex:none;box-shadow:inset 0 -.25rem .4rem rgba(0,0,0,.25),inset 0 .2rem .3rem rgba(255,255,255,.5)}
+.fbtn b{display:block;font-size:.86rem;line-height:1.1}.fbtn small{display:block;font-size:.62rem;font-weight:800;letter-spacing:.08em;opacity:.75;text-transform:uppercase}
+#keysbar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + .6rem);padding:.4rem .8rem;font-size:.78rem;font-weight:800;color:var(--muted);white-space:nowrap;pointer-events:none}
+#keysbar .key{display:inline-block;min-width:1.4rem;padding:.05rem .35rem;margin:0 .15rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:.4rem;background:var(--paper2);color:var(--ink);text-align:center}
+@media (max-width:900px){#fcard,#keysbar,#objective{display:none}}
+/* minimal glass menu */
+#menu{--g1:rgba(255,253,245,.66);--g2:rgba(255,255,255,.5);--g3:rgba(255,255,255,.75);--g4:rgba(255,255,255,.8);background:rgba(24,44,36,.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #menu{--g1:rgba(22,32,28,.62);--g2:rgba(255,255,255,.08);--g3:rgba(255,255,255,.16);--g4:rgba(255,255,255,.16)}}
+:root[data-theme="dark"] #menu{--g1:rgba(22,32,28,.62);--g2:rgba(255,255,255,.08);--g3:rgba(255,255,255,.16);--g4:rgba(255,255,255,.16)}
+#menu .sheet{width:min(52rem,94vw);height:min(37rem,90vh);grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);background:var(--g1);backdrop-filter:blur(26px) saturate(1.3);-webkit-backdrop-filter:blur(26px) saturate(1.3);border:1px solid var(--g3);border-radius:1.6rem;box-shadow:0 1.6rem 4rem rgba(20,45,35,.28)}
+#menu .tabs{flex-direction:row;flex-wrap:wrap;align-items:center;gap:.2rem;padding:.8rem 1.1rem;border:0;background:transparent}
+#menu .tabs .brand{padding:0 .8rem 0 .2rem;font-size:.8rem;letter-spacing:.24em;color:var(--muted)}
+#menu .tabs button[data-tab]{padding:.42rem .95rem;border-radius:999px;font-weight:700;font-size:.9rem;color:var(--muted)}
+#menu .tabs button[data-tab]:hover{background:var(--g2)}
+#menu .tabs button[aria-selected="true"]{background:var(--g4);color:var(--ink);box-shadow:0 .1rem .6rem rgba(20,45,35,.12)}
+#menu .tabs .btn{background:transparent;border:1px solid var(--line);border-radius:999px;padding:.38rem .9rem;font-size:.82rem;color:var(--muted)}
+#menu .tabs .close{margin-top:0}#fbBtn{margin-left:auto}
+#menu .panes{padding:.4rem 1.6rem 1.6rem;scrollbar-width:thin}
+#menu .pane h2{font-size:1.15rem;font-weight:800;margin:.2rem 0 .4rem}
+#menu .pane h3{margin:1.2rem 0 .3rem;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#menu .seg button,#menu .seg3 button,#menu .acts button,#menu .row button{background:var(--g2);border:1px solid var(--g3);border-radius:.9rem;box-shadow:0 .1rem .5rem rgba(20,45,35,.06)}
+#menu .seg button[aria-pressed="true"],#menu .seg3 button[aria-pressed="true"],#menu .acts button[aria-pressed="true"],#menu .row button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#menu .hcard{background:var(--g2);border-color:var(--g3)}
+#menu select,#menu input.txt{background:var(--g2);border-color:var(--g3)}
+/* creature tab: only the selected creature */
+#pane_creature>h2{order:0;font-size:1.5rem;margin:.1rem 0 0}
+#famRow{order:1}#mg_cards{order:2}#formInfo{order:3}.shapeLbl{order:4;margin-top:.4rem}#bodies,#mg_stone,#mg_wisp{order:5}
+#pane_creature .lbl[style*="opacity"],#mg_cards .mgh{display:none}
+#pane_creature[data-k="0"] #mg_stone,#pane_creature[data-k="0"] #mg_wisp,#pane_creature[data-k="1"] #bodies,#pane_creature[data-k="1"] #mg_stone,#pane_creature[data-k="2"] #bodies,#pane_creature[data-k="2"] #mg_wisp{display:none}
+#pane_creature:not([data-k="0"]) #mg_cards [data-fam="0"],#pane_creature:not([data-k="1"]) #mg_cards [data-fam="1"],#pane_creature:not([data-k="2"]) #mg_cards [data-fam="2"]{display:none}
+#mg_cards>div[data-fam]{grid-template-columns:repeat(3,1fr)!important}
+#mg_cards button{padding:.5rem .6rem!important;border-width:1px!important;border-radius:.9rem!important}
+#mg_cards button>div:nth-child(n+2){display:none!important}
+#mg_cards button>div:first-child{font-size:.85rem}
+#formInfo{padding:.7rem .9rem;font-size:.88rem;line-height:1.5}#fiChk{margin-top:.4rem;font-size:.76rem;color:var(--muted)}
+.more{order:6;margin-top:.8rem;border-top:1px solid var(--line);padding-top:.6rem}.more>summary{cursor:pointer;font-weight:800;font-size:.9rem;color:var(--muted)}.more[open]>summary{margin-bottom:.6rem}
+/* the form rows carry inline display:grid, so hiding the other families needs !important */
+#pane_creature:not([data-k="0"]) #mg_cards [data-fam="0"],#pane_creature:not([data-k="1"]) #mg_cards [data-fam="1"],#pane_creature:not([data-k="2"]) #mg_cards [data-fam="2"],#pane_creature[data-k="0"] #mg_stone,#pane_creature[data-k="0"] #mg_wisp,#pane_creature[data-k="1"] #bodies,#pane_creature[data-k="1"] #mg_stone,#pane_creature[data-k="2"] #bodies,#pane_creature[data-k="2"] #mg_wisp{display:none!important}
+/* minimal HUD */
+#inv{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:.2rem .4rem!important;min-width:0!important;opacity:.85}
+#inv .wx,#inv .clock{font-size:.7rem;opacity:.7}
+#chip{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:.2rem .3rem!important}
+/* minimal HUD v3: controls list hidden behind a ? button, tidy key bar, trimmed ability card */
+#abilities{display:none!important}
+body.hints #abilities{display:grid!important;opacity:1;bottom:calc(env(safe-area-inset-bottom,0px) + 3.4rem)}
+#keysbar{bottom:calc(env(safe-area-inset-bottom,0px) + 1.7rem)}
+#helpBtn{position:absolute;right:max(.7rem,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + .8rem);width:2.2rem;height:2.2rem;padding:0;border-radius:50%;font-weight:900;pointer-events:auto;background:var(--paper);border:1px solid var(--line);color:var(--ink);cursor:pointer}
+body.hints #helpBtn{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+body>div[style*="4.6rem"]>div:nth-child(n+3){display:none}
+body.hints>div[style*="4.6rem"]>div:nth-child(n+3){display:block}
+#jump .txt{display:none}#jump{opacity:.9}
+#hotbar:has(#invList:empty){display:none}
+/* ===== HUD v2: calm, compact, game-like ===== */
+#chip,#inv,#objective{background:var(--paper)!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important;backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;border-radius:999px!important}
+#chip{padding:.25rem .9rem .25rem .3rem!important;gap:.55rem!important}
+#chip .iconbtn{width:2.1rem;height:2.1rem;font-size:1rem;box-shadow:none}
+#chip::before{content:"";order:1;width:.85rem;height:.85rem;border-radius:50%;background:var(--fam,var(--accent));box-shadow:0 0 .7rem var(--fam,var(--accent))}
+#chip .who{order:2;display:flex;flex-direction:column}#chipName{font-size:.9rem}#chipForm{font-size:.68rem}
+#inv{display:flex!important;align-items:center;gap:.7rem;padding:.4rem 1rem!important;min-width:0!important;text-align:left;opacity:1!important}
+#inv .biome{font-size:.9rem}#inv .wx,#inv .clock{margin:0;font-size:.78rem;padding-left:.7rem;border-left:1px solid var(--line)}
+#objective{left:50%!important;right:auto!important;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + .7rem)!important;width:auto!important;max-width:min(24rem,40vw);padding:.42rem 1.1rem!important;text-align:center;animation:objfade 1.2s ease 12s forwards}
+#objective .eyebrow,#objSub{display:none}#objMain{margin:0;font-size:.88rem}@keyframes objfade{to{opacity:.4}}
+#toasts{top:calc(env(safe-area-inset-top,0px) + 3.7rem)!important}
+#fcard{top:50%!important;transform:translateY(-50%);left:max(.7rem,env(safe-area-inset-left,0px))!important;width:auto!important;padding:.35rem!important;border-radius:1.4rem!important}
+#fcard .eyebrow{display:none}#fl{margin:0;gap:.2rem}.fgap{height:.5rem;border-top:1px solid var(--line);margin:.1rem .3rem}
+.fbtn{padding:.2rem!important;border-radius:999px!important}.fbtn .dot{width:1.6rem;height:1.6rem}
+.fbtn b,.fbtn small{display:none}.fbtn.on b,.fbtn:hover b{display:block;padding-right:.55rem;font-size:.8rem}
+#abilities{bottom:calc(env(safe-area-inset-bottom,0px) + 3.4rem)!important;gap:.25rem;opacity:.92}
+.ab{padding:.15rem .6rem .15rem .2rem;font-size:.74rem;border-radius:999px}.ab small{display:none}.ab.minor{display:none}body.hints .ab.minor{display:flex}
+#hotbar{bottom:calc(env(safe-area-inset-bottom,0px) + .8rem)!important}.slot{width:2.6rem;height:2.6rem;font-size:1.2rem}
+#jump{opacity:0;transition:opacity .15s;bottom:calc(env(safe-area-inset-bottom,0px) + 4.2rem)!important;width:min(14rem,60vw)!important}
+#jump.on{opacity:1}#jump .txt{display:none}#jump .bar{height:.4rem}
+#keysbar{display:none!important}body.hints #keysbar{display:block!important;bottom:calc(env(safe-area-inset-bottom,0px) + 4.8rem)!important}
+#helpBtn{opacity:.6}#helpBtn:hover,body.hints #helpBtn{opacity:1}
 </style>
 </head>
 <body>
@@ -130,6 +215,10 @@ html:not([data-screen="play"]) #hud, html:not([data-screen="play"]) #touch { dis
   <div id="chip" class="card"><button id="menuBtn" class="iconbtn" aria-label="Open menu">&#9776;</button><div class="who"><div id="chipName">Slimey</div><div id="chipForm">Slime</div></div></div>
   <div id="inv" class="card" aria-live="polite"><div class="biome" id="biomeLbl">Aetheria</div><div class="wx"><span id="windArrow">&#10148;</span> <span id="wxLbl">Clear</span></div><div class="clock" id="clock">14:00</div></div>
   <div id="toasts" aria-live="polite"></div>
+  <div id="objective" class="card"><div class="eyebrow">Your little adventure</div><div id="objMain">Explore the island</div><div id="objSub">Swap forms with 1 2 3 and Z, then find what each one can reach.</div></div>
+  <aside id="fcard" class="card"><div class="eyebrow">Choose your form · Z cycles</div><div id="fl"></div></aside>
+  <button id="helpBtn" aria-label="Show or hide all controls" title="Controls (H also opens Heart, so use this button)" onclick="document.body.classList.toggle('hints')">?</button>
+  <div id="keysbar" class="card"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> Move <span class="key">Space</span> Jump <span class="key">1 2 3</span> Family <span class="key">Z</span> Form <span class="key">J</span><span class="key">K</span> Abilities <span class="key">Esc</span> Menu</div>
   <div id="hotbar"><div id="invList"></div></div>
   <div id="abilities"></div>
   <div id="jump"><div class="txt" id="jtxt">Tap Space for a hop, hold for a big jump</div><div class="bar"><div class="fill" id="jfill"></div></div></div>
@@ -167,7 +256,7 @@ html:not([data-screen="play"]) #hud, html:not([data-screen="play"]) #touch { dis
       <button id="menuClose" class="btn close">Close (Esc)</button>
     </div>
     <div class="panes">
-      <section id="pane_creature" class="pane on" data-pane="creature">
+      <section id="pane_creature" class="pane on" data-pane="creature" data-k="0">
         <h2>Creature</h2>
         <div class="lbl">Shape (three per creature)</div><div class="lbl" style="opacity:.7">Slime</div><div class="seg" id="bodies"></div><div class="lbl" style="opacity:.7">Stone</div><div class="seg" id="mg_stone"></div><div class="lbl" style="opacity:.7">Wisp</div><div class="seg" id="mg_wisp"></div><div id="mg_cards"></div>
         <div style="display:none"><div class="seg3" id="forms"></div></div>
@@ -227,7 +316,7 @@ html:not([data-screen="play"]) #hud, html:not([data-screen="play"]) #touch { dis
           <div class="hcard"><h4>Slime (liquid)</h4><ul><li>Hold <span class="key">Space</span> to squash down, release to jump. The longer you hold, the higher you go.</li><li>Hold <span class="key">Space</span> in the air to glide.</li><li>Push into a wall to climb it (needs Stickiness).</li><li><span class="key">M</span> melts into a puddle to slip under gaps. <span class="key">F</span> pounds the ground.</li></ul></div>
           <div class="hcard"><h4>Wisp (gas)</h4><ul><li>Tap <span class="key">Space</span> to hop. Hold it to rise, which uses breath fast.</li><li>Press <span class="key">V</span> to float: you hold your height and breath drains slowly. Otherwise you sink.</li><li>On the ground your breath refills. Out of breath means no more rising until you touch down.</li><li><span class="key">F</span> dives for a shockwave. <span class="key">C</span> condenses, <span class="key">M</span> spreads out.</li></ul></div>
           <div class="hcard"><h4>Stone (solid)</h4><ul><li>Rolls fast and keeps its shape.</li><li>Push into a wall to climb with pitons. You can hang there as long as you like.</li><li>Hold <span class="key">Space</span> in the air for the crystal sail. It lands with a shockwave.</li><li><span class="key">M</span> shrinks to a pebble to fit through small gaps.</li></ul></div>
-          <div class="hcard"><h4>Wind</h4><ul><li>Wind never pushes you around by default, so you can stand still safely.</li><li>Hold <span class="key">Shift</span> to ride it: tailwinds speed you up, headwinds never slow you, and updrafts lift you.</li><li>Press <span class="key">B</span> to see the wind arrows.</li></ul></div>
+          <div class="hcard"><h4>Wind</h4><ul><li>Wind never pushes you around by default, so you can stand still safely.</li><li>Hold <span class="key">G</span> to ride it: tailwinds speed you up, headwinds never slow you, and updrafts lift you.</li><li>Press <span class="key">B</span> to see the wind arrows.</li></ul></div>
           <div class="hcard"><h4>Gather, craft, build</h4><ul><li>Run into trunks to shake loose wood and sap. Pound geodes and clay. Roll over flowers.</li><li>Items fly into your Core when you are near.</li><li>Open Craft and build in this menu. Press <span class="key">P</span> to place things: <span class="key">Enter</span> places, <span class="key">X</span> turns, <span class="key">Del</span> removes.</li></ul></div>
           <div class="hcard"><h4>Physics in plain words</h4><p>Your slime is a soft jelly made of hundreds of tiny points. It squashes when it lands, stretches when it jumps and wobbles when it stops. The wisp is a cloud of motes held together by its glowing Core. The stone is the same body made completely stiff.</p><p>Everyone can do everything. The forms only differ in how they do it and what they are best at.</p></div>
         </div>
@@ -330,7 +419,7 @@ function makeSlime(kind, cx, cy, cz, level, size) {
     idx: new Uint32Array(m.tris.length * 3),
     qr: [0, 0, 0, 1],
     com: [cx, cy, cz], vcom: [0, 0, 0], avgN: [0, 1, 0], contacts: 0,
-    charge: 0, prevHeld: false, groundTimer: 0, cooldown: 0,
+    charge: 0, prevHeld: false, groundTimer: 0, cooldown: 0, dwell: 1, chain: 0, relBuf: 0,
     jumpActive: false, jumpPower: 0, takeoffY: 0, peak: 0, lastPeak: 0, lastPower: 0,
     melt: 0, airTime: 0, pounding: false, poundQueued: false, gliding: false, events: [],
     shrink: 0, scale: 1, hoverLeft: 0.8, hovering: false, clingLeft: 1.5, glideTime: 0, pitHold: false, lastWallMode: 0, wallNx: 0, wallNz: 0
@@ -727,7 +816,11 @@ function substep(b, w, P, c, h) {
 function powerMul(P) { return (P.jboost || 1) * (P.spring ? 1.35 : 1); }
 
 function doJump(b, P) {
-  const J = (JMIN + (P.jmax - JMIN) * b.charge) * powerMul(P);
+  // bounce chain: re-jumping within 0.3 s of landing builds rhythm, each link adds 10% power (max 5 links)
+  b.chain = (b.dwell < 0.3 && b.chain < 9) ? b.chain + 1 : 0;
+  const link = Math.min(b.chain, 5);
+  if (link > 0) b.events.push({ t: 'chain', n: link, x: b.com[0], y: b.com[1], z: b.com[2] });
+  const J = (JMIN + (P.jmax - JMIN) * b.charge) * powerMul(P) * (1 + 0.1 * link);
   const n = b.n, x = b.x, v = b.v;
   let minY = 1e9, maxY = -1e9;
   for (let i = 0; i < n; i++) { const y = x[3*i+1]; if (y < minY) minY = y; if (y > maxY) maxY = y; }
@@ -773,7 +866,8 @@ function stepBody(b, w, P, inp, dt) {
   b.shrink += (shrinkT - b.shrink) * Math.min(1, dt * 5); if (b.shrink < 0.001 && !shrinkT) b.shrink = 0;
   b.scale = 1 - SHRINK * b.shrink;
 
-  if (b.groundTimer <= 0) b.airTime += dt; else b.airTime = 0;
+  if (b.groundTimer <= 0) { b.airTime += dt; b.dwell = 0; } else { b.airTime = 0; b.dwell += dt; }
+  b.relBuf = Math.max(0, b.relBuf - dt);
 
   // one-shot actions
   if (inp.heart) { heartPop(b); b.events.push({ t: 'heart', x: b.com[0], y: b.com[1], z: b.com[2] }); }
@@ -792,6 +886,8 @@ function stepBody(b, w, P, inp, dt) {
     else if (b.airTime > 0.1) b.charge = 0;
   } else {
     if (!held && b.prevHeld && b.groundTimer > 0 && b.cooldown <= 0 && b.melt < 0.4) doJump(b, P);
+    else if (!held && b.prevHeld && b.groundTimer <= 0 && b.airTime > 0.1 && b.melt < 0.4) b.relBuf = 0.1;   // input buffer
+    else if (b.relBuf > 0 && b.groundTimer > 0 && b.cooldown <= 0 && b.melt < 0.4) { b.relBuf = 0; b.charge = 0.15; doJump(b, P); }
     b.charge = 0;
   }
   b.prevHeld = held;
@@ -817,7 +913,7 @@ function stepBody(b, w, P, inp, dt) {
     sq: Math.max(b.charge, b.melt * 0.9, (b.gliding && !b.hovering) ? 0.3 : 0),
     glide: b.gliding, hover: b.hovering, pit: !!P.pit, glideCap: P.glideCap || -2.2, overhang: b.clingLeft > 0 && P.sticky > 0.3,
     free: !!P.freeSpeed,
-    maxSpeed: MAXSPEED * (b.gliding ? 1.3 : 1) * (1 - 0.2*b.melt) * (P.speedMul || 1)
+    maxSpeed: MAXSPEED * (b.gliding ? 1.3 : 1) * (1 - 0.2*b.melt) * (P.speedMul || 1) * (inp.sprint ? 1.45 : 1)
   };
   // Wind: Steady by default (it never moves, slows or lifts you). Hold Ride to let it carry and boost you.
   const riding = !!inp.ride;
@@ -1436,7 +1532,7 @@ function step(wp, w, P, inp, dt) {
   if (wp.diving) { kCoh *= 3; rep *= 0.7; }              // the cloud tightens into a bolt while diving
   kCoh *= 1 + 0.5 * bw[2];            // cold taiga air pulls it tight
   kCoh *= 1 - 0.3 * bw[1];            // dune heat expands it
-  const maxSpeed = MAXSPEED * speedMul * (P && P.speedMul ? P.speedMul : 1) * (1 + 0.4 * tailwind);
+  const maxSpeed = MAXSPEED * speedMul * (P && P.speedMul ? P.speedMul : 1) * (1 + 0.4 * tailwind) * (inp.sprint ? 1.45 : 1);
   const h = dt / SUB, cell = Math.max(0.1, rep);
   const t = inp.time || 0;
   wp.grounded = false; wp.landed = false;
@@ -2453,15 +2549,16 @@ window.addEventListener('keydown', e => {
   if (e.code === 'Space') { e.preventDefault(); keyJump = true; return; }
   if (k.startsWith('arrow') || k === 'tab') e.preventDefault();
   if (e.repeat) return;
-  if (k === 'q') azT += Math.PI / 2; else if (k === 'e') azT -= Math.PI / 2;
+  if ((e.ctrlKey || e.metaKey) && (k === 'z' || k === 'y')) { e.preventDefault(); if (buildMode) { (k === 'y' || e.shiftKey) ? redoBuild() : undoBuild(); } return; }
+  if (k === 'q') azT += (e.shiftKey ? -1 : 1) * Math.PI / 2; else if (k === 'e') interact();
   else if (k === 'r') spawnForm(formKind, world.spawn); else if (k === 't') toggleSlow();
   else if (k === 'm') toggleMelt(); else if (k === 'c') toggleSpring();
-  else if (k === 'h') pendingHeart = true; else if (k === 'f') pendingPound = true; else if (k === 'b') windDebug = !windDebug;
+  else if (k === 'h') pendingHeart = true; else if (k === 'f') pendingPound = true; else if (k === 'y') windDebug = !windDebug;
   else if (k === 'tab') { const order = ['slime', 'wisp', 'stone']; switchForm(order[(order.indexOf(formKind) + 1) % 3]); }
   else if (k === 'v') pendingFloat = true;
-  else if (k === 'p') toggleBuild(); else if (k === '[') cyclePiece(-1); else if (k === ']') cyclePiece(1); else if (k === 'x') rotateGhost();
+  else if (k === 'b' || k === 'p') toggleBuild(); else if (k === '[') cyclePiece(-1); else if (k === ']') cyclePiece(1); else if (k === 'x') rotateGhost();
   else if (k === 'enter') placeGhost(); else if (k === 'backspace' || k === 'delete') removeNear();
-  else if (k >= '1' && k <= '8') emoManual(Profile.MANUAL[+k - 1]);
+  else if (k >= '1' && k <= '3') Magic.fam(+k - 1); else if (k >= '4' && k <= '8') emoManual(Profile.MANUAL[+k - 1]);
   else if (k === '=' || k === '+') zoom(0.82); else if (k === '-') zoom(1.22);
   else keys.add(k);
 });
@@ -2501,7 +2598,7 @@ function readInput() {
   const sa = Math.sin(az), ca = Math.cos(az);
   const mx = -sa * iz + ca * ix, mz = -ca * iz - sa * ix;
   inp.mx = mx; inp.mz = mz; inp.jumpHeld = keyJump || touchJump; inp.melt = meltOn; inp.pound = pendingPound; inp.heart = pendingHeart;
-  inp.ride = winp.ride = keys.has('shift') || touchRide; winp.pound = pendingPound; winp.floatToggle = pendingFloat;
+  inp.ride = winp.ride = keys.has('g') || touchRide; inp.sprint = winp.sprint = keys.has('shift'); winp.pound = pendingPound; winp.floatToggle = pendingFloat;
   winp.mx = mx; winp.mz = mz; winp.jumpHeld = inp.jumpHeld; winp.dash = false; winp.mode = modeSel; winp.fx = facing.x; winp.fz = facing.z;
   if (pendingHeart && wisp) { const c = com(); popHearts(c[0], c[1], c[2]); emoTrigger('love', 2); chime([659, 784, 988, 1319], 0.05); }
   pendingPound = false; pendingHeart = false; pendingFloat = false;
@@ -2578,7 +2675,8 @@ function handleEvents() {
   const ev = events();
   while (ev.length) {
     const e = ev.shift();
-    if (e.t === 'pound') onPound(e);
+    if (e.t === 'pound') { onPound(e); Magic.stomp(e); }
+    else if (e.t === 'chain') { const f = [392, 440, 494, 523, 587, 659][Math.min(e.n, 6) - 1]; chime([f, f * 1.5], 0.04); if (e.n >= 2) toast('Bounce chain x' + e.n, 'item', 700); shakeAmp = Math.max(shakeAmp, 0.02 * e.n); }
     else if (e.t === 'heart') { popHearts(e.x, e.y, e.z); chime([659, 784, 988, 1319], 0.05); emoTrigger('love', 2); }
     else if (e.t === 'puff') { stats.jumps++; puff(e.x, Phys.groundHeight(world, e.x, e.z) + 0.1, e.z, 6, 1.4); }
     else if (e.t === 'dash') { chime([440, 660], 0.04); emoTrigger('excited', 0.8); }
@@ -2795,6 +2893,29 @@ function setGhostObj(type) {
   const info = buildPieceObj(type, null); info.obj.traverse(o => { if (o.isMesh) { o.material = ghostMat; o.castShadow = false; } });
   ghostObj = info.obj; ghostObj.visible = false; scene.add(ghostObj);
 }
+
+/* ---- undo/redo (20 steps, full refunds), interact, RMB orbit, safe respawn ---- */
+const undoSt = [], redoSt = [];
+function pushAct(a) { undoSt.push(a); if (undoSt.length > 20) undoSt.shift(); redoSt.length = 0; }
+function dropPieces(ids) { const gone = []; ids.forEach(id => (Build.remove(bs, id) || []).forEach(r => gone.push(r))); gone.forEach(r => { const i = pieceObjs.get(r.id); if (i) { pieceGroup.remove(i.obj); pieceObjs.delete(r.id); } inv[r.type] = (inv[r.type] || 0) + 1; }); return gone; }
+function restorePieces(recs) { const made = []; recs.forEach(r => { if ((inv[r.type] || 0) < 1) return; const n = Build.place(bs, r); if (n) { inv[r.type]--; addPieceObj(n); made.push(n); } }); return made; }
+function flipAct(a) { try { if (a.present) { a.recs = dropPieces(a.ids); a.ids = []; a.present = false; } else { const m = restorePieces(a.recs); a.ids = m.map(r => r.id); a.present = true; } } catch (e) { toast('Could not redo that piece here', 'tip', 1800); } renderInv(); chime([392, 330], 0.05); saveSave(); }
+function undoBuild() { const a = undoSt.pop(); if (!a) return toast('Nothing to undo', 'tip', 1200); flipAct(a); redoSt.push(a); }
+function redoBuild() { const a = redoSt.pop(); if (!a) return toast('Nothing to redo', 'tip', 1200); flipAct(a); undoSt.push(a); }
+function interact() { if (isPaused() || !bs) return; if (nearBench()) openMenu('craft'); else toast('Nothing to use here. Stand near a workbench and press E.', 'tip', 1800); }
+{ let rmb = false; const cv = $('c'); cv.addEventListener('contextmenu', e => e.preventDefault());
+  cv.addEventListener('pointerdown', e => { if (e.button === 2) { rmb = true; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ok */ } } });
+  cv.addEventListener('pointermove', e => { if (rmb) azT -= e.movementX * 0.008; });
+  cv.addEventListener('pointerup', e => { if (e.button === 2) rmb = false; }); cv.addEventListener('pointercancel', () => { rmb = false; }); }
+const fadeEl = document.createElement('div'); fadeEl.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .25s;z-index:60'; document.body.appendChild(fadeEl);
+let lastSafe = null, lastSafeW = null, safeT = 0, respawning = false;
+function respawnSafe() { if (respawning) return; respawning = true; fadeEl.style.opacity = 1; setTimeout(() => { const q = lastSafe || world.spawn; spawnForm(formKind, [q[0], q[1] + 1.2, q[2]]); toast('Back on solid ground', 'item', 1500); setTimeout(() => { fadeEl.style.opacity = 0; respawning = false; }, 250); }, 250); }
+function trackSafe(dt) {
+  if (ui.screen !== 'play' || respawning || !(body || wisp)) return; if (lastSafeW !== world) { lastSafe = null; lastSafeW = world; }
+  const c = com(), grounded = wisp ? !!wisp.grounded : body.groundTimer > 0; safeT -= dt;
+  if (grounded && safeT <= 0) { safeT = 0.4; const gh = Phys.groundHeight(world, c[0], c[2]); if (Math.abs(c[1] - gh) < 2.5) lastSafe = [c[0], gh, c[2]]; }
+  const floor = world.magic ? world.magic.floorY : (lastSafe ? lastSafe[1] - 40 : -80); if (c[1] < floor) respawnSafe();
+}
 function toggleBuild() { buildMode = !buildMode; if (buildMode) buildUsed = true; $('bMode').setAttribute('aria-pressed', buildMode); if (!buildMode && ghostObj) ghostObj.visible = false; }
 function cyclePiece(d) { const list = Build.PLACEABLE; selPiece = list[(list.indexOf(selPiece) + d + list.length) % list.length]; $('bPiece').value = selPiece; }
 function rotateGhost() { ghostYaw = (ghostYaw + 90) % 360; }
@@ -2811,12 +2932,12 @@ function updateGhost() {
 }
 function placeGhost() {
   if (!buildMode || !ghostG || !ghostG.valid) return;
-  const rec = Build.place(bs, ghostG); if (!rec) return;
+  const rec = Build.place(bs, ghostG); if (!rec) return; pushAct({ present: true, ids: [rec.id], recs: [rec] });
   inv[selPiece]--; addPieceObj(rec); renderInv(); chime([392, 523, 659], 0.05); corePulse = 1; emoTrigger('proud', 1.6); saveSave();
 }
 function removeNear() {
   const c = com(), p = Build.nearestPiece(bs, c[0], c[2], 5); if (!p) return;
-  const gone = Build.remove(bs, p.id) || [];
+  const gone = Build.remove(bs, p.id) || []; pushAct({ present: false, ids: [], recs: gone.slice() });
   gone.forEach(r => { const i = pieceObjs.get(r.id); if (i) { pieceGroup.remove(i.obj); pieceObjs.delete(r.id); } inv[r.type] = (inv[r.type] || 0) + 1; });
   renderInv(); chime([330, 262], 0.05); saveSave();
 }
@@ -2863,7 +2984,7 @@ $('bRot').addEventListener('click', e => { rotateGhost(); e.currentTarget.blur()
 $('bPlace').addEventListener('click', e => { placeGhost(); e.currentTarget.blur(); });
 $('bRemove').addEventListener('click', e => { removeNear(); e.currentTarget.blur(); });
 $('giveRes').addEventListener('click', e => { Craft.RES.forEach(k => { inv[k] = Math.min(Craft.stackCap(formKind), inv[k] + 10); }); renderInv(); saveSave(); e.currentTarget.blur(); });
-$('c').addEventListener('pointerdown', () => { if (buildMode && !coarse && !isPaused()) placeGhost(); });
+$('c').addEventListener('pointerdown', e => { if (e.button === 0 && buildMode && !coarse && !isPaused()) placeGhost(); });
 craftReady = true; renderInv();
 
 
@@ -2891,7 +3012,7 @@ const HINTS = [
   { id: 'menu', when: () => stats.picks >= 3, text: () => 'Press Esc for crafting, your look and the settings.' },
   { id: 'craft', when: () => inv.timber >= 5 && inv.workbench === 0 && !buildUsed, text: () => 'You can craft now: open the menu (Esc) and choose Craft and build.' },
   { id: 'bench', when: () => inv.workbench > 0 && !buildUsed, text: () => 'Press P for build mode. Enter places the piece.' },
-  { id: 'ride', when: () => stats.t > 40 && lastSample && lastSample.strength > 2.5 && !inp.ride, text: () => 'Hold Shift to ride the wind. Tailwinds speed you up.' },
+  { id: 'ride', when: () => stats.t > 40 && lastSample && lastSample.strength > 2.5 && !inp.ride, text: () => 'Hold G to ride the wind. Tailwinds speed you up.' },
   { id: 'float', when: () => formKind === 'wisp' && !!wisp && stats.jumps > 1 && !wisp.low && !wisp.floatMode, text: () => 'Press V to float and hold your height. Otherwise you slowly sink.' },
   { id: 'forms', when: () => stats.t > 120, text: () => 'Press Tab to switch form: slime, wisp or stone. Each has its own strengths.' }
 ];
@@ -2906,7 +3027,7 @@ const ABIL = {
   wisp: [['Space', 'Hop or rise', 'tap, hold'], ['V', 'Float', 'toggle', 'float'], ['F', 'Down-gust', '', 'pound'], ['C', 'Condense', 'toggle', 'spring'], ['M', 'Diffuse', 'toggle', 'melt'], ['H', 'Heart', '', 'heart']],
   stone: [['Space', 'Jump', 'hold, release'], ['Space', 'Sail', 'in the air'], ['M', 'Pebble', 'toggle', 'melt'], ['C', 'Spring', 'toggle', 'spring'], ['F', 'Pound', '', 'pound'], ['H', 'Heart', '', 'heart']]
 };
-const ABIL_COMMON = [['Shift', 'Ride wind', 'hold'], ['P', 'Build', 'toggle', 'build'], ['Esc', 'Menu', '', 'menu']];
+const ABIL_COMMON = [['Shift', 'Sprint', 'hold'], ['G', 'Ride wind', 'hold'], ['J', 'Form ability 1', 'hold'], ['K', 'Form ability 2', 'tap or hold'], ['E', 'Interact', '', 'interact'], ['B', 'Build', 'toggle', 'build'], ['Esc', 'Menu', '', 'menu']];
 let abBtns = [], abSig = '';
 function renderAbilities() {
   const box = $('abilities'); box.innerHTML = ''; abBtns = []; abSig = '';
@@ -3047,7 +3168,7 @@ const Magic = (function () {
   }
   const down = {};
   addEventListener('keydown', e => {
-    if (ui.screen !== 'play' || ui.blocking || e.repeat) return; const k = e.key.toLowerCase(); down[k] = true;
+    if (ui.screen !== 'play' || ui.blocking || e.repeat || e.ctrlKey || e.metaKey) return; const k = e.key.toLowerCase(); down[k] = true;
     if (k === 'z') { const f = KIND.indexOf(formKind); M.a[f] = (M.a[f] + 1) % 3; M.anch = false; reshape(); hud(); chime([520 + M.a[f] * 110, 780], 0.05); const c = com(); ringAt(c[0], c[2]); }
     if (k === 'k') tap();
   });
@@ -3188,8 +3309,16 @@ const Magic = (function () {
     });
     if (id === 5 && M.stairs.some(q => q.lit > 0)) mark(5, 'lit the stairs');
     if (changed) { world.grid = null; if (M.phased) M.saved[0] = world.boxes; }
-    const pl = M.plate, onP = Math.hypot(c[0] - pl.x, c[2] - pl.z) < 1.6 && c[1] < pl.y + 1.6;
-    if ((onP && (id === 8 || id === 7 || (id === 1 && M.ballast > .6))) || M.props.some(q => q.m >= 5 && Math.hypot(q.x - pl.x, q.z - pl.z) < 1.6 && q.y < pl.y + 2)) M.plateT = 3; else M.plateT -= dt;
+    // pressure plate: it reads real weight (kg) and a stomp multiplies it, so no form is hard-coded
+    const pl = M.plate, onP = Math.hypot(c[0] - pl.x, c[2] - pl.z) < 1.6 && c[1] < pl.y + 1.6, touching = wisp ? !!wisp.grounded : body.groundTimer > 0;
+    const Lw = onP && touching ? plateMass(id) : 0; M.stompT = Math.max(0, (M.stompT || 0) - dt);
+    const vy = vcom()[1], tch = onP && touching;   // impact load: landing speed over a short stop adds force, softer forms stop slower so they hit softer
+    if (tch && !M.pT2 && (M.pv2 || 0) < -4) { const gE = 20 * (activeP().gscale || 1), stop = [.1, .25, .2, .2, .2, .2, .06, .05, .04][id]; M.impK = 1 + Math.min(3, -M.pv2 / (gE * stop)); M.impT = .35; }
+    M.pT2 = tch; M.pv2 = vy; M.impT = Math.max(0, (M.impT || 0) - dt);
+    const eff = Lw * Math.max(M.impT > 0 ? M.impK : 1, M.stompT > 0 ? 3 : 1);
+    if (eff >= PLATE_TH || M.props.some(q => q.m >= 2 && Math.hypot(q.x - pl.x, q.z - pl.z) < 1.6 && q.y < pl.y + 2)) M.plateT = 3;
+    else { M.plateT -= dt; if (Lw > 0 && M.t - (M.pmT || -9) > 8) { M.pmT = M.t; toast('Too light for the plate (' + Lw.toFixed(1) + ' of ' + PLATE_TH + '). Stomp with F, drop from higher, or add weight.', 'tip', 2800); } }
+    M.plateMesh.position.y = pl.y + 0.08 - 0.06 * Math.min(1, Math.max(eff, M.plateT > 0 ? PLATE_TH : 0) / PLATE_TH);
     const open = M.plateT > 0; M.plateMesh.material.color.set(open ? 0x55e08a : 0xffb43a);
     if (open !== M.gateOpen) { M.gateOpen = open; M.gateMesh.visible = !open; if (open) { world.boxes = world.boxes.filter(b => b !== M.gate); chime([523, 659, 784], .06); toast('The gate swings open', 'item', 1800); if (id === 1) mark(1, 'held the plate'); } else world.boxes.push(M.gate); world.grid = null; if (M.phased) M.saved[0] = world.boxes; }
     M.stars.forEach((s, i) => {
@@ -3198,7 +3327,7 @@ const Magic = (function () {
       if (M.anch && dd < 10 && dd > .1) { s.m.position.x += dx * 5 * dt / dd; s.m.position.y += dy * 5 * dt / dd; s.m.position.z += dz * 5 * dt / dd; s.y = s.m.position.y; }
       if (dd < 1.6) { s.got = true; s.m.visible = false; M.got++; hud(); chime([784 + M.got * 60, 1046], .07); if (M.got === M.total) toast('All stars gathered. Aetheria is yours!', 'item', 4000); }
     });
-    if (world.magic && c[1] < world.magic.floorY) { toast('Fell into the chasm. Back to spawn.', 'item', 2200); spawnForm(formKind, world.spawn); }
+    if (world.magic && c[1] < world.magic.floorY) { respawnSafe(); }
     if (M.t - (M.tel || 0) > .25) { M.tel = M.t; hud(); renderChecks(); }
   }
   const sh = () => M.sh || 'round', shape = (k, d) => (k === 'stone' && sh() === 'block') ? 'cube' : d, level = (k, d) => (k === 'stone' && sh() === 'crystal') ? 1 : d;
@@ -3209,6 +3338,9 @@ const Magic = (function () {
     if (wisp) { wispMat.size = [30, 14, 20 + 14 * M.cond][id - 3] * ({ cloud: 1, fireflies: .5, plume: 1.6 }[M.wl || 'cloud']) * (1 + .06 * Math.sin(M.t * 3)); wispLight.color.set([0xcfe6ff, 0xb8f0d8, 0xffe08a][id - 3]); wispLight.intensity = id === 5 ? .8 + 1.4 * M.cond : .8; }
   }
   // rigid props: crates (density .6, float) and boulders (density 2.5, sink); mass decides who pushes whom
+  const PLATE_TH = 1.7;   // kg of load needed to press the plate
+  const plateMass = id => id === 1 ? 1.2 + .8 * M.ballast : id === 5 ? .3 + 3 * M.cond : MC[id];   // Dewdrop gains water weight, Lantern condenses into hard light
+  function stomp(e) { if (M.plate && Math.hypot(e.x - M.plate.x, e.z - M.plate.z) < 1.8) M.stompT = .6; }   // squash, down-gust, stone pound: all deliver a 3x load pulse
   const MC = [1.2, 1.2, .4, .3, .3, .3, 1.5, 3.5, 9], KD = [.02, .02, .1, 0, 0, 0, .03, .02, .02];
   function propStep(dt, c, v, id) {
     const mc = M.anch ? 1e5 : MC[id] + (id === 1 ? .8 * M.ballast : 0), rc = .85, rdv = [0, 0, 0], P = M.props;
@@ -3263,7 +3395,8 @@ const Magic = (function () {
   }
   function wake(x, y, z, s) { const m = new THREE.Mesh(new THREE.RingGeometry(.4, .5, 28).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .6, depthWrite: false })); m.position.set(x, y + .03, z); scene.add(m); (M.wk = M.wk || []).push({ m, t: 0, s }); }
   function markCards() { document.querySelectorAll('#mg_cards button').forEach(b => { b.style.borderColor = +b.dataset.id === idOf() ? 'var(--accent)' : 'var(--line)'; }); }
-  function select(k, a) { M.a[k] = a; M.anch = false; if (formKind !== KIND[k]) spawnForm(KIND[k], null, true); else reshape(); hud(); markCards(); chime([520 + a * 110, 780], .05); }
+  window.AethSelect = (k, a) => select(k, a);
+  function select(k, a) { M.a[k] = a; M.anch = false; { const pn = document.getElementById('pane_creature'); if (pn) pn.dataset.k = k; } if (formKind !== KIND[k]) spawnForm(KIND[k], null, true); else reshape(); hud(); markCards(); chime([520 + a * 110, 780], .05); }
   (function cards() {
     const box = document.getElementById('mg_cards'); if (!box) return;
     ['Slime · fluid', 'Wisp · atmosphere', 'Stone · gravity'].forEach((t, k) => {
@@ -3281,7 +3414,8 @@ const Magic = (function () {
     const sb = document.getElementById('mg_stone'); if (sb) [['round', 'Round'], ['crystal', 'Crystal'], ['block', 'Block']].forEach(([k, t]) => { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { M.sh = k; if (formKind === 'stone') reshape(); [...sb.children].forEach(x => x.setAttribute('aria-pressed', x === b)); }; sb.appendChild(b); });
     const wb = document.getElementById('mg_wisp'); if (wb) [['cloud', 'Cloud'], ['fireflies', 'Fireflies'], ['plume', 'Plume']].forEach(([k, t]) => { const b = document.createElement('button'); b.textContent = t; b.onclick = () => { M.wl = k; [...wb.children].forEach(x => x.setAttribute('aria-pressed', x === b)); }; wb.appendChild(b); });
   })();
-  return { step, params, hud };
+  const fam = k => select(k, M.a[k]);
+  return { fam, step, params, hud, stomp };
 })();
 
 /* ================= main loop ================= */
@@ -3328,8 +3462,8 @@ function frame(now) {
   if (formCd > 0) formCd -= dt;
   acc += paused ? 0 : dt * (slow ? 0.25 : 1);
   let steps = 0; while (acc >= FIXED && steps < 4) { fixedStep(); acc -= FIXED; steps++; } if (steps === 4) acc = 0;
-  if (ui.screen === 'title') azT += dt * 0.12;
-  if (settings.dayCycle) { clockT = (clockT + dt / 30) % 24; clockAcc += dt; if (clockAcc > 0.25) { clockAcc = 0; applyTime(clockT); $('time').value = clockT.toFixed(1); } }
+  if (ui.screen === 'title') azT += dt * 0.12; trackSafe(dt);
+  if (settings.dayCycle) { clockT = (clockT + dt / 60) % 24; clockAcc += dt; if (clockAcc > 0.25) { clockAcc = 0; applyTime(clockT); $('time').value = clockT.toFixed(1); } }
   absorbFlowers(dt); updateItems(dt); updateShake(dt); updateHut(dt); updateHearts(dt); updateWings(dt); updateClouds(visT); updateHints(dt); updateDust(dt); updateChargeRing();
   if (ringT < 0.6) { ringT += dt; const k = ringT / 0.6; ring.scale.setScalar(0.5 + k * 4.5); ring.material.opacity = 0.7 * (1 - k); } else ring.visible = false;
   updateWeather(dt);
@@ -3378,6 +3512,64 @@ if (window.__SLIMELAB_DEBUG) window.__lab = { spawnAt: (x, z) => spawnForm(formK
 requestAnimationFrame(t => { last = t; frame(t); });
 })();
 
+</script>
+<script>
+(function(){const $=id=>document.getElementById(id),
+FL=[["Slime","Oobleck","Bounce","#e86aa8"],["Slime","Dewdrop","Soak","#4fb6e6"],["Slime","Aether Bubble","Float","#bfe8ff"],["Wisp","Mist","Hover","#d9e4f2"],["Wisp","Zephyr","Dash","#9be6c9"],["Wisp","Lantern","Light","#ffd45e"],["Stone","Aerolite","Lift","#b7b0a5"],["Stone","Geode","Roll","#a57de0"],["Stone","Obsidian","Anchor","#4a3f6a"]],list=$("fl");
+FL.forEach((f,i)=>{if(i&&i%3==0){const g=document.createElement("div");g.className="fgap";list.appendChild(g)}
+ const b=document.createElement("button");b.className="fbtn";b.dataset.i=i;b.innerHTML='<span class="dot" style="background:'+f[3]+'"></span><span><b>'+f[1]+'</b><small>'+f[0]+" · "+f[2]+"</small></span>";
+ b.onclick=()=>{b.blur();window.AethSelect&&window.AethSelect(Math.floor(i/3),i%3)};list.appendChild(b)});
+setInterval(()=>{const n=$("biomeLbl"),c=$("chipForm");if(n)$("objMain").textContent="Explore the "+n.textContent;
+ const nm=c&&c.textContent.split(" · ")[1],ix=FL.findIndex(f=>f[1]==nm);[...list.querySelectorAll(".fbtn")].forEach(b=>b.classList.toggle("on",+b.dataset.i===ix))},300);
+})();
+</script>
+<script>
+(function(){const $=id=>document.getElementById(id),pane=$("pane_creature"),cards=$("mg_cards");if(!pane||!cards)return;
+const NM=["Oobleck","Dewdrop","Aether Bubble","Mist","Zephyr","Lantern","Aerolite","Geode","Obsidian"],FAMN=["Slime","Wisp","Stone"];
+[...cards.children].forEach((el,i)=>{el.dataset.fam=Math.floor(i/2);if(i%2==0)el.className+=" mgh"});
+const row=document.createElement("div");row.id="famRow";row.className="seg3";
+FAMN.forEach((n,k)=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{b.blur();window.AethSelect&&window.AethSelect(k,0)};row.appendChild(b)});
+const h2=pane.querySelector("h2");h2.after(row);
+const info=document.createElement("div");info.id="formInfo";info.className="hcard";info.innerHTML='<div id="fiDesc"></div><div id="fiChk"></div>';cards.after(info);
+const sl=pane.querySelector(".lbl");sl.textContent="Shape";sl.className+=" shapeLbl";
+const det=pane.querySelector("details"),more=document.createElement("details");more.className="more";more.innerHTML="<summary>More options: look, tuning, abilities</summary>";
+if(det){let n=det;const mv=[];while(n){mv.push(n);n=n.nextElementSibling}mv.forEach(e=>more.appendChild(e));pane.appendChild(more)}
+setInterval(()=>{const c=$("chipForm"),nm=c&&c.textContent.split(" · ")[1],id=NM.indexOf(nm);if(id<0)return;const k=Math.floor(id/3);
+ pane.dataset.k=k;h2.textContent=nm;[...row.children].forEach((b,i)=>b.setAttribute("aria-pressed",i==k));
+ const b=cards.querySelector('button[data-id="'+id+'"]');if(b){$("fiDesc").textContent=b.children[1].textContent;$("fiChk").innerHTML=b.children[3].innerHTML}},300);
+})();
+
+/* ---- save vault: IndexedDB mirror, 3 rolling backups, copy/paste export + import ---- */
+const Vault = (() => {
+  const KEYS = ['aetheria.profile.v1', 'aetheria.save.v1', 'aetheria.settings.v1']; let db = null, last = 0;
+  const open = () => new Promise(res => { try { const r = indexedDB.open('aetheria', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { db = r.result; res(db); }; r.onerror = () => res(null); } catch (e) { res(null); } });
+  const put = (k, v) => new Promise(res => { if (!db) return res(); try { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = res; } catch (e) { res(); } });
+  const get = k => new Promise(res => { if (!db) return res(null); try { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); } catch (e) { res(null); } });
+  function snap() { const o = { v: 1, t: Date.now() }; KEYS.forEach(k => { try { o[k] = localStorage.getItem(k); } catch (e) { /* storage off */ } }); return JSON.stringify(o); }
+  async function mirror() { if (!db) await open(); if (!db) return; const s = snap(); await put('current', s); const now = Date.now(); if (now - last < 120000) return; last = now; const b1 = await get('backup_1'); if (b1 === s) return; const b2 = await get('backup_2'); if (b2) await put('backup_3', b2); if (b1) await put('backup_2', b1); await put('backup_1', s); }
+  function check(json) { let o; try { o = JSON.parse(json); } catch (e) { throw new Error('That is not valid JSON'); } if (!o || o.v !== 1) throw new Error('Unknown save version'); let n = 0; KEYS.forEach(k => { if (o[k] == null) return; if (typeof o[k] !== 'string') throw new Error('Entry ' + k + ' is malformed'); let v; try { v = JSON.parse(o[k]); } catch (e) { throw new Error('Entry ' + k + ' is damaged'); } if (!v || typeof v !== 'object') throw new Error('Entry ' + k + ' is malformed'); n++; }); if (!n) throw new Error('The text has no save data'); return { o, n }; }
+  function apply(o) { KEYS.forEach(k => { if (typeof o[k] === 'string') localStorage.setItem(k, o[k]); }); }
+  async function backupNow() { if (!db) await open(); if (!db) return; const s = snap(), b1 = await get('backup_1'), b2 = await get('backup_2'); if (b2) await put('backup_3', b2); if (b1) await put('backup_2', b1); await put('backup_1', s); }
+  return { mirror, snap, check, apply, backupNow, get, open };
+})();
+setInterval(() => Vault.mirror(), 30000); addEventListener('pagehide', () => Vault.mirror());
+{ const pane = document.getElementById('pane_settings'); if (pane) { const d = document.createElement('div'); d.className = 'hcard';
+  d.innerHTML = '<h4>Save data</h4><textarea id="vTxt" rows="3" style="width:100%;font-size:.7rem" placeholder="Export fills this box. Paste a save here, then Import."></textarea><div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem"><button class="btn" id="vExp">Export</button><button class="btn" id="vImp">Import</button><button class="btn" id="vB1">Backup 1</button><button class="btn" id="vB2">Backup 2</button><button class="btn" id="vB3">Backup 3</button></div><div id="vMsg" style="font-size:.7rem;margin-top:.3rem"></div>';
+  pane.appendChild(d); const ta = d.querySelector('#vTxt'), msg = t => { d.querySelector('#vMsg').textContent = t; };
+  ['keydown', 'keyup'].forEach(t => ta.addEventListener(t, e => e.stopPropagation()));
+  d.querySelector('#vExp').onclick = () => { ta.value = Vault.snap(); ta.select(); try { navigator.clipboard.writeText(ta.value); msg('Copied. Keep it somewhere safe.'); } catch (e) { msg('Select the text and copy it.'); } };
+  d.querySelector('#vImp').onclick = async () => { try { const { o, n } = Vault.check(ta.value); await Vault.backupNow(); Vault.apply(o); msg('Imported ' + n + ' parts saved ' + new Date(o.t).toLocaleString() + '. Your previous save is in Backup 1. Reloading...'); setTimeout(() => location.reload(), 900); } catch (e) { msg(e.message + '. Nothing was changed.'); } };
+  [1, 2, 3].forEach(n => { d.querySelector('#vB' + n).onclick = async () => { await Vault.open(); const v = await Vault.get('backup_' + n); if (v) { ta.value = v; msg('Backup ' + n + ' loaded. Press Import to restore it.'); } else msg('Backup ' + n + ' is empty yet.'); }; }); } }
+</script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id), minor = ['G', 'E', 'ESC', 'H', 'M', 'C', 'B'], ab = $('abilities');
+  if (ab) { const tag = () => ab.querySelectorAll('.ab').forEach(b => { const k = (b.firstChild && b.firstChild.textContent || '').trim().toUpperCase(); b.classList.toggle('minor', minor.indexOf(k) >= 0); }); new MutationObserver(tag).observe(ab, { childList: true }); tag(); }
+  setInterval(() => {
+    const j = $('jfill'), jp = $('jump'), jt = $('jtxt'); if (j && jp) { const w = parseFloat(j.style.width) || 0; jp.classList.toggle('on', w > 0 && (w < 99 || /Jump power/.test(jt ? jt.textContent : ''))); }
+    const d = document.querySelector('.fbtn.on .dot'), c = $('chip'); if (d && c) c.style.setProperty('--fam', getComputedStyle(d).backgroundColor);
+  }, 200);
+})();
 </script>
 </body>
 </html>
