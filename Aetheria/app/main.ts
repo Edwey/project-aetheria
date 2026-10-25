@@ -1,12 +1,16 @@
 /**
  * Aetheria — Phase 0: Physics & Feel Spike Interactive Showcase
  *
- * Verifies:
- * 1. Rigid Proxy Bounce Test (>= 5 bounces, restitution 0.85 from 4m drop)
- * 2. Tight Spaces Test (0.5m Grate without tunneling or snagging)
- * 3. Trench & Ditch Navigation (0.4m trench support & navigation)
- * 4. Cutaway Dither Shader (circular cutaway revealing occluded creature)
- * 5. Physics Step Performance (<0.05 ms/step benchmark)
+ * Verifies the physics foundation across ALL 9 FORMS:
+ * - Slime: Oobleck (1), Dewdrop (2), Aether Bubble (3)
+ * - Wisp: Mist (4), Zephyr (5), Lantern (6)
+ * - Stone: Aerolite (7), Geode (8), Obsidian (9)
+ *
+ * Courses:
+ * 1. 4m Drop Test (Restitution ordering & Dewdrop ballast splat)
+ * 2. 0.5m Grate Squeeze (Zero tunneling / pinching)
+ * 3. 0.4m Trench Navigation (Geode rim rolling vs walking avatar)
+ * 4. Water Basin (Buoyancy: relative density < 1 floats, > 1 sinks)
  */
 
 import * as THREE from 'three';
@@ -17,7 +21,179 @@ import {
 import { createCutawayStandardMaterial } from '../packages/render/src/cutaway-shader.js';
 
 // ---------------------------------------------------------------------------
-// 1. Scene & Renderer Setup
+// 1. Form Definitions for Phase 0
+// ---------------------------------------------------------------------------
+
+export type FormKey =
+  | 'oobleck'
+  | 'dewdrop'
+  | 'aether_bubble'
+  | 'mist'
+  | 'zephyr'
+  | 'lantern'
+  | 'aerolite'
+  | 'geode'
+  | 'obsidian';
+
+export interface FormSpec {
+  id: FormKey;
+  name: string;
+  family: 'Slime' | 'Wisp' | 'Stone';
+  mass: number;
+  density: number;
+  restitution: number;
+  gravityScale: number; // relative to -20 m/s^2
+  radius: number;
+  friction: number;
+  moveSpeed: number;
+  jumpImpulse: number;
+  color: number;
+  glowColor: number;
+}
+
+const FORMS: Record<FormKey, FormSpec> = {
+  oobleck: {
+    id: 'oobleck',
+    name: 'Oobleck',
+    family: 'Slime',
+    mass: 1.2,
+    density: 1.12,
+    restitution: 0.85, // Bounce champion
+    gravityScale: 1.0,
+    radius: 0.35,
+    friction: 0.2,
+    moveSpeed: 4.8,
+    jumpImpulse: 7.5,
+    color: 0x48e5c2,
+    glowColor: 0x8ef5e8,
+  },
+  dewdrop: {
+    id: 'dewdrop',
+    name: 'Dewdrop',
+    family: 'Slime',
+    mass: 1.2, // Dry mass; scales to 2.0 with full ballast
+    density: 0.85,
+    restitution: 0.6, // Dry bounce; drops to 0.0 with full ballast splat
+    gravityScale: 1.0,
+    radius: 0.34,
+    friction: 0.22,
+    moveSpeed: 4.4,
+    jumpImpulse: 6.2,
+    color: 0x54a0ff,
+    glowColor: 0x99ccff,
+  },
+  aether_bubble: {
+    id: 'aether_bubble',
+    name: 'Aether Bubble',
+    family: 'Slime',
+    mass: 0.4,
+    density: 0.25,
+    restitution: 0.5, // Airy soft bounce
+    gravityScale: 0.35, // 0.35g floaty feel
+    radius: 0.38,
+    friction: 0.1,
+    moveSpeed: 3.8,
+    jumpImpulse: 4.8,
+    color: 0xff9ff3,
+    glowColor: 0xffd2f9,
+  },
+  mist: {
+    id: 'mist',
+    name: 'Mist',
+    family: 'Wisp',
+    mass: 0.3,
+    density: 0.08,
+    restitution: 0.1,
+    gravityScale: 0.15, // Gaseous float
+    radius: 0.32,
+    friction: 0.05,
+    moveSpeed: 4.2,
+    jumpImpulse: 4.2,
+    color: 0xdff9fb,
+    glowColor: 0xffffff,
+  },
+  zephyr: {
+    id: 'zephyr',
+    name: 'Zephyr',
+    family: 'Wisp',
+    mass: 0.3,
+    density: 0.12,
+    restitution: 0.2,
+    gravityScale: 0.25,
+    radius: 0.3,
+    friction: 0.05,
+    moveSpeed: 6.5, // Swift horizontal breeze
+    jumpImpulse: 5.5,
+    color: 0x55efc4,
+    glowColor: 0x00b894,
+  },
+  lantern: {
+    id: 'lantern',
+    name: 'Lantern',
+    family: 'Wisp',
+    mass: 0.8,
+    density: 0.9,
+    restitution: 0.25,
+    gravityScale: 0.4,
+    radius: 0.32,
+    friction: 0.12,
+    moveSpeed: 4.0,
+    jumpImpulse: 5.0,
+    color: 0xfeca57,
+    glowColor: 0xff9f43,
+  },
+  aerolite: {
+    id: 'aerolite',
+    name: 'Aerolite',
+    family: 'Stone',
+    mass: 1.5,
+    density: 0.55, // Naturally floats on water (< 1.0)!
+    restitution: 0.3,
+    gravityScale: 0.8,
+    radius: 0.36,
+    friction: 0.25,
+    moveSpeed: 4.5,
+    jumpImpulse: 6.0,
+    color: 0xdfd8c8,
+    glowColor: 0xf5f3ea,
+  },
+  geode: {
+    id: 'geode',
+    name: 'Geode',
+    family: 'Stone',
+    mass: 3.5,
+    density: 2.6, // Heavy mineral rock
+    restitution: 0.25,
+    gravityScale: 1.0,
+    radius: 0.45,
+    friction: 0.05, // Near-zero rolling friction!
+    moveSpeed: 5.2,
+    jumpImpulse: 5.2,
+    color: 0xa29bfe,
+    glowColor: 0x6c5ce7,
+  },
+  obsidian: {
+    id: 'obsidian',
+    name: 'Obsidian',
+    family: 'Stone',
+    mass: 9.0, // Immense mass
+    density: 5.0, // Sinks rapidly
+    restitution: 0.15, // Solid, low rebound
+    gravityScale: 1.25,
+    radius: 0.4,
+    friction: 0.35,
+    moveSpeed: 3.5,
+    jumpImpulse: 4.0,
+    color: 0x2d3436,
+    glowColor: 0x636e72,
+  },
+};
+
+let currentForm: FormSpec = FORMS.oobleck;
+let dewdropFullBallast = false; // Toggle with B or UI button
+
+// ---------------------------------------------------------------------------
+// 2. Three.js Scene Setup
 // ---------------------------------------------------------------------------
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -47,8 +223,8 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 let camDistance = 14;
-let camPitch = 0.65; // ~37 degrees
-let camYaw = Math.PI * 0.25; // 45 degrees isometric angle
+let camPitch = 0.65;
+let camYaw = Math.PI * 0.25;
 
 function updateCameraPosition(targetPos: THREE.Vector3) {
   const cx = targetPos.x + camDistance * Math.cos(camPitch) * Math.sin(camYaw);
@@ -58,10 +234,7 @@ function updateCameraPosition(targetPos: THREE.Vector3) {
   camera.lookAt(targetPos.x, targetPos.y + 0.5, targetPos.z);
 }
 
-// ---------------------------------------------------------------------------
-// 2. Lighting & Atmosphere
-// ---------------------------------------------------------------------------
-
+// Lighting
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0xb0d8b8, 0.75);
 scene.add(hemiLight);
 
@@ -79,34 +252,27 @@ sunLight.shadow.camera.bottom = -16;
 sunLight.shadow.bias = -0.0005;
 scene.add(sunLight);
 
-// ---------------------------------------------------------------------------
-// 3. Ground & Environment Setup
-// ---------------------------------------------------------------------------
-
+// Ground plane
 const groundGeo = new THREE.PlaneGeometry(60, 60, 60, 60);
 groundGeo.rotateX(-Math.PI / 2);
-
-// Low-poly pastel grass material
 const groundMat = new THREE.MeshStandardMaterial({
   color: 0x76c985,
   roughness: 0.85,
-  metalness: 0.05,
   flatShading: true,
 });
 const groundMesh = new THREE.Mesh(groundGeo, groundMat);
 groundMesh.receiveShadow = true;
 scene.add(groundMesh);
 
-// Subtle grid lines to read movement & distance
 const gridHelper = new THREE.GridHelper(50, 50, 0x58a867, 0x98dd9e);
 gridHelper.position.y = 0.005;
 scene.add(gridHelper);
 
 // ---------------------------------------------------------------------------
-// 4. Test Courses Props
+// 3. Test Course Obstacles & Props
 // ---------------------------------------------------------------------------
 
-// Course 1: 4m Bounce Drop Target
+// Course 1: 4m Bounce Drop Target Ring
 const targetCircleGeo = new THREE.RingGeometry(0.2, 1.8, 32);
 targetCircleGeo.rotateX(-Math.PI / 2);
 const targetCircleMat = new THREE.MeshBasicMaterial({
@@ -123,11 +289,7 @@ scene.add(targetCircle);
 const grateGroup = new THREE.Group();
 grateGroup.position.set(10, 0, 0);
 
-// Two concrete support side pillars
-const pillarMat = new THREE.MeshStandardMaterial({
-  color: 0x829489,
-  roughness: 0.7,
-});
+const pillarMat = new THREE.MeshStandardMaterial({ color: 0x829489, roughness: 0.7 });
 const pillarGeo = new THREE.BoxGeometry(0.4, 0.5, 3.0);
 
 const leftPillar = new THREE.Mesh(pillarGeo, pillarMat);
@@ -142,7 +304,7 @@ rightPillar.castShadow = true;
 rightPillar.receiveShadow = true;
 grateGroup.add(rightPillar);
 
-// Overhead metal grate ceiling at exactly 0.5m height
+// Overhead metal grate bars ceiling at exactly 0.5m
 const grateBarMat = new THREE.MeshStandardMaterial({
   color: 0x475569,
   metalness: 0.65,
@@ -153,8 +315,6 @@ const grateTop = new THREE.Mesh(grateTopGeo, grateBarMat);
 grateTop.position.set(0, 0.54, 0);
 grateTop.castShadow = true;
 grateGroup.add(grateTop);
-
-// Squeeze visual label
 scene.add(grateGroup);
 
 // Course 3: 0.4m Trench visual ditch
@@ -163,21 +323,14 @@ trenchGroup.position.set(-10, 0, 0);
 
 const trenchFloorGeo = new THREE.PlaneGeometry(0.4, 8);
 trenchFloorGeo.rotateX(-Math.PI / 2);
-const trenchFloorMat = new THREE.MeshStandardMaterial({
-  color: 0x4d3826,
-  roughness: 0.95,
-});
+const trenchFloorMat = new THREE.MeshStandardMaterial({ color: 0x4d3826, roughness: 0.95 });
 const trenchFloor = new THREE.Mesh(trenchFloorGeo, trenchFloorMat);
 trenchFloor.position.set(0, -0.29, 0);
 trenchFloor.receiveShadow = true;
 trenchGroup.add(trenchFloor);
 
-// Trench left and right walls
 const trenchWallGeo = new THREE.BoxGeometry(0.04, 0.3, 8);
-const trenchWallMat = new THREE.MeshStandardMaterial({
-  color: 0x6e5238,
-  roughness: 0.9,
-});
+const trenchWallMat = new THREE.MeshStandardMaterial({ color: 0x6e5238, roughness: 0.9 });
 const leftWall = new THREE.Mesh(trenchWallGeo, trenchWallMat);
 leftWall.position.set(-0.2, -0.15, 0);
 trenchGroup.add(leftWall);
@@ -185,16 +338,36 @@ trenchGroup.add(leftWall);
 const rightWall = new THREE.Mesh(trenchWallGeo, trenchWallMat);
 rightWall.position.set(0.2, -0.15, 0);
 trenchGroup.add(rightWall);
-
 scene.add(trenchGroup);
+
+// Course 4: Water Basin (Centered at 0, 0, -10)
+const waterBasinGroup = new THREE.Group();
+waterBasinGroup.position.set(0, 0, -10);
+
+const waterGeo = new THREE.PlaneGeometry(8, 8);
+waterGeo.rotateX(-Math.PI / 2);
+const waterMat = new THREE.MeshStandardMaterial({
+  color: 0x38bdf8,
+  transparent: true,
+  opacity: 0.65,
+  roughness: 0.1,
+  metalness: 0.1,
+});
+const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+waterMesh.position.set(0, 0.02, 0);
+waterBasinGroup.add(waterMesh);
+
+const basinFloorGeo = new THREE.BoxGeometry(8.2, 0.2, 8.2);
+const basinFloorMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 });
+const basinFloor = new THREE.Mesh(basinFloorGeo, basinFloorMat);
+basinFloor.position.set(0, -1.5, 0);
+waterBasinGroup.add(basinFloor);
+scene.add(waterBasinGroup);
 
 // Cutaway Occlusion Wall (Toggled with T)
 const wallGeo = new THREE.BoxGeometry(3.5, 4.0, 0.6);
 const { material: cutawayMat, uniforms: cutawayUniforms } = createCutawayStandardMaterial(
-  {
-    color: 0x8a7258,
-    roughness: 0.85,
-  },
+  { color: 0x8a7258, roughness: 0.85 },
   1.8,
   0.8
 );
@@ -205,40 +378,35 @@ cutawayWallMesh.receiveShadow = true;
 scene.add(cutawayWallMesh);
 
 // ---------------------------------------------------------------------------
-// 5. Living Slime Avatar Mesh (Procedural Rigid Proxy Visuals)
+// 4. Creature Avatar Mesh Setup
 // ---------------------------------------------------------------------------
 
 const avatarGroup = new THREE.Group();
 
-// Outer jelly body
-const slimeGeo = new THREE.SphereGeometry(0.35, 32, 24);
-const slimeMat = new THREE.MeshPhysicalMaterial({
-  color: 0x48e5c2,
-  emissive: 0x145244,
-  roughness: 0.15,
-  transmission: 0.6,
-  thickness: 0.8,
-  ior: 1.33,
-  clearcoat: 0.8,
-  clearcoatRoughness: 0.1,
+// Main body mesh
+const bodyGeo = new THREE.SphereGeometry(0.35, 32, 24);
+const bodyMat = new THREE.MeshPhysicalMaterial({
+  color: currentForm.color,
+  roughness: 0.2,
+  metalness: 0.1,
+  clearcoat: 0.6,
+  transmission: 0.4,
 });
-const slimeMesh = new THREE.Mesh(slimeGeo, slimeMat);
-slimeMesh.castShadow = true;
-avatarGroup.add(slimeMesh);
+const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+bodyMesh.castShadow = true;
+avatarGroup.add(bodyMesh);
 
-// Inner core crystal
+// Inner core
 const coreGeo = new THREE.OctahedronGeometry(0.12, 0);
 const coreMat = new THREE.MeshStandardMaterial({
-  color: 0x8ef5e8,
-  emissive: 0x48e5c2,
-  emissiveIntensity: 0.8,
-  roughness: 0.1,
-  metalness: 0.2,
+  color: currentForm.glowColor,
+  emissive: currentForm.color,
+  emissiveIntensity: 0.6,
 });
 const coreMesh = new THREE.Mesh(coreGeo, coreMat);
 avatarGroup.add(coreMesh);
 
-// Cute facial eyes
+// Eyes
 const eyeGeo = new THREE.SphereGeometry(0.045, 12, 12);
 const eyeMat = new THREE.MeshBasicMaterial({ color: 0x142e1d });
 
@@ -255,15 +423,11 @@ avatarGroup.add(rightEye);
 scene.add(avatarGroup);
 
 // ---------------------------------------------------------------------------
-// 6. Physics Simulation Instances
+// 5. Physics Simulator & Courses
 // ---------------------------------------------------------------------------
 
-let activeCourse: 1 | 2 | 3 = 1;
-
-// Course 1 & 2 use standard flat heightfield
+let activeCourse: 1 | 2 | 3 | 4 = 1;
 const flatWorld = new FlatHeightfieldWithTrench(0, 0, 0);
-
-// Course 3 uses flat heightfield with trench centered at -10
 const trenchWorld = new FlatHeightfieldWithTrench(0.4, 0.3, -10);
 
 let currentWorld: FlatHeightfieldWithTrench = flatWorld;
@@ -272,74 +436,151 @@ let ceilingLimit: number | undefined = undefined;
 // Simulator instance
 const simulator = new RigidProxySimulator(
   {
-    restitution: 0.85,
-    mass: 1.2,
-    radius: 0.35,
-    linearDamping: 0.05,
-    friction: 0.2,
+    radius: currentForm.radius,
+    mass: currentForm.mass,
+    restitution: currentForm.restitution,
+    friction: currentForm.friction,
+    gravity: -20 * currentForm.gravityScale,
+    maxStepHeight: 0.35,
   },
   { x: 0, y: 4.0, z: 0 }
 );
 
-function switchCourse(course: 1 | 2 | 3) {
+function applyForm(formKey: FormKey) {
+  currentForm = FORMS[formKey];
+
+  // Update simulator properties
+  simulator.config.radius = currentForm.radius;
+  simulator.config.mass = currentForm.mass;
+  simulator.config.restitution = currentForm.restitution;
+  simulator.config.friction = currentForm.friction;
+  simulator.config.gravity = -20 * currentForm.gravityScale;
+
+  // Dewdrop Ballast special handling
+  const ballastRow = document.getElementById('ballast-control');
+  if (ballastRow) {
+    ballastRow.style.display = formKey === 'dewdrop' ? 'flex' : 'none';
+  }
+  if (formKey === 'dewdrop' && dewdropFullBallast) {
+    simulator.config.mass = 2.0;
+    simulator.config.restitution = 0.0; // Flat splat!
+  }
+
+  // Update Visuals
+  bodyMat.color.setHex(currentForm.color);
+  coreMat.color.setHex(currentForm.glowColor);
+  coreMat.emissive.setHex(currentForm.color);
+
+  // Geometry switch for stone vs slime/wisp
+  if (currentForm.family === 'Stone') {
+    bodyGeo.dispose();
+    bodyMesh.geometry = new THREE.DodecahedronGeometry(currentForm.radius, 1);
+    bodyMat.roughness = 0.85;
+    bodyMat.metalness = 0.2;
+    bodyMat.transmission = 0.0;
+    coreMesh.visible = false;
+  } else if (currentForm.family === 'Wisp') {
+    bodyGeo.dispose();
+    bodyMesh.geometry = new THREE.SphereGeometry(currentForm.radius, 24, 16);
+    bodyMat.roughness = 0.1;
+    bodyMat.metalness = 0.0;
+    bodyMat.transmission = 0.7;
+    coreMesh.visible = true;
+  } else {
+    bodyGeo.dispose();
+    bodyMesh.geometry = new THREE.SphereGeometry(currentForm.radius, 32, 24);
+    bodyMat.roughness = 0.2;
+    bodyMat.metalness = 0.05;
+    bodyMat.transmission = 0.45;
+    coreMesh.visible = true;
+  }
+
+  // Active button highlight
+  document.querySelectorAll('.btn-form').forEach((btn) => btn.classList.remove('active'));
+  const activeBtn = document.getElementById(`btn-form-${formKey.replace('_', '-')}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Update Telemetry Header
+  document.getElementById('telemetry-form-title')!.textContent = `${currentForm.name} (${currentForm.family})`;
+  updateTelemetryDisplay();
+}
+
+function switchCourse(course: 1 | 2 | 3 | 4) {
   activeCourse = course;
 
   document.querySelectorAll('.btn-course').forEach((btn) => btn.classList.remove('active'));
   const activeBtn = document.getElementById(`btn-course-${course}`);
   if (activeBtn) activeBtn.classList.add('active');
 
-  const courseTitle = document.getElementById('course-name')!;
-
   if (course === 1) {
-    courseTitle.textContent = 'Course 1: 4m Bounce Drop Test (Restitution 0.85)';
     currentWorld = flatWorld;
     ceilingLimit = undefined;
-    simulator.config.restitution = 0.85;
-    simulator.config.radius = 0.35;
     simulator.reset({ x: 0, y: 4.0, z: 0 });
-    slimeMesh.scale.set(1, 1, 1);
   } else if (course === 2) {
-    courseTitle.textContent = 'Course 2: 0.5m Grate Squeeze (Zero Tunneling)';
     currentWorld = flatWorld;
     ceilingLimit = 0.5;
-    simulator.config.restitution = 0.4;
-    simulator.config.radius = 0.22; // Squeezed radius
     simulator.reset({ x: 10, y: 0.25, z: 2.2 });
-    slimeMesh.scale.set(1.2, 0.63, 1.2);
   } else if (course === 3) {
-    courseTitle.textContent = 'Course 3: 0.4m Trench Navigation (Rim Rolling / Walking)';
     currentWorld = trenchWorld;
     ceilingLimit = undefined;
-    simulator.config.restitution = 0.4;
-    simulator.config.radius = 0.35;
     simulator.reset({ x: -10, y: 1.0, z: 2.0 });
-    slimeMesh.scale.set(1, 1, 1);
+  } else if (course === 4) {
+    currentWorld = flatWorld;
+    ceilingLimit = undefined;
+    simulator.reset({ x: 0, y: 2.5, z: -10 });
   }
 }
 
 // ---------------------------------------------------------------------------
-// 7. Input Handling
+// 6. User Input & Controls Handling
 // ---------------------------------------------------------------------------
 
 const keysDown = new Set<string>();
+let coyoteTime = 0;
+let jumpBuffer = 0;
+
+// Focus window on click to guarantee keyboard capture
+window.addEventListener('click', () => {
+  window.focus();
+});
 
 window.addEventListener('keydown', (e) => {
   keysDown.add(e.code);
 
-  if (e.code === 'Digit1') switchCourse(1);
-  if (e.code === 'Digit2') switchCourse(2);
-  if (e.code === 'Digit3') switchCourse(3);
+  // Direct Number Key Selection for 9 Forms (1-9)
+  if (e.code === 'Digit1') applyForm('oobleck');
+  if (e.code === 'Digit2') applyForm('dewdrop');
+  if (e.code === 'Digit3') applyForm('aether_bubble');
+  if (e.code === 'Digit4') applyForm('mist');
+  if (e.code === 'Digit5') applyForm('zephyr');
+  if (e.code === 'Digit6') applyForm('lantern');
+  if (e.code === 'Digit7') applyForm('aerolite');
+  if (e.code === 'Digit8') applyForm('geode');
+  if (e.code === 'Digit9') applyForm('obsidian');
 
+  // Space for Jump (registers in jumpBuffer)
+  if (e.code === 'Space') {
+    e.preventDefault();
+    jumpBuffer = 0.12; // 120ms jump buffer
+  }
+
+  // Dewdrop ballast toggle
+  if (e.code === 'KeyB' && currentForm.id === 'dewdrop') {
+    toggleDewdropBallast();
+  }
+
+  // Reset / Drop
   if (e.code === 'KeyR') {
     switchCourse(activeCourse);
   }
 
+  // Cutaway Toggle
   if (e.code === 'KeyT') {
     cutawayWallMesh.visible = !cutawayWallMesh.visible;
-    const btn = document.getElementById('btn-toggle-wall');
-    if (btn) btn.classList.toggle('active', cutawayWallMesh.visible);
+    document.getElementById('btn-toggle-wall')?.classList.toggle('active', cutawayWallMesh.visible);
   }
 
+  // Camera 90-degree snap
   if (e.code === 'KeyQ') {
     camYaw += (e.shiftKey ? -1 : 1) * (Math.PI / 4);
   }
@@ -349,16 +590,46 @@ window.addEventListener('keyup', (e) => {
   keysDown.delete(e.code);
 });
 
+function toggleDewdropBallast() {
+  dewdropFullBallast = !dewdropFullBallast;
+  const btn = document.getElementById('btn-toggle-ballast');
+  if (btn) {
+    if (dewdropFullBallast) {
+      btn.textContent = 'Ballast: FULL (e=0.0, Splats Flat!)';
+      btn.classList.add('full');
+      simulator.config.mass = 2.0;
+      simulator.config.restitution = 0.0;
+    } else {
+      btn.textContent = 'Ballast: Dry (e=0.60, Bouncy)';
+      btn.classList.remove('full');
+      simulator.config.mass = 1.2;
+      simulator.config.restitution = 0.6;
+    }
+  }
+  updateTelemetryDisplay();
+}
+
+// UI Form Buttons
+document.querySelectorAll('.btn-form').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const formKey = btn.getAttribute('data-form') as FormKey;
+    if (formKey) applyForm(formKey);
+  });
+});
+
+document.getElementById('btn-toggle-ballast')?.addEventListener('click', toggleDewdropBallast);
+
 // UI Course Buttons
 document.getElementById('btn-course-1')?.addEventListener('click', () => switchCourse(1));
 document.getElementById('btn-course-2')?.addEventListener('click', () => switchCourse(2));
 document.getElementById('btn-course-3')?.addEventListener('click', () => switchCourse(3));
+document.getElementById('btn-course-4')?.addEventListener('click', () => switchCourse(4));
 document.getElementById('btn-toggle-wall')?.addEventListener('click', () => {
   cutawayWallMesh.visible = !cutawayWallMesh.visible;
   document.getElementById('btn-toggle-wall')?.classList.toggle('active', cutawayWallMesh.visible);
 });
 
-// Orbit Controls via Right-Mouse Drag
+// Camera Drag Controls
 let isDragging = false;
 let prevMouseX = 0;
 let prevMouseY = 0;
@@ -400,22 +671,33 @@ window.addEventListener('resize', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 8. Main Loop & Performance Telemetry
+// 7. Telemetry Display Updates
 // ---------------------------------------------------------------------------
 
-// Telemetry DOM elements
-const elFps = document.getElementById('val-fps')!;
-const elStepTime = document.getElementById('val-step-time')!;
-const elBounces = document.getElementById('val-bounces')!;
-const elVy = document.getElementById('val-vy')!;
+const elMassDensity = document.getElementById('val-mass-density')!;
 const elRestitution = document.getElementById('val-restitution')!;
+const elGravity = document.getElementById('val-gravity')!;
+const elStepTime = document.getElementById('val-step-time')!;
+const elVy = document.getElementById('val-vy')!;
+const elBounces = document.getElementById('val-bounces')!;
 const elContacts = document.getElementById('val-contacts')!;
 
-let frameCount = 0;
-let lastFpsTime = performance.now();
+function updateTelemetryDisplay() {
+  const massVal = currentForm.id === 'dewdrop' && dewdropFullBallast ? '2.0 kg' : `${currentForm.mass.toFixed(1)} kg`;
+  const restVal = currentForm.id === 'dewdrop' && dewdropFullBallast ? '0.00 (Splat)' : currentForm.restitution.toFixed(2);
+  elMassDensity.textContent = `${massVal} / ${currentForm.density.toFixed(2)}`;
+  elRestitution.textContent = restVal;
+  elGravity.textContent = `${currentForm.gravityScale.toFixed(2)}g (${(-20 * currentForm.gravityScale).toFixed(1)} m/s²)`;
+}
+
+// ---------------------------------------------------------------------------
+// 8. Main Loop & Fixed Time-Step Integration
+// ---------------------------------------------------------------------------
+
 let lastTime = performance.now();
 const FIXED_DT = 1 / 60;
 let accumulator = 0;
+let stepDurationMs = 0;
 
 // Hide loading screen
 loadingEl.style.opacity = '0';
@@ -430,6 +712,22 @@ function animate(now: number) {
   lastTime = now;
   accumulator += delta;
 
+  // Coyote time & Jump buffer timers
+  if (simulator.isGrounded) {
+    coyoteTime = 0.1; // 100ms coyote time
+  } else {
+    coyoteTime = Math.max(0, coyoteTime - delta);
+  }
+
+  jumpBuffer = Math.max(0, jumpBuffer - delta);
+
+  // Jump Execution: if jump was buffered and creature can jump
+  if (jumpBuffer > 0 && (simulator.isGrounded || coyoteTime > 0)) {
+    simulator.applyJumpImpulse(currentForm.jumpImpulse, true);
+    jumpBuffer = 0;
+    coyoteTime = 0;
+  }
+
   // Read movement inputs relative to camera yaw
   let inputX = 0;
   let inputZ = 0;
@@ -437,11 +735,6 @@ function animate(now: number) {
   if (keysDown.has('KeyS') || keysDown.has('ArrowDown')) inputZ += 1;
   if (keysDown.has('KeyA') || keysDown.has('ArrowLeft')) inputX -= 1;
   if (keysDown.has('KeyD') || keysDown.has('ArrowRight')) inputX += 1;
-
-  // Jump input
-  if (keysDown.has('Space')) {
-    simulator.applyJumpImpulse(6.5);
-  }
 
   // Camera-relative input transformation
   const forwardX = Math.sin(camYaw);
@@ -452,20 +745,29 @@ function animate(now: number) {
   const moveDirX = inputX * rightX - inputZ * forwardX;
   const moveDirZ = inputX * rightZ - inputZ * forwardZ;
 
-  let stepDurationMs = 0;
-
   // Fixed physics time-stepping
   while (accumulator >= FIXED_DT) {
     const t0 = performance.now();
+
+    // In Water Basin: apply buoyant force based on relative density
+    const inWater = activeCourse === 4 && Math.abs(simulator.pos.x) < 4 && Math.abs(simulator.pos.z + 10) < 4 && simulator.pos.y < 0.2;
+    if (inWater) {
+      const submerged = THREE.MathUtils.clamp((0.2 - (simulator.pos.y - currentForm.radius)) / (2 * currentForm.radius), 0, 1);
+      const buoyancyAccel = (-simulator.config.gravity / currentForm.density) * submerged;
+      simulator.vel.y += buoyancyAccel * FIXED_DT;
+      // Hydrodynamic damping
+      simulator.vel.x *= Math.max(0, 1 - 2.5 * FIXED_DT);
+      simulator.vel.y *= Math.max(0, 1 - 2.5 * FIXED_DT);
+      simulator.vel.z *= Math.max(0, 1 - 2.5 * FIXED_DT);
+    }
 
     // Step physics simulator
     simulator.step(FIXED_DT, currentWorld, ceilingLimit);
 
     // Apply horizontal input drive
     if (moveDirX !== 0 || moveDirZ !== 0) {
-      const driveSpeed = activeCourse === 2 ? 3.0 : 4.5;
-      simulator.vel.x = moveDirX * driveSpeed;
-      simulator.vel.z = moveDirZ * driveSpeed;
+      simulator.vel.x = moveDirX * currentForm.moveSpeed;
+      simulator.vel.z = moveDirZ * currentForm.moveSpeed;
     }
 
     stepDurationMs = performance.now() - t0;
@@ -475,27 +777,38 @@ function animate(now: number) {
   // Synchronize 3D avatar position with simulator
   avatarGroup.position.set(simulator.pos.x, simulator.pos.y, simulator.pos.z);
 
-  // Dynamic squash-and-stretch based on vertical velocity
+  // Dynamic visual squash & stretch based on velocity and ballast
   const vy = simulator.vel.y;
   let squashY = 1.0;
-  if (activeCourse !== 2) {
-    squashY = THREE.MathUtils.clamp(1.0 + vy * 0.04, 0.65, 1.45);
-    const squashXZ = 1.0 / Math.sqrt(squashY);
-    slimeMesh.scale.set(squashXZ, squashY, squashXZ);
+  let squashXZ = 1.0;
+
+  if (currentForm.id === 'dewdrop' && dewdropFullBallast && simulator.isGrounded) {
+    // Dewdrop flat splat deformation
+    squashY = 0.35;
+    squashXZ = 1.6;
+  } else if (currentForm.family === 'Slime') {
+    // Normal elastic slime squash
+    squashY = THREE.MathUtils.clamp(1.0 + vy * 0.045, 0.65, 1.45);
+    squashXZ = 1.0 / Math.sqrt(squashY);
+  } else if (currentForm.family === 'Stone') {
+    // Stone rolling rotation
+    const hSpeed = Math.hypot(simulator.vel.x, simulator.vel.z);
+    if (hSpeed > 0.05 && simulator.isGrounded) {
+      bodyMesh.rotation.x += (simulator.vel.z / currentForm.radius) * delta;
+      bodyMesh.rotation.z -= (simulator.vel.x / currentForm.radius) * delta;
+    }
   }
 
-  // Subtle core wobble
+  bodyMesh.scale.set(squashXZ, squashY, squashXZ);
+
+  // Core idle rotation
   coreMesh.rotation.x += 0.02;
   coreMesh.rotation.y += 0.03;
 
   // Face rotation toward movement direction
   if (moveDirX !== 0 || moveDirZ !== 0) {
     const targetAngle = Math.atan2(moveDirX, moveDirZ);
-    avatarGroup.rotation.y = THREE.MathUtils.lerp(
-      avatarGroup.rotation.y,
-      targetAngle,
-      0.15
-    );
+    avatarGroup.rotation.y = THREE.MathUtils.lerp(avatarGroup.rotation.y, targetAngle, 0.15);
   }
 
   // Update cutaway shader uniform with avatar position
@@ -507,19 +820,11 @@ function animate(now: number) {
   // Render scene
   renderer.render(scene, camera);
 
-  // Telemetry updates
-  frameCount++;
-  if (now - lastFpsTime >= 500) {
-    const currentFps = Math.round((frameCount * 1000) / (now - lastFpsTime));
-    elFps.textContent = currentFps.toString();
-    elStepTime.textContent = `${stepDurationMs.toFixed(3)} ms`;
-    elBounces.textContent = simulator.bounceCount.toString();
-    elVy.textContent = `${vy.toFixed(2)} m/s`;
-    elRestitution.textContent = simulator.config.restitution.toFixed(2);
-    elContacts.textContent = simulator.isGrounded ? '1 (Ground)' : '0 (Air)';
-    frameCount = 0;
-    lastFpsTime = now;
-  }
+  // Real-time telemetry updates
+  elStepTime.textContent = `${stepDurationMs.toFixed(3)} ms`;
+  elVy.textContent = `${vy.toFixed(2)} m/s`;
+  elBounces.textContent = simulator.bounceCount.toString();
+  elContacts.textContent = simulator.isGrounded ? '1 (Grounded)' : '0 (Air)';
 }
 
 requestAnimationFrame(animate);

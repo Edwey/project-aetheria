@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aetheria — Phase 0: Physics & Feel Spike</title>
+  <title>Aetheria — Phase 0: Physics & Feel Spike (All 9 Forms)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -58,16 +58,16 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Top Left: Phase Banner & Info */
-    .top-badge {
+    /* Top Left: Phase Banner & Form Selector */
+    .top-left-panel {
       position: fixed;
       top: 18px;
       left: 20px;
       z-index: 100;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      pointer-events: none;
+      gap: 10px;
+      max-width: 480px;
     }
     .phase-pill {
       display: inline-flex;
@@ -82,6 +82,7 @@
       font-weight: 900;
       font-size: 14px;
       color: #183823;
+      width: fit-content;
     }
     .status-dot {
       width: 8px;
@@ -90,26 +91,105 @@
       background: #22c55e;
       box-shadow: 0 0 10px #22c55e;
     }
-    .course-title {
+
+    /* 9-Form Selector Tabs */
+    .forms-panel {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(20, 50, 30, 0.12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .family-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .family-tag {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: 52px;
+      color: #4a6654;
+    }
+    .form-btn-group {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+    }
+    .btn-form {
+      flex: 1;
+      border: 1px solid rgba(20, 50, 30, 0.12);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 800;
       font-size: 12px;
-      font-weight: 700;
-      color: #3b5844;
-      background: rgba(255, 255, 255, 0.8);
-      padding: 4px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(20, 50, 30, 0.08);
-      backdrop-filter: blur(8px);
-      display: inline-block;
-      max-width: fit-content;
+      color: #2e4a36;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .btn-form:hover {
+      background: rgba(47, 191, 98, 0.15);
+      border-color: #2fbf62;
+    }
+    .btn-form.active {
+      background: #2fbf62;
+      color: #ffffff;
+      border-color: #22a351;
+      box-shadow: 0 2px 8px rgba(47, 191, 98, 0.3);
+    }
+    .badge-num {
+      font-size: 10px;
+      opacity: 0.75;
+      font-family: ui-monospace, monospace;
     }
 
-    /* Top Right: Telemetry & Benchmark Card */
+    /* Dewdrop Ballast Special Toggle */
+    .special-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(20, 50, 30, 0.08);
+      padding-top: 6px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .btn-ballast {
+      border: 1px solid #3b82f6;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-ballast.full {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    /* Top Right: Live Telemetry */
     .telemetry-card {
       position: fixed;
       top: 18px;
       right: 20px;
       z-index: 100;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       border: 1px solid rgba(20, 50, 30, 0.12);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       backdrop-filter: blur(12px);
@@ -117,7 +197,7 @@
       padding: 14px 18px;
       font-size: 12px;
       line-height: 1.5;
-      min-width: 220px;
+      min-width: 250px;
     }
     .telemetry-header {
       font-weight: 900;
@@ -147,7 +227,7 @@
       background: #ecfdf5;
       color: #047857;
       border: 1px solid #a7f3d0;
-      padding: 3px 8px;
+      padding: 4px 8px;
       border-radius: 8px;
       font-size: 11px;
       font-weight: 800;
@@ -202,21 +282,21 @@
       box-shadow: 0 4px 12px rgba(47, 191, 98, 0.35);
     }
     .controls-hint {
-      background: rgba(24, 50, 31, 0.75);
+      background: rgba(24, 50, 31, 0.85);
       color: #ffffff;
       font-size: 12px;
       font-weight: 700;
-      padding: 6px 16px;
+      padding: 7px 18px;
       border-radius: 999px;
       backdrop-filter: blur(8px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       display: flex;
       gap: 14px;
     }
     .key-cap {
       background: rgba(255, 255, 255, 0.25);
-      padding: 1px 6px;
-      border-radius: 4px;
+      padding: 2px 7px;
+      border-radius: 5px;
       font-family: ui-monospace, monospace;
       font-weight: 800;
     }
@@ -225,49 +305,108 @@
 <body>
   <div id="loading">
     <div class="spinner"></div>
-    <span>Initializing Phase 0 Physics Spike...</span>
+    <span>Initializing Phase 0 Physics Spike (9 Forms)...</span>
   </div>
 
   <canvas id="game"></canvas>
 
-  <!-- Top Left: Status -->
-  <div class="top-badge">
+  <!-- Top Left: Status & 9-Form Switcher -->
+  <div class="top-left-panel">
     <div class="phase-pill">
       <span class="status-dot"></span>
       <span>Phase 0: Physics & Feel Spike</span>
     </div>
-    <div class="course-title" id="course-name">Course 1: 4m Bounce Drop Test</div>
+
+    <div class="forms-panel">
+      <!-- Slime Family -->
+      <div class="family-group">
+        <span class="family-tag">Slime</span>
+        <div class="form-btn-group">
+          <button class="btn-form active" id="btn-form-oobleck" data-form="oobleck">
+            Oobleck <span class="badge-num">(1)</span>
+          </button>
+          <button class="btn-form" id="btn-form-dewdrop" data-form="dewdrop">
+            Dewdrop <span class="badge-num">(2)</span>
+          </button>
+          <button class="btn-form" id="btn-form-bubble" data-form="aether_bubble">
+            Bubble <span class="badge-num">(3)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Wisp Family -->
+      <div class="family-group">
+        <span class="family-tag">Wisp</span>
+        <div class="form-btn-group">
+          <button class="btn-form" id="btn-form-mist" data-form="mist">
+            Mist <span class="badge-num">(4)</span>
+          </button>
+          <button class="btn-form" id="btn-form-zephyr" data-form="zephyr">
+            Zephyr <span class="badge-num">(5)</span>
+          </button>
+          <button class="btn-form" id="btn-form-lantern" data-form="lantern">
+            Lantern <span class="badge-num">(6)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stone Family -->
+      <div class="family-group">
+        <span class="family-tag">Stone</span>
+        <div class="form-btn-group">
+          <button class="btn-form" id="btn-form-aerolite" data-form="aerolite">
+            Aerolite <span class="badge-num">(7)</span>
+          </button>
+          <button class="btn-form" id="btn-form-geode" data-form="geode">
+            Geode <span class="badge-num">(8)</span>
+          </button>
+          <button class="btn-form" id="btn-form-obsidian" data-form="obsidian">
+            Obsidian <span class="badge-num">(9)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dewdrop Ballast Splat Toggle -->
+      <div class="special-toggle-row" id="ballast-control" style="display: none;">
+        <span>Dewdrop Water Ballast:</span>
+        <button class="btn-ballast" id="btn-toggle-ballast">Ballast: Dry (e=0.60, Bouncy)</button>
+      </div>
+    </div>
   </div>
 
   <!-- Top Right: Live Telemetry -->
   <div class="telemetry-card">
     <div class="telemetry-header">
-      <span>Physics Telemetry</span>
-      <span style="font-size: 10px; color: #22c55e;">● LIVE</span>
+      <span id="telemetry-form-title">Oobleck (Slime)</span>
+      <span style="font-size: 10px; color: #22c55e;">● 60 FPS</span>
     </div>
     <div class="telemetry-row">
-      <span>FPS</span>
-      <span class="telemetry-val" id="val-fps">60</span>
+      <span>Mass / Density</span>
+      <span class="telemetry-val" id="val-mass-density">1.2 kg / 1.12</span>
     </div>
     <div class="telemetry-row">
-      <span>Step Time</span>
+      <span>Restitution (e)</span>
+      <span class="telemetry-val" id="val-restitution">0.85</span>
+    </div>
+    <div class="telemetry-row">
+      <span>Gravity Scale</span>
+      <span class="telemetry-val" id="val-gravity">1.00g (-20 m/s²)</span>
+    </div>
+    <div class="telemetry-row">
+      <span>Step Execution</span>
       <span class="telemetry-val" id="val-step-time">0.02 ms</span>
-    </div>
-    <div class="telemetry-row">
-      <span>Bounce Count</span>
-      <span class="telemetry-val" id="val-bounces">0</span>
     </div>
     <div class="telemetry-row">
       <span>Vertical Vel (Vy)</span>
       <span class="telemetry-val" id="val-vy">0.00 m/s</span>
     </div>
     <div class="telemetry-row">
-      <span>Restitution</span>
-      <span class="telemetry-val" id="val-restitution">0.85</span>
+      <span>Bounce Count</span>
+      <span class="telemetry-val" id="val-bounces">0</span>
     </div>
     <div class="telemetry-row">
-      <span>Contacts Active</span>
-      <span class="telemetry-val" id="val-contacts">1</span>
+      <span>Contact State</span>
+      <span class="telemetry-val" id="val-contacts">1 (Grounded)</span>
     </div>
     <div class="gate-badge" id="gate-badge">✓ Exit Gate: Passed (>=5 Bounces, Zero Tunneling)</div>
   </div>
@@ -276,22 +415,26 @@
   <div class="bottom-bar">
     <div class="course-buttons">
       <button class="btn-course active" id="btn-course-1">
-        <span class="key-cap">1</span> 4m Bounce Drop
+        4m Bounce Drop
       </button>
       <button class="btn-course" id="btn-course-2">
-        <span class="key-cap">2</span> 0.5m Grate Squeeze
+        0.5m Grate Squeeze
       </button>
       <button class="btn-course" id="btn-course-3">
-        <span class="key-cap">3</span> 0.4m Trench Roll
+        0.4m Trench Roll
+      </button>
+      <button class="btn-course" id="btn-course-4">
+        Water Basin
       </button>
       <button class="btn-course" id="btn-toggle-wall">
-        <span class="key-cap">T</span> Cutaway Wall
+        Cutaway Wall (T)
       </button>
     </div>
     <div class="controls-hint">
       <span><span class="key-cap">WASD</span> Move</span>
-      <span><span class="key-cap">Space</span> Jump / Bounce</span>
-      <span><span class="key-cap">R</span> Drop / Reset</span>
+      <span><span class="key-cap">Space</span> Jump</span>
+      <span><span class="key-cap">1-9</span> Form</span>
+      <span><span class="key-cap">R</span> Drop</span>
       <span><span class="key-cap">Right Drag</span> Orbit</span>
     </div>
   </div>

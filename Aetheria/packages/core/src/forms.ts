@@ -104,7 +104,7 @@ export const FORMS_TABLE: Record<FormId, FormDefinition> = {
     description: 'Absorbs water to gain mass for heavy pressure plates; exhausts water in a rocket jet.',
     mass: 1.2, // Base dry mass; scales up to 2.0 kg with soaked ballast
     baseRadius: 0.34,
-    restitution: 0.80,
+    restitution: 0.60,
     friction: 0.22,
     gravityMultiplier: 1.0,
     relativeDensity: 0.85, // Floats dry, sinks when saturated
@@ -140,7 +140,7 @@ export const FORMS_TABLE: Record<FormId, FormDefinition> = {
     description: 'Feather-light buoyant bubble. High elasticity and gentle slow descent.',
     mass: 0.4,
     baseRadius: 0.38,
-    restitution: 0.95,
+    restitution: 0.50,
     friction: 0.10,
     gravityMultiplier: 0.35, // Low gravity float
     relativeDensity: 0.25,  // Super buoyant

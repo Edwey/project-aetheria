@@ -196,6 +196,31 @@ export class RigidProxySimulator {
     this.pos.x = nextX;
     this.pos.z = nextZ;
   }
+
+  /**
+   * Applies an upward jump impulse if grounded or within coyote time.
+   */
+  applyJumpImpulse(impulse: number = 7.0, force = false): boolean {
+    if (this.isGrounded || force) {
+      this.vel.y = impulse;
+      this.isGrounded = false;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Resets simulator position, velocity, and bounce telemetry.
+   */
+  reset(pos?: Vector3Like): void {
+    if (pos) {
+      this.pos = { ...pos };
+    }
+    this.vel = { x: 0, y: 0, z: 0 };
+    this.bounceCount = 0;
+    this.isGrounded = false;
+    this.lastBouncePeak = 0;
+  }
 }
 
 // ---------------------------------------------------------------------------
